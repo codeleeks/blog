@@ -1,8 +1,9 @@
-# React + Vite
+# Blog
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 기술 설명
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- markdown으로 포스팅.
+  - `react-markdown, rehype-highlight, highlight.js, rehype-raw`
+- `vite` 사용.
+  - github에 푸시 => github page 배포 (official github action)
+  - 좋은점: `gh-pages` 패키지 설치 필요 없음
