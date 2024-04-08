@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import 'highlight.js/styles/a11y-dark.css'
+import { createGithubCommit } from '../utils/github.js'
 
 export default (props) => {
   const [content, setContent] = useState()
@@ -17,11 +18,38 @@ export default (props) => {
     fetchPost()
   }, [])
 
+  async function handleClick() {
+    const token = import.meta.env.VITE_GITHUB_ACCESS_TOKEN
+    const fileName = 'test.md'
+    console.log(token)
+
+    try {
+      await createGithubCommit(
+        token,
+        'codeleeks',
+        'blog',
+        'test-commit',
+        'Posting a new article.',
+        [
+          {
+            content,
+            path: `/posts/Frontend/${fileName}`,
+          },
+        ]
+      )
+      console.log('succeeded!')
+    } catch (error) {
+      console.log(error)
+      console.log(error.message)
+    }
+  }
+
   return (
     <article style={{ textAlign: 'left' }}>
       <ReactMarkdown rehypePlugins={[rehypeHighlight, rehypeRaw]}>
         {content}
       </ReactMarkdown>
+      <button onClick={handleClick}>Save</button>
     </article>
   )
 }
