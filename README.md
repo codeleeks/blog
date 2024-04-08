@@ -1,5 +1,8 @@
 # Blog
 
+## URL
+[Go to blog](https://codeleeks.github.io/blog/)
+
 ## 기술 설명
 
 - markdown으로 포스팅.
