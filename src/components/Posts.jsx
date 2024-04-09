@@ -4,6 +4,7 @@ import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import 'highlight.js/styles/a11y-dark.css'
 import { createGithubCommit } from '../utils/github.js'
+import { parseTextFromMarkDown } from '../utils/markdown.js'
 
 export default (props) => {
   const [content, setContent] = useState()
@@ -24,25 +25,27 @@ export default (props) => {
     console.log(token)
 
     try {
-      await createGithubCommit(
-        token,
-        'codeleeks',
-        'blog',
-        'test-commit',
-        'Posting a new article.',
-        [
-          {
-            content,
-            path: `/posts/Frontend/${fileName}`,
-          },
-        ]
-      )
-      console.log('succeeded!')
+      // await createGithubCommit(
+      //   token,
+      //   'codeleeks',
+      //   'blog',
+      //   'test-commit',
+      //   'Posting a new article.',
+      //   [
+      //     {
+      //       content,
+      //       path: `/posts/Frontend/${fileName}`,
+      //     },
+      //   ]
+      // )
+      setContent(parseTextFromMarkDown(content))
     } catch (error) {
       console.log(error)
       console.log(error.message)
     }
   }
+
+  console.log(content)
 
   return (
     <article style={{ textAlign: 'left' }}>
