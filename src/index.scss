@@ -23,6 +23,7 @@ img {
   -khtml-user-drag: none;
   -moz-user-drag: none;
   -o-user-drag: none;
+  display: block;
 }
 a {
   text-decoration: none;
@@ -58,10 +59,11 @@ button {
 .date {
   display: flex;
   align-items: center;
-  gap: 10px;
+  font-size: clamp(10px, 2vw, 32px);
+  gap: clamp(2px, 1vw, 10px);
 }
 .icon {
-  font-size: 2em;
+  font-size: clamp(10px, 2vw, 32px);
   cursor: pointer;
 }
 
@@ -79,59 +81,74 @@ header.navigation {
     font-family: var(--title-font);
     gap: 10px;
     img {
-      width: 60px;
+      width: clamp(35px, 4vw, 100px);
     }
     h1 {
-      font-size: 64px;
+      font-size: clamp(20px, 4vw, 64px);
       font-weight: 700;
       text-transform: uppercase;
     }
+  }
+  .icon {
+    font-size: clamp(25px, 4vw, 50px);
   }
 }
 
 // Prolouge
 .hero {
-  margin-top: 6rem;
+  margin-top: clamp(2rem, 3vw, 6rem);
   margin-bottom: 6rem;
   display: flex;
   gap: 8px;
   justify-content: center;
+
   .text {
     max-width: 50%;
     display: flex;
-    flex-grow: 1;
     flex-direction: column;
-    gap: 20px;
+    // gap: 20px;
+    gap: clamp(3px, 1vw, 20px);
     align-items: flex-start;
     justify-content: center;
     h2 {
       font-family: var(--title-font);
-      font-size: 2rem;
+      font-size: clamp(25px, 2vw, 32px);
       font-weight: 500;
       line-height: 1.5;
     }
     p {
-      font-size: 1rem;
+      font-size: clamp(14px, 2vw, 20px);
       line-height: 1.4;
       font-weight: 400;
     }
     button {
-      margin-top: 30px;
+      margin-top: clamp(0px, 2vw, 50px);
+      font-size: clamp(12px, 1vw, 16px);
       border-radius: var(--main-border-radius);
       font-weight: 500;
       border: 1px solid #b7bbc1;
     }
   }
   .image {
-    display: block;
-    max-width: 50%;
+    width: clamp(30px, 2vw, 100%);
+    // height: clamp(30px, 2vw, 100%);
     flex-grow: 1;
     border-radius: 1rem;
+  }
+
+  @media (max-width: 760px) {
+    flex-direction: column-reverse;
+    .text {
+      max-width: none;
+    }
+    .image {
+      width: 100%;
+    }
   }
 }
 
 .latest-posts {
-  padding: 2rem;
+  padding: clamp(16px, 2vw, 32px);
   padding-bottom: 0;
   display: flex;
   flex-direction: column;
@@ -147,10 +164,11 @@ header.navigation {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
       justify-items: start;
+      row-gap: 30px;
+      column-gap: 10px;
       li {
         width: 100%;
         .image {
-          width: 90%;
           height: 0;
           padding-bottom: 67.5%;
           position: relative;
@@ -176,6 +194,10 @@ header.navigation {
             }
           }
         }
+      }
+
+      @media (max-width: 760px) {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       }
     }
   }
@@ -205,10 +227,10 @@ footer {
       align-items: center;
       line-height: 2;
       span {
-        font-size: 5em;
+        font-size: clamp(2em, 2vw, 5em);
       }
       h2 {
-        font-size: 2em;
+        font-size: clamp(1em, 2vw, 2em);
         font-weight: 700;
         color: var(--main-color);
       }
@@ -222,20 +244,17 @@ footer {
         display: flex;
         gap: 10px;
         align-items: center;
-
-        .mail-icon {
-          font-size: 2em;
-          padding-top: 5px;
-        }
         a {
-          font-size: 2em;
+          text-align: center;
+          font-size: clamp(1em, 2vw, 2em);
         }
         button {
           padding: 0;
-          padding-left: 5px;
-          padding-top: 1em;
+          padding-top: clamp(0.5em, 1vw, 1em);
+          span {
+            font-size: clamp(1em, 2vw, 2em);
+          }
           span.copied {
-            font-size: 2em;
             color: rgb(0, 128, 0);
           }
         }
@@ -245,6 +264,7 @@ footer {
         display: flex;
         gap: 10px;
         svg {
+          width: clamp(1em, 2vw, 4em);
           border-radius: 50%;
         }
       }
@@ -253,6 +273,7 @@ footer {
   p {
     margin-top: 20px;
     font-family: var(--title-font);
+    font-size: clamp(10px, 2vw, 16px);
     font-weight: 400;
     text-align: center;
     // text-transform: uppercase;
