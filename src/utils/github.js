@@ -50,7 +50,12 @@ const getShaForBaseTree = async (
   return response.sha
 }
 
-const getParentSha = async (githubAccessToken, owner, repoFullName, branchName) => {
+const getParentSha = async (
+  githubAccessToken,
+  owner,
+  repoFullName,
+  branchName
+) => {
   const parentResp = await fetch(
     `https://api.github.com/repos/${owner}/${repoFullName}/git/refs/heads/${branchName}`,
     {
@@ -201,4 +206,41 @@ const updateGithubBranchRef = async (
   )
 
   const commitResp = await response.json()
+}
+
+// Github Dir Read API
+export async function fetchRepositoryPosts(
+  githubAccessToken,
+  owner,
+  repoFullName,
+  branchName
+) {
+  const url = `https://api.github.com/repos/${owner}/${repoFullName}/git/trees/${branchName}?recursive=true`
+  try {
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${githubAccessToken}`,
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    })
+    const { tree } = await resp.json()
+
+    const postTree = tree
+      .filter((tree) => tree.mode === '040000')
+      .reduce((acc, cur) => {
+        acc[cur.path] = [
+          ...tree.filter(
+            (tree) =>
+              tree.mode === '100644' && tree.path.startsWith(cur.path + '/')
+          ),
+        ]
+        return acc
+      }, {})
+
+    return postTree
+  } catch (err) {
+    console.error(err)
+  }
 }

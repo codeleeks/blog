@@ -11,7 +11,7 @@ export default (props) => {
   useEffect(() => {
     async function fetchPost() {
       const md = await fetch(
-        'https://raw.githubusercontent.com/codeleeks/blog/main/posts/Frontend/helloworld.md'
+        'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-posts/posts/Frontend/helloworld.md'
       )
       const mdText = await md.text()
       setContent(mdText)
