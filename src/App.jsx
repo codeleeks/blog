@@ -1,9 +1,13 @@
-import { RouterProvider, createBrowserRouter } from 'react-router-dom'
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import Date from './components/UI/Date'
 import RootPage from './pages/Root'
 import Prologue from './components/Prologue/Prologue'
 
 const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Navigate to={import.meta.env.BASE_URL}/>
+  },
   {
     path: import.meta.env.BASE_URL,
     element: <RootPage />,
@@ -12,11 +16,7 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  return (
-    <RouterProvider router={router}>
-      <Date dateTime='2022-06-12' />
-    </RouterProvider>
-  )
+  return <RouterProvider router={router}></RouterProvider>
 }
 
 export default App
