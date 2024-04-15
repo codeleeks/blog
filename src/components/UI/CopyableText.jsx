@@ -1,4 +1,4 @@
-import { createContext, useState } from 'react'
+import { useState } from 'react'
 
 export default (props) => {
   const [isCopied, setIsCopied] = useState(false)

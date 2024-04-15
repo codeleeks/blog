@@ -1,14 +1,6 @@
-import { useState } from 'react'
 import CopyableText from './UI/CopyableText'
-import linkedInImg from '../assets/linkedin.svg'
 
 export default (props) => {
-  const [emailCopied, setEmailCopied] = useState(false)
-
-  function handleEmailCopy(e) {
-    setEmailCopied(true)
-  }
-
   return (
     <footer>
       <address>
@@ -30,7 +22,7 @@ export default (props) => {
             >
               <svg
                 xmlns='http://www.w3.org/2000/svg'
-                xmlns:xlink='http://www.w3.org/1999/xlink'
+                xmlnsXlink='http://www.w3.org/1999/xlink'
                 width='34px'
                 height='34px'
                 viewBox='0 0 34 34'

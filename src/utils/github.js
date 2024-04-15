@@ -225,6 +225,19 @@ export async function fetchRepositoryPosts(
         'X-GitHub-Api-Version': '2022-11-28',
       },
     })
+
+    console.log(resp)
+
+    if (!resp.ok) {
+      throw new Error(
+        JSON.stringify({
+          isError: true,
+          status: resp.status,
+          message: 'could not fetch respostory&apos;s trees',
+        })
+      )
+    }
+
     const { tree } = await resp.json()
 
     const postTree = tree
@@ -241,6 +254,12 @@ export async function fetchRepositoryPosts(
 
     return postTree
   } catch (err) {
-    console.error(err)
+    const error = JSON.parse(err.message)
+    console.dir(error)
+    return {
+      isError: error.isError,
+      status: error.status,
+      message: error.message,
+    }
   }
 }
