@@ -1,9 +1,10 @@
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import RootPage from './pages/Root'
-import Prologue, {
-  loader as fetchPostsLoader,
-} from './components/Prologue/Prologue'
 import ErrorPage from './pages/Error'
+import CategoryPostsPage, {
+  loader as categoryPostsLoader,
+} from './pages/CategoryPosts'
+import ProloguePage, { loader as fetchPostsLoader } from './pages/Prologue'
 
 const router = createBrowserRouter([
   {
@@ -15,7 +16,12 @@ const router = createBrowserRouter([
     element: <RootPage />,
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <Prologue />, loader: fetchPostsLoader },
+      { index: true, element: <ProloguePage />, loader: fetchPostsLoader },
+      {
+        path: ':category',
+        element: <CategoryPostsPage />,
+        loader: categoryPostsLoader,
+      },
     ],
   },
 ])

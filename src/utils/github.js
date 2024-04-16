@@ -1,6 +1,13 @@
 // refs: https://gist.github.com/maskaravivek/a477c2c98651bdfbda5b99a81b261c37#file-twt-1b5e2427-e5fc-49c4-a29e-a305fce63aab-js
 // also details about this behavior in https://dev.to/bro3886/create-a-folder-and-push-multiple-files-under-a-single-commit-through-github-api-23kc
 
+const config = {
+  token: import.meta.env.VITE_GITHUB_ACCESS_TOKEN,
+  owner: 'codeleeks',
+  repo: 'blog',
+  branch: 'codeleeks-posts',
+}
+
 const createGithubFileBlob = async (
   githubAccessToken,
   owner,
@@ -209,25 +216,18 @@ const updateGithubBranchRef = async (
 }
 
 // Github Dir Read API
-export async function fetchRepositoryPosts(
-  githubAccessToken,
-  owner,
-  repoFullName,
-  branchName
-) {
-  const url = `https://api.github.com/repos/${owner}/${repoFullName}/git/trees/${branchName}?recursive=true`
+export async function fetchRepositoryPosts() {
+  const { token, owner, repo, branch } = config
+  const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=true`
   try {
     const resp = await fetch(url, {
       method: 'GET',
       headers: {
         Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${githubAccessToken}`,
+        Authorization: `Bearer ${token}`,
         'X-GitHub-Api-Version': '2022-11-28',
       },
     })
-
-    console.log(resp)
-
     if (!resp.ok) {
       throw new Error(
         JSON.stringify({
@@ -252,10 +252,55 @@ export async function fetchRepositoryPosts(
         return acc
       }, {})
 
+    console.log(postTree)
+
     return postTree
   } catch (err) {
     const error = JSON.parse(err.message)
-    console.dir(error)
+    return {
+      isError: error.isError,
+      status: error.status,
+      message: error.message,
+    }
+  }
+}
+
+// Github File Contents Read API
+export async function fetchRepositoryFileContents(path) {
+  const { token, owner, repo, branch } = config
+
+  if (path[0] === '/') {
+    path = path.slice(1)
+  }
+
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`
+  try {
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/vnd.github.raw+json',
+        Authorization: `Bearer ${token}`,
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    })
+
+    if (!resp.ok) {
+      throw new Error(
+        JSON.stringify({
+          isError: true,
+          status: resp.status,
+          message: 'could not fetch file contents',
+        })
+      )
+    }
+
+    const content = new TextDecoder().decode(
+      new Uint8Array(await resp.arrayBuffer())
+    )
+
+    return content
+  } catch (err) {
+    const error = JSON.parse(err.message)
     return {
       isError: error.isError,
       status: error.status,

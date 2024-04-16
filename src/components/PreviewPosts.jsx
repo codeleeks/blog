@@ -1,4 +1,4 @@
-import Post from './Post'
+import PreviewPost from "./PreviewPost"
 
 export default (props) => {
   const { posts } = props
@@ -6,7 +6,7 @@ export default (props) => {
   return (
     <div className='posts'>
       {posts.map((post) => {
-        return <Post key={post.path} post={post} />
+        return <PreviewPost key={post.path} post={post} />
       })}
     </div>
   )
