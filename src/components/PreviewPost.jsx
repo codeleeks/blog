@@ -20,8 +20,14 @@ function extractTitle(path) {
 }
 
 function findMetadataArea(contents) {
+  if (!contents) {
+    return {
+      found: false,
+    }
+  }
+
   let s = 0
-  while (contents[s] === ' ') {
+  while (contents[s] === ' ' && s < contents.length) {
     s++
   }
 
@@ -48,51 +54,67 @@ function findMetadataArea(contents) {
 
   return {
     found: true,
-    summary: contents.slice(s, e),
+    metadata: contents.slice(s, e),
   }
 }
 
 function extractSummary(contents) {
-  const { summary, found } = findMetadataArea(contents)
+  const { metadata, found } = findMetadataArea(contents)
   if (!found) {
     return ''
   }
 
   const key = 'summary:'
-  let s = summary.indexOf(key)
+  let s = metadata.indexOf(key)
   if (s === -1) {
     return ''
   }
   s += key.length
 
-  while (summary[s] === ' ') {
+  while (metadata[s] === ' ') {
     s++
   }
 
-  let e = summary.indexOf('\n', s)
-  return summary.slice(s, e)
+  let e = metadata.indexOf('\n', s)
+  return metadata.slice(s, e)
+}
+
+function extractDate(contents) {
+  const { metadata, found } = findMetadataArea(contents)
+  if (!found) {
+    return ''
+  }
+
+  const pattern = /(?<=^date\:\s*)[0-9\-]+(?=\s?)/m
+  const date = metadata.match(pattern)
+  if (date) {
+    return date[0]
+  }
+  return date
 }
 
 export default (props) => {
   const { post } = props
   const [contents, setContents] = useState()
 
-  const title = extractTitle(post.path)
   useEffect(() => {
     async function fetchPost() {
       const contents = await fetchRepositoryFileContents(post.path)
       if (!contents?.isError) {
-        const summary = extractSummary(contents)
-        setContents(summary)
+        setContents(contents)
       }
     }
 
     fetchPost()
   }, [post])
 
+  const title = extractTitle(post.path)
+  const date = extractDate(contents)
+  const summary = extractSummary(contents)
+
   return (
     <Link to={`${title}.md`} key={post.path}>
-      <Card title={title}>{contents}</Card>
+      <Card title={title} date={date}>{summary}</Card>
     </Link>
   )
 }
