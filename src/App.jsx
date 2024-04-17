@@ -5,6 +5,9 @@ import CategoryPostsPage, {
   loader as categoryPostsLoader,
 } from './pages/CategoryPosts'
 import ProloguePage, { loader as fetchPostsLoader } from './pages/Prologue'
+import CategoryPostPage, {
+  loader as fetchPostLoader,
+} from './pages/CategoryPost'
 
 const router = createBrowserRouter([
   {
@@ -19,8 +22,18 @@ const router = createBrowserRouter([
       { index: true, element: <ProloguePage />, loader: fetchPostsLoader },
       {
         path: ':category',
-        element: <CategoryPostsPage />,
-        loader: categoryPostsLoader,
+        children: [
+          {
+            index: true,
+            element: <CategoryPostsPage />,
+            loader: categoryPostsLoader,
+          },
+          {
+            path: ':postFileName',
+            element: <CategoryPostPage />,
+            loader: fetchPostLoader,
+          },
+        ],
       },
     ],
   },

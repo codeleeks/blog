@@ -4,10 +4,10 @@ import { fetchRepositoryPosts } from '../utils/github'
 import { Suspense } from 'react'
 import LoadingIndicator from '../components/UI/LoadingIndicator'
 import PreviewPosts from '../components/PreviewPosts'
+import { throwErrorJsonIfError } from '../utils/loader-error'
 export default function CategoryPostsPage(props) {
   const { posts } = useLoaderData()
   const { category } = useParams()
-
   return (
     <section className='category-posts'>
       <h2>{category}</h2>
@@ -24,17 +24,7 @@ export default function CategoryPostsPage(props) {
 
 async function fetchPosts(category) {
   const allPosts = await fetchRepositoryPosts()
-  if (allPosts?.isError) {
-    throw json(
-      {
-        message: allPosts.message,
-      },
-      {
-        status: allPosts.status,
-      }
-    )
-  }
-
+  throwErrorJsonIfError(allPosts)
   return allPosts[category]
 }
 

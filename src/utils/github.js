@@ -1,6 +1,8 @@
 // refs: https://gist.github.com/maskaravivek/a477c2c98651bdfbda5b99a81b261c37#file-twt-1b5e2427-e5fc-49c4-a29e-a305fce63aab-js
 // also details about this behavior in https://dev.to/bro3886/create-a-folder-and-push-multiple-files-under-a-single-commit-through-github-api-23kc
 
+import { throwErrorJson } from './error'
+
 const config = {
   token: import.meta.env.VITE_GITHUB_ACCESS_TOKEN,
   owner: 'codeleeks',
@@ -229,13 +231,7 @@ export async function fetchRepositoryPosts() {
       },
     })
     if (!resp.ok) {
-      throw new Error(
-        JSON.stringify({
-          isError: true,
-          status: resp.status,
-          message: 'could not fetch respostory&apos;s trees',
-        })
-      )
+      throwErrorJson(resp.status, 'could not fetch repository&apos;s trees')
     }
 
     const { tree } = await resp.json()
@@ -252,16 +248,9 @@ export async function fetchRepositoryPosts() {
         return acc
       }, {})
 
-    console.log(postTree)
-
     return postTree
   } catch (err) {
-    const error = JSON.parse(err.message)
-    return {
-      isError: error.isError,
-      status: error.status,
-      message: error.message,
-    }
+    return JSON.parse(err.message)
   }
 }
 
@@ -285,13 +274,7 @@ export async function fetchRepositoryFileContents(path) {
     })
 
     if (!resp.ok) {
-      throw new Error(
-        JSON.stringify({
-          isError: true,
-          status: resp.status,
-          message: 'could not fetch file contents',
-        })
-      )
+      throwErrorJson(resp.status, 'could not fetch file contents')
     }
 
     const content = new TextDecoder().decode(
@@ -300,11 +283,6 @@ export async function fetchRepositoryFileContents(path) {
 
     return content
   } catch (err) {
-    const error = JSON.parse(err.message)
-    return {
-      isError: error.isError,
-      status: error.status,
-      message: error.message,
-    }
+    return JSON.parse(err.message)
   }
 }

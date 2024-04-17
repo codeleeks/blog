@@ -3,6 +3,7 @@ import { fetchRepositoryPosts } from '../utils/github'
 import { Await, defer, json, useLoaderData } from 'react-router-dom'
 import LoadingIndicator from '../components/UI/LoadingIndicator'
 import Posts from '../components/Prologue/Posts'
+import { throwErrorJsonIfError } from '../utils/loader-error'
 
 export default function ProloguePage(props) {
   const { posts } = useLoaderData()
@@ -32,17 +33,7 @@ export default function ProloguePage(props) {
 
 async function fetchPosts() {
   const fetchedPosts = await fetchRepositoryPosts()
-  if (fetchedPosts?.isError) {
-    throw json(
-      {
-        message: fetchedPosts.message,
-      },
-      {
-        status: fetchedPosts.status,
-      }
-    )
-  }
-
+  throwErrorJsonIfError(fetchedPosts)
   return fetchedPosts
 }
 
