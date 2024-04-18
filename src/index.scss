@@ -43,12 +43,23 @@ button {
     color: var(--main-color-hover);
   }
 }
-h2 {
-  font-family: var(--title-font);
-  font-size: clamp(14px, 2vw, 32px);
-  font-weight: 700;
-  color: var(--main-color);
-  line-height: 2;
+@for $i from 1 through 6 {
+  h#{$i} {
+    font-family: var(--title-font);
+    color: var(--main-color);
+
+    $vw: 3vw;
+    $weight: 700;
+    $height: 2;
+    @if $i > 2 {
+      $vw: 2vw;
+      $weight: 600;
+      $height: 1.5;
+    }
+    font-size: clamp(16px - #{$i}px, $vw, calc(38px - #{$i * 4}px));
+    font-weight: $weight;
+    line-height: $height;
+  }
 }
 
 // Common class
@@ -155,6 +166,8 @@ header.navigation {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(0,0,0,.2);
 
   a {
     display: flex;
@@ -162,16 +175,26 @@ header.navigation {
     font-family: var(--title-font);
     gap: 10px;
     img {
-      width: clamp(35px, 4vw, 100px);
+      width: clamp(20px, 2vw, 32px);
     }
     h1 {
-      font-size: clamp(20px, 4vw, 64px);
+      font-size: clamp(20px, 2vw, 32px);
       font-weight: 700;
       text-transform: uppercase;
     }
   }
-  .icon {
-    font-size: clamp(25px, 4vw, 50px);
+  .icons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    .icon {
+      margin-left: 10px;
+      font-size: clamp(20px, 2vw, 25px);
+    }
+    svg {
+      width: clamp(20px, 2vw, 25px);
+      border-radius: 50%;
+    }
   }
 }
 
@@ -245,25 +268,28 @@ header.navigation {
   }
   .post {
     flex-grow: 1;
+
+    h1 {
+    }
   }
   .toc {
     box-sizing: border-box;
-    padding: 10px;
-    padding-right: 0;
-    padding-left: 20px;
+    padding: 10px 0;
     ul {
+      $spacing: 10px;
       position: sticky;
       top: 10px;
       left: 0;
+      padding-left: $spacing;
 
       h4 {
         font-size: clamp(12px, 2vw, 16px);
         font-weight: 700;
         color: #000;
         line-height: 1.2;
-        padding-bottom: 10px;
-        margin-bottom: 10px;
-        border-bottom: 1px solid rgba(0,0,0,.4);
+        padding-bottom: $spacing;
+        margin-bottom: $spacing;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.4);
       }
 
       li {
@@ -287,56 +313,11 @@ footer {
   margin-top: 120px;
   padding-bottom: 10px;
   border-top: 1px solid;
-  address {
-    .title-icon {
-      display: flex;
-      align-items: center;
-      line-height: 2;
-      span {
-        font-size: clamp(2em, 2vw, 5em);
-      }
-    }
-
-    .contents {
-      display: flex;
-      justify-content: space-between;
-      padding: 0 1em;
-      .email {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        a {
-          text-align: center;
-          font-size: clamp(1em, 2vw, 2em);
-        }
-        button {
-          padding: 0;
-          padding-top: clamp(0.5em, 1vw, 1em);
-          span {
-            font-size: clamp(1em, 2vw, 2em);
-          }
-          span.copied {
-            color: rgb(0, 128, 0);
-          }
-        }
-      }
-
-      .icons {
-        display: flex;
-        gap: 10px;
-        svg {
-          width: clamp(1em, 2vw, 4em);
-          border-radius: 50%;
-        }
-      }
-    }
-  }
   p {
     margin-top: 20px;
     font-family: var(--title-font);
     font-size: clamp(10px, 2vw, 16px);
     font-weight: 400;
     text-align: center;
-    // text-transform: uppercase;
   }
 }
