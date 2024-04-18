@@ -3,9 +3,11 @@
   --main-color-hover: #fff;
   --title-font: 'Roboto Slab', sans-serif;
   --main-border-radius: 10px;
-  --section-gray: #f3f4f6;
+  --border-color: #ffffffd9;
+  // --section-gray: #f3f4f6;
   --background-color: #121212;
   --highlight-color: #e96900;
+  --highlight-color-8: rgba(233,105,0,.8);
   // font-family: 'Gowun Batang', 'Roboto Slob', sans-serif;
   font-family: sans-serif;
   line-height: 1.4;
@@ -18,6 +20,9 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   word-break: keep-all;
+}
+html {
+  color-scheme: dark;
 }
 
 // Common element settings
@@ -64,11 +69,27 @@ button {
   }
 }
 
-// Common class
+// global mixin
 @mixin inner {
   max-width: 88%;
   margin: 0 auto;
 }
+@mixin color-hovering($color: #ffffffb3, $color-hover: #fff) {
+  color: $color;
+  transition: color 0.4s;
+  &:hover {
+    color: $color-hover;
+  }
+}
+@mixin fill-hovering($color: $color, $color-hover: $color) {
+  fill: $color;
+  transition: fill 0.4s;
+  &:hover {
+    fill: $color-hover;
+  }
+}
+
+// Common class
 .section {
   @include inner;
   border-radius: var(--main-border-radius);
@@ -92,8 +113,12 @@ button {
   box-sizing: border-box;
   padding: 8px;
   border-radius: 10px;
-  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 2px 0 rgba(255, 255, 255, 0.7);
   height: 350px;
+  &:hover {
+    box-shadow: 0 0 2px 0 rgba(255, 255, 255, 1);
+  }
+
   header {
     display: flex;
     flex-direction: column;
@@ -109,14 +134,12 @@ button {
   }
   p {
     height: 50%;
+    display: -webkit-box;
+    -webkit-line-clamp: 10;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 2;
-    // display: -webkit-box;
-    // -webkit-line-clamp: 10;
-    // -webkit-box-orient: vertical;
-    // overflow: hidden;
-    // text-overflow: ellipsis '[...]';
-    padding: 5px 10px 0;
+    line-height: 1.4;
+    padding: 5px 0 0;
     font-size: clamp(12px, 2vw, 16px);
     font-weight: 400;
     color: var(--main-color);
@@ -171,25 +194,6 @@ header.navigation {
   margin-bottom: 10px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 
-  $color: #ffffffb3;
-  $color-hover: #fff;
-
-  @mixin color-hovering($color: $color, $color-hover: $color-hover) {
-    color: $color;
-    transition: color 0.4s;
-    &:hover {
-      color: $color-hover;
-    }
-  }
-
-  @mixin fill-hovering($color: $color, $color-hover: $color) {
-    fill: $color;
-    transition: fill 0.4s;
-    &:hover {
-      fill: $color-hover;
-    }
-  }
-
   a {
     display: flex;
     align-items: center;
@@ -208,7 +212,7 @@ header.navigation {
 
     &:hover {
       h1 {
-        color: $color-hover;
+        color: #fff;
       }
     }
   }
@@ -222,14 +226,16 @@ header.navigation {
       @include color-hovering;
     }
     svg {
-      
       width: clamp(20px, 2vw, 25px);
       border-radius: 50%;
       &#github {
-        @include fill-hovering(rgba(111,132,214,.4), rgba(111,132,214,1));
+        @include fill-hovering(
+          rgba(111, 132, 214, 0.4),
+          rgba(111, 132, 214, 1)
+        );
       }
       &#linkedin {
-        @include fill-hovering(rgba(10,102,194,.4), rgba(10,102,194,1));
+        @include fill-hovering(rgba(10, 102, 194, 0.4), rgba(10, 102, 194, 1));
       }
     }
   }
@@ -243,9 +249,6 @@ header.navigation {
   border-radius: var(--main-border-radius);
   padding: 0 5px;
 
-  &.gray {
-    background-color: var(--section-gray);
-  }
   .header {
     font-family: var(--title-font);
     font-size: clamp(16px, 2vw, 22px);
@@ -258,7 +261,7 @@ header.navigation {
   .more-btn {
     display: block;
     width: 10em;
-    margin: 0 auto;
+    margin: 25px auto 0;
     padding: 0 5px;
     text-align: center;
     button {

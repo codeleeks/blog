@@ -9,10 +9,7 @@ export default (props) => {
         <h1>Codeleeks</h1>
       </Link>
       <div className='icons'>
-        <a
-          href='https://www.linkedin.com/in/kasong-lee-17533b149'
-          target='_blank'
-        >
+        <a href='https://github.com/codeleeks/blog' target='_blank'>
           <svg
             xmlns='http://www.w3.org/2000/svg'
             xmlnsXlink='http://www.w3.org/1999/xlink'
