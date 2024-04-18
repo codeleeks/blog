@@ -10,8 +10,12 @@
   - view: `react-markdown, rehype-highlight, highlight.js, rehype-raw`
   - post: `github.js` thanks to [this gist](https://gist.github.com/maskaravivek/a477c2c98651bdfbda5b99a81b261c37#file-twt-1b5e2427-e5fc-49c4-a29e-a305fce63aab-js)
 - `vite` 사용.
+
   - github에 푸시 => github page 배포 (official github action)
   - 좋은점: `gh-pages` 패키지 설치 필요 없음
+
+- `gsap`
+  - scroll 애니메이션 적용.
 
 ## 기록
 
@@ -40,3 +44,16 @@ text-overflow: ellipsis '[...]';
 ```
 
 - 잠깐 보니 여러 개의 `<li>`를 자식 엘리먼트로 생성하고, 줄마다 이를 hidden 처리하는 것처럼 보였다.
+
+### 목차(Table Of Contents) 만들기
+
+#### 정규표현식
+
+- `heading`만을 추출하여, \# 갯수(level)와 heading 텍스트를 객체로 저장.
+- level에 따라 `padding-left`를 다르게 적용.
+- `rehype-slug`가 내부적으로 사용하는 `github slugger`를 anchor의 href로 지정
+  - ```React-Markdown```이 html 변환 과정에서 삽입한 id와 동일하게 href에 지정 가능.
+
+#### gsap을 통한 scroll 애니메이션
+
+- 클릭시 handler에서 `gsap.to` 호출.
