@@ -52,8 +52,27 @@ text-overflow: ellipsis '[...]';
 - `heading`만을 추출하여, \# 갯수(level)와 heading 텍스트를 객체로 저장.
 - level에 따라 `padding-left`를 다르게 적용.
 - `rehype-slug`가 내부적으로 사용하는 `github slugger`를 anchor의 href로 지정
-  - ```React-Markdown```이 html 변환 과정에서 삽입한 id와 동일하게 href에 지정 가능.
+  - `React-Markdown`이 html 변환 과정에서 삽입한 id와 동일하게 href에 지정 가능.
 
 #### gsap을 통한 scroll 애니메이션
 
 - 클릭시 handler에서 `gsap.to` 호출.
+
+#### sticky로 뷰포트에 고정하기
+- ```flex```로 nav, section, aside(목차)를 나눈 상태에서 nav와 aside 영역을 sticky로 지정하려 한다.
+- 교차축 정렬이 ```stretch```로 되어 있기 때문에 주어진 height를 다 쓴다.
+- 이렇게 되면 sticky 오퍼레이션이 적용되지 않는다.
+- ```align-items: flex-start```로 height를 컨텐츠만큼 줄여준다.
+
+### 스타일링
+
+#### font-size
+
+- `clamp`를 이용하여 반응형으로 font size를 조절할 수 있다. 그런데 개인적으로 글자가 커졌다 작아졌다 하는게 좋아보이지 않는다.
+
+#### heading color
+
+- heading 태그 선택자에 `color` 속성을 넣지 않는 게 좋다.
+- heading의 의미는 제목인데, 기술적으로 상관없지만 의미적으로 heading을 여러 군데에서 쓴다.
+- 이때, hover시 `color`를 변경하는 애니메이션을 주려면, 기본적으로 color 속성이 없거나 메인으로 사용하는 font color와 동일해야 한다.
+- 그렇지 않으면, heading과 엮여 있는 다른 태그의 font color와 동일한 타이밍에 color 변환을 하기 어려워진다.

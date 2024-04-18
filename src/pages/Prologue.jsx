@@ -14,7 +14,7 @@ export default function ProloguePage(props) {
           const allPosts = Object.values(fetchedPosts).flatMap((category) => [
             ...category,
           ])
-          return <main>{<Posts posts={allPosts} />}</main>
+          return <Posts posts={allPosts} />
         }}
       </Await>
     </Suspense>

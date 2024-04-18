@@ -1,4 +1,11 @@
-import { Await, Link, defer, useLoaderData, useParams } from 'react-router-dom'
+import {
+  Await,
+  Link,
+  NavLink,
+  defer,
+  useLoaderData,
+  useParams,
+} from 'react-router-dom'
 import {
   fetchRepositoryFileContents,
   fetchRepositoryPosts,
@@ -12,41 +19,40 @@ import rehypeHighlight from 'rehype-highlight'
 import rehypeSlug from 'rehype-slug'
 import 'highlight.js/styles/github-dark-dimmed.min.css'
 import rehypeRaw from 'rehype-raw'
-import TableOfContents from '../components/TableOfContents'
-
-
+import TableOfContents from '../components/Post/TableOfContents'
+import PostsNavigation from '../components/Post/PostsNavigation'
 
 export default function CategoryPostPage(props) {
-  const { category } = useParams()
+  const { category, postFileName } = useParams()
   const { contents, posts } = useLoaderData()
+
+  const title = extractTitle(`${category}/${postFileName}`)
 
   return (
     <section className='post-page'>
-      <div className='other-posts'>
+      <nav>
         <Suspense fallback={<LoadingIndicator />}>
           <Await resolve={posts}>
             {(fetchedPosts) => {
               return (
-                <>
-                  <h2>{category}</h2>
-                  <ul>
-                    {fetchedPosts.map((post) => (
-                      <li key={post.sha}>{extractTitle(post.path)}</li>
-                    ))}
-                  </ul>
-                </>
+                <section>
+                  {Object.entries(fetchedPosts).map(([category, posts]) => {
+                    console.log(category, posts)
+                    return <PostsNavigation key={category} category={category} posts={posts}/>
+                  })}
+                </section>
               )
             }}
           </Await>
         </Suspense>
-      </div>
-      <div className='post'>
+      </nav>
+      <section className='post'>
         <Suspense fallback={<LoadingIndicator />}>
           <Await resolve={contents}>
             {(fetchedContents) => {
               return (
                 <>
-                  <h1 className='title'>타이틀</h1>
+                  <h1 className='title'>{title}</h1>
                   <Markdown
                     rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeSlug]}
                   >
@@ -57,8 +63,8 @@ export default function CategoryPostPage(props) {
             }}
           </Await>
         </Suspense>
-      </div>
-      <div className='toc'>
+      </section>
+      <aside>
         <Suspense fallback={<LoadingIndicator />}>
           <Await resolve={contents}>
             {(fetchedContents) => {
@@ -66,17 +72,15 @@ export default function CategoryPostPage(props) {
             }}
           </Await>
         </Suspense>
-      </div>
+      </aside>
     </section>
   )
 }
 
-async function fetchPosts(params) {
-  const { category } = params
-
+async function fetchPosts() {
   const allPosts = await fetchRepositoryPosts()
   throwErrorJsonIfError(allPosts)
-  return allPosts[category]
+  return allPosts
 }
 
 async function fetchPostContents(params) {
@@ -89,6 +93,6 @@ async function fetchPostContents(params) {
 export async function loader({ params }) {
   return defer({
     contents: fetchPostContents(params),
-    posts: fetchPosts(params),
+    posts: fetchPosts(),
   })
 }

@@ -7,8 +7,10 @@ export default function RootPage() {
   return (
     <>
       <Header />
-      <Outlet />
-      <Footer />
+      <main>
+        <Outlet />
+        <Footer />
+      </main>
     </>
   )
 }
