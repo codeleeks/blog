@@ -24,7 +24,7 @@ export default (props) => {
   const summary = extractSummary(contents)
 
   return (
-    <Link to={`${title}.md`} key={post.path}>
+    <Link to={post.path} key={post.path}>
       <Card title={title} date={date}>{summary}</Card>
     </Link>
   )

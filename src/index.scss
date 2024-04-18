@@ -7,7 +7,7 @@
   // --section-gray: #f3f4f6;
   --background-color: #121212;
   --highlight-color: #e96900;
-  --highlight-color-8: rgba(233,105,0,.8);
+  --highlight-color-8: rgba(233, 105, 0, 0.8);
   // font-family: 'Gowun Batang', 'Roboto Slob', sans-serif;
   font-family: sans-serif;
   line-height: 1.4;
@@ -55,15 +55,13 @@ button {
     font-family: var(--title-font);
     color: var(--main-color);
 
-    $vw: 3vw;
     $weight: 700;
     $height: 2;
     @if $i > 2 {
-      $vw: 2vw;
       $weight: 600;
       $height: 1.5;
     }
-    font-size: clamp(17px - #{$i}px, $vw, calc(38px - #{$i * 4}px));
+    font-size: calc(34px - #{$i * 4}px);
     font-weight: $weight;
     line-height: $height;
   }
@@ -101,11 +99,11 @@ button {
 .date {
   display: flex;
   align-items: center;
-  font-size: clamp(10px, 2vw, 16px);
-  gap: clamp(2px, 1vw, 10px);
+  font-size: 16px;
+  gap: 10px;
 }
 .icon {
-  font-size: clamp(10px, 2vw, 16px);
+  font-size: 16px;
   cursor: pointer;
 }
 
@@ -123,24 +121,23 @@ button {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    height: clamp(15%, 5vw, 30%);
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--main-color);
     h3 {
       font-family: var(--title-font);
-      font-size: clamp(14px, 2vw, 22px);
+      font-size: 22px;
       font-weight: 700;
       color: var(--main-color);
     }
   }
   p {
-    height: 50%;
     display: -webkit-box;
-    -webkit-line-clamp: 10;
+    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.4;
     padding: 5px 0 0;
-    font-size: clamp(12px, 2vw, 16px);
+    font-size: 16px;
     font-weight: 400;
     color: var(--main-color);
   }
@@ -180,8 +177,8 @@ button {
 .posts {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  column-gap: 10px;
-  row-gap: 10px;
+  column-gap: 30px;
+  row-gap: 30px;
 }
 
 // Header
@@ -199,12 +196,13 @@ header.navigation {
     align-items: center;
     font-family: var(--title-font);
     gap: 10px;
+    $px: 24px;
 
     img {
-      width: clamp(20px, 2vw, 32px);
+      width: $px;
     }
     h1 {
-      font-size: clamp(20px, 2vw, 32px);
+      font-size: $px;
       font-weight: 700;
       text-transform: uppercase;
       @include color-hovering;
@@ -222,11 +220,11 @@ header.navigation {
     align-items: center;
     .icon {
       margin-left: 10px;
-      font-size: clamp(20px, 2vw, 25px);
+      font-size: 25px;
       @include color-hovering;
     }
     svg {
-      width: clamp(20px, 2vw, 25px);
+      width: 25px;
       border-radius: 50%;
       &#github {
         @include fill-hovering(
@@ -251,7 +249,7 @@ header.navigation {
 
   .header {
     font-family: var(--title-font);
-    font-size: clamp(16px, 2vw, 22px);
+    font-size: 22px;
     font-weight: 700;
     color: var(--main-color);
     font-style: italic;
@@ -293,28 +291,21 @@ header.navigation {
   }
 }
 
-// category
-.category-posts {
-  @include inner;
-}
-
 // post-page (category post)
 .post-page {
   @include inner;
   display: flex;
   justify-content: space-between;
-
+  $spacing: 10px;
   .other-posts {
-    width: 10%;
-    @media (max-width: 764px) {
-      display: none;
-    }
+    flex-shrink: 0;
+    padding: 0 $spacing;
   }
   .post {
-    flex-grow: 1;
+    flex-grow: 2;
 
     h1.title {
-      font-size: clamp(50px, 3vw, 64px);
+      font-size: 50px;
     }
   }
   .toc {
@@ -329,7 +320,7 @@ header.navigation {
       padding-left: $spacing;
 
       h4 {
-        font-size: clamp(12px, 2vw, 16px);
+        font-size: 16px;
         font-weight: 700;
         color: #000;
         line-height: 1.2;
@@ -341,7 +332,7 @@ header.navigation {
       li {
         @for $i from 1 through 6 {
           &.heading-#{$i} {
-            font-size: clamp(12px, 2vw, 16px);
+            font-size: 16px;
             font-weight: 500;
             color: var(--main-color);
             line-height: 1.2;
@@ -362,7 +353,7 @@ footer {
   p {
     margin-top: 20px;
     font-family: var(--title-font);
-    font-size: clamp(10px, 2vw, 16px);
+    font-size: 16px;
     font-weight: 400;
     text-align: center;
   }
