@@ -1,15 +1,17 @@
 :root {
-  --main-color: rgba(10, 10, 10, 0.8);
-  --main-color-hover: rgba(10, 10, 10, 1);
+  --main-color: #fff;
+  --main-color-hover: #fff;
   --title-font: 'Roboto Slab', sans-serif;
   --main-border-radius: 10px;
   --section-gray: #f3f4f6;
+  --background-color: #121212;
+  --highlight-color: #e96900;
   // font-family: 'Gowun Batang', 'Roboto Slob', sans-serif;
   font-family: sans-serif;
   line-height: 1.4;
   font-weight: 400;
   color: var(--main-color);
-  background-color: #fff;
+  background-color: var(--background-color);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -56,7 +58,7 @@ button {
       $weight: 600;
       $height: 1.5;
     }
-    font-size: clamp(16px - #{$i}px, $vw, calc(38px - #{$i * 4}px));
+    font-size: clamp(17px - #{$i}px, $vw, calc(38px - #{$i * 4}px));
     font-weight: $weight;
     line-height: $height;
   }
@@ -167,13 +169,33 @@ header.navigation {
   align-items: center;
   padding: 10px 0;
   margin-bottom: 10px;
-  border-bottom: 1px solid rgba(0,0,0,.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+
+  $color: #ffffffb3;
+  $color-hover: #fff;
+
+  @mixin color-hovering($color: $color, $color-hover: $color-hover) {
+    color: $color;
+    transition: color 0.4s;
+    &:hover {
+      color: $color-hover;
+    }
+  }
+
+  @mixin fill-hovering($color: $color, $color-hover: $color) {
+    fill: $color;
+    transition: fill 0.4s;
+    &:hover {
+      fill: $color-hover;
+    }
+  }
 
   a {
     display: flex;
     align-items: center;
     font-family: var(--title-font);
     gap: 10px;
+
     img {
       width: clamp(20px, 2vw, 32px);
     }
@@ -181,6 +203,13 @@ header.navigation {
       font-size: clamp(20px, 2vw, 32px);
       font-weight: 700;
       text-transform: uppercase;
+      @include color-hovering;
+    }
+
+    &:hover {
+      h1 {
+        color: $color-hover;
+      }
     }
   }
   .icons {
@@ -190,10 +219,18 @@ header.navigation {
     .icon {
       margin-left: 10px;
       font-size: clamp(20px, 2vw, 25px);
+      @include color-hovering;
     }
     svg {
+      
       width: clamp(20px, 2vw, 25px);
       border-radius: 50%;
+      &#github {
+        @include fill-hovering(rgba(111,132,214,.4), rgba(111,132,214,1));
+      }
+      &#linkedin {
+        @include fill-hovering(rgba(10,102,194,.4), rgba(10,102,194,1));
+      }
     }
   }
 }
@@ -264,17 +301,23 @@ header.navigation {
   display: flex;
   justify-content: space-between;
 
-  .posts {
+  .other-posts {
+    width: 10%;
+    @media (max-width: 764px) {
+      display: none;
+    }
   }
   .post {
     flex-grow: 1;
 
-    h1 {
+    h1.title {
+      font-size: clamp(50px, 3vw, 64px);
     }
   }
   .toc {
     box-sizing: border-box;
     padding: 10px 0;
+    flex-grow: 1;
     ul {
       $spacing: 10px;
       position: sticky;

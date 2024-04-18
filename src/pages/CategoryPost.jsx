@@ -22,7 +22,7 @@ export default function CategoryPostPage(props) {
 
   return (
     <section className='post-page'>
-      <div className='posts'>
+      <div className='other-posts'>
         <Suspense fallback={<LoadingIndicator />}>
           <Await resolve={posts}>
             {(fetchedPosts) => {
@@ -45,11 +45,14 @@ export default function CategoryPostPage(props) {
           <Await resolve={contents}>
             {(fetchedContents) => {
               return (
-                <Markdown
-                  rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeSlug]}
-                >
-                  {skipMetadata(fetchedContents)}
-                </Markdown>
+                <>
+                  <h1 className='title'>타이틀</h1>
+                  <Markdown
+                    rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeSlug]}
+                  >
+                    {skipMetadata(fetchedContents)}
+                  </Markdown>
+                </>
               )
             }}
           </Await>
