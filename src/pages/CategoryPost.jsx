@@ -1,26 +1,18 @@
-import {
-  Await,
-  Link,
-  NavLink,
-  defer,
-  useLoaderData,
-  useParams,
-} from 'react-router-dom'
+import { Await, defer, useLoaderData, useParams } from 'react-router-dom'
 import {
   fetchRepositoryFileContents,
   fetchRepositoryPosts,
 } from '../utils/github'
 import { throwErrorJsonIfError } from '../utils/loader-error'
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import LoadingIndicator from '../components/UI/LoadingIndicator'
-import Markdown from 'react-markdown'
-import { extractTitle, skipMetadata } from '../utils/post'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeSlug from 'rehype-slug'
-import 'highlight.js/styles/github-dark-dimmed.min.css'
-import rehypeRaw from 'rehype-raw'
+import { extractTitle } from '../utils/post'
+
 import TableOfContents from '../components/Post/TableOfContents'
 import PostsNavigation from '../components/Post/PostsNavigation'
+
+import 'highlight.js/styles/github-dark-dimmed.min.css'
+import PostContents from '../components/Post/PostContents'
 
 export default function CategoryPostPage(props) {
   const { category, postFileName } = useParams()
@@ -38,7 +30,13 @@ export default function CategoryPostPage(props) {
                 <section>
                   {Object.entries(fetchedPosts).map(([category, posts]) => {
                     console.log(category, posts)
-                    return <PostsNavigation key={category} category={category} posts={posts}/>
+                    return (
+                      <PostsNavigation
+                        key={category}
+                        category={category}
+                        posts={posts}
+                      />
+                    )
                   })}
                 </section>
               )
@@ -50,16 +48,7 @@ export default function CategoryPostPage(props) {
         <Suspense fallback={<LoadingIndicator />}>
           <Await resolve={contents}>
             {(fetchedContents) => {
-              return (
-                <>
-                  <h1 className='title'>{title}</h1>
-                  <Markdown
-                    rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeSlug]}
-                  >
-                    {skipMetadata(fetchedContents)}
-                  </Markdown>
-                </>
-              )
+              return <PostContents title={title} contents={fetchedContents} />
             }}
           </Await>
         </Suspense>
@@ -68,7 +57,12 @@ export default function CategoryPostPage(props) {
         <Suspense fallback={<LoadingIndicator />}>
           <Await resolve={contents}>
             {(fetchedContents) => {
-              return <TableOfContents contents={fetchedContents} />
+              return (
+                <TableOfContents
+                  key={fetchedContents}
+                  contents={fetchedContents}
+                />
+              )
             }}
           </Await>
         </Suspense>

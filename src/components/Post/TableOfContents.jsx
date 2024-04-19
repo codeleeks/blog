@@ -1,9 +1,8 @@
 import GithubSlugger from 'github-slugger'
 import { useEffect, useState } from 'react'
-import { gsap } from 'gsap'
-import ScrollToPlugin from 'gsap/ScrollToPlugin'
-
-gsap.registerPlugin(ScrollToPlugin)
+import TableOfContentsItem from './TableOfContentsItem'
+import { useDispatch } from 'react-redux'
+import { setIntersectionObserver } from '../../store/post-store'
 
 function getTableOfContents(contents) {
   const slugger = new GithubSlugger()
@@ -36,38 +35,48 @@ function getTableOfContents(contents) {
   }))
 }
 export default (props) => {
-  const [tableOfContents, setTableOfContents] = useState([])
   const { contents } = props
-
+  const tableOfContents = getTableOfContents(contents)
   useEffect(() => {
-    setTableOfContents(getTableOfContents(contents))
-  }, [contents])
+    const headingItemEls = Array.from(
+      document.querySelectorAll('.post-page aside ul li')
+    )
+    // console.log(document.querySelector('.post-page aside ul li'))
+    // console.log(headingItemEls)
+    const slugToAnchor = headingItemEls.reduce((acc, el) => {
+      const slug = el.querySelector('a').getAttribute('href').slice(1)
+      return { ...acc, [slug]: el }
+    }, {})
 
-  const clickHandler = (e) => {
-    e.preventDefault()
+    const io = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.intersectionRatio > 0) {
+          slugToAnchor[entry.target.id].classList.add('visible')
+        } else {
+          slugToAnchor[entry.target.id].classList.remove('visible')
+        }
+      })
+    })
 
-    const slug = e.target.attributes.href.value
-    console.log(slug)
-    gsap.to(window, { duration: 1, scrollTo: {
-      y: slug,
-      offsetY: 10
-    } })
-  }
+    const contentsHeadingEls = document
+      .querySelector('.post-page .post .contents')
+      .querySelectorAll('h1,h2,h3,h4,h5,h6')
+
+    // console.log(document.querySelector('.post-page .post .contents'))
+    // console.log(contentsHeadingEls)
+    contentsHeadingEls.forEach((el) => {
+      io.observe(el)
+    })
+  }, [])
 
   return (
-    <ul>
+    <>
       <h4>목차</h4>
-      {tableOfContents.map((heading) => {
-        return (
-          <li
-            key={heading.slug}
-            className={`heading-${heading.level}`}
-            onClick={clickHandler}
-          >
-            <a href={`#${heading.slug}`}>{heading.text}</a>
-          </li>
-        )
-      })}
-    </ul>
+      <ul>
+        {tableOfContents.map((heading) => {
+          return <TableOfContentsItem key={heading.slug} heading={heading} />
+        })}
+      </ul>
+    </>
   )
 }

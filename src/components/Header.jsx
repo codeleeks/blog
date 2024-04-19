@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import avatarImg from '../assets/avatar.png'
+import codepenImg from '../assets/codepen.png'
 import Icon from './UI/Icon'
 export default (props) => {
   return (
@@ -45,6 +46,10 @@ export default (props) => {
             </g>
           </svg>
         </a>
+        <a href='https://codepen.io/kasong-lee' target='_blank' className='codepen'>
+          <img src={codepenImg} alt='codepen icon' />
+        </a>
+
         <Icon>search</Icon>
       </div>
     </header>
