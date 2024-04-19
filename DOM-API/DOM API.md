@@ -1,12 +1,12 @@
 ---
 summary: DOM API의 정의와 개발시 유용한 로직을 살펴봅니다.
-date: 2024-01-21
+date: 2024-04-19
 ---
 
 # DOM API
-- Document Object Model API
-  - document에 들어 있는 오브젝트 모델
-  - 오브젝트 모델: 블록, 인라인, 인라인-블록 요소를 의미.
+Document Object Model API의 축약어이다.
+DOM이란 html document에 들어 있는 오브젝트 모델을 의미한다.
+오브젝트 모델이란 블록, 인라인, 인라인-블록 요소 등 화면에 배치되는 요소들의 특성을 정의한다.
 
 ## 요소 한 개 찾기
 
