@@ -56,7 +56,5 @@ async function fetchPost(postPath) {
 }
 
 export async function loader({ params }) {
-  console.log(params)
-
   return await fetchPost(params.path)
 }

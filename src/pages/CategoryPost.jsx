@@ -30,7 +30,6 @@ export default function CategoryPostPage(props) {
               return (
                 <section>
                   {Object.entries(fetchedPosts).map(([category, posts]) => {
-                    console.log(category, posts)
                     return (
                       <PostsNavigation
                         key={category}

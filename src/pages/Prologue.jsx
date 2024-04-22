@@ -11,8 +11,6 @@ export default function ProloguePage(props) {
     <Suspense fallback={<LoadingIndicator />}>
       <Await resolve={posts} errorElement={<AsyncError />}>
         {(fetchedPosts) => {
-          console.log(fetchedPosts)
-
           const allPosts = Object.values(fetchedPosts).flatMap((category) => [
             ...category,
           ])

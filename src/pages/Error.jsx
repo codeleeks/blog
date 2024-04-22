@@ -7,10 +7,6 @@ export default function ErrorPage() {
   let title = 'Error occurred!'
   let message = 'something went wrong'
 
-  console.log(error)
-  console.log(JSON.parse(error.message))
-  console.log(isRouteErrorResponse(error))
-
   if (error.status === 404) {
     title = 'Not found!'
     message = 'Could not find resource or page.'

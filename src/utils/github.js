@@ -220,7 +220,6 @@ const updateGithubBranchRef = async (
 // Github Dir Read API
 export async function fetchRepositoryPosts() {
   const { token, owner, repo, branch } = config
-  console.log(token)
   const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=true`
 
   const resp = await fetch(url, {

@@ -300,14 +300,14 @@ main {
 
   display: flex;
   justify-content: space-between;
-  $spacing: 10px;
+  --spacing: 10px;
   flex-grow: 1;
   align-items: flex-start;
 
   nav {
     @include scrollY;
     flex-shrink: 0;
-    padding: 30px $spacing;
+    padding: 30px var(--spacing);
     position: sticky;
     top: 0;
     left: 0;
@@ -340,19 +340,19 @@ main {
     }
   }
   .post {
-    $title-font-size: 50px;
+    --title-font-size: 50px;
     @media (max-width: $media-small) {
-      $title-font-size: 35px;
-      $contents-width: 350px;
-      $spacing: 1px;
+      --title-font-size: 35px;
+      --contents-width: 350px;
+      --spacing: 1px;
     }
 
     flex-grow: 1;
-    max-width: $contents-width;
-    padding: 20px #{$spacing * 6};
+    max-width: var(--contents-width);
+    padding: 20px calc(var(--spacing) * 6);
 
     h1.title {
-      font-size: $title-font-size;
+      font-size: var(--title-font-size);
       color: var(--font-title-color-bright);
       line-height: 1.5;
     }
@@ -389,7 +389,7 @@ main {
   aside {
     @include scrollY;
     box-sizing: border-box;
-    padding: 20px #{$spacing * 2};
+    padding: 20px calc(var(--spacing) * 2);
     flex-shrink: 0;
     position: sticky;
     top: 10px;
@@ -398,8 +398,8 @@ main {
 
     h4 {
       line-height: 1.2;
-      padding-bottom: $spacing;
-      margin-bottom: $spacing;
+      padding-bottom: var(--spacing);
+      margin-bottom: var(--spacing);
       border-bottom: 1px solid rgba(255, 255, 255, 0.4);
     }
     ul {
