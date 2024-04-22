@@ -1,16 +1,7 @@
 ---
-title: "DOM 검색"
-categories:
-  - study
-tags:
-  - html
-  - css
-  - javascript
-  - typescript
+description: DOM 검색 API를 정리합니다.
+date: 2024-04-22
 ---
-
-# DOM 검색
-
 ## document.getElementById
 - html id 속성 값으로 요소를 반환
 - 여러 요소가 검색되면 가장 먼저 찾은 요소만 반환
