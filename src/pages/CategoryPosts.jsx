@@ -5,13 +5,14 @@ import { Suspense } from 'react'
 import LoadingIndicator from '../components/UI/LoadingIndicator'
 import PreviewPosts from '../components/PreviewPosts'
 import { throwErrorJsonIfError } from '../utils/loader-error'
+import AsyncError from './AsyncError'
 export default function CategoryPostsPage(props) {
   const { posts } = useLoaderData()
   const { category } = useParams()
   return (
     <section className='category-posts'>
       <h2>{category}</h2>
-      <Suspense fallback={<LoadingIndicator />}>
+      <Suspense fallback={<LoadingIndicator />} errorElement={<AsyncError />}>
         <Await resolve={posts}>
           {(fetchedPosts) => {
             return <PreviewPosts posts={fetchedPosts} />
@@ -24,7 +25,6 @@ export default function CategoryPostsPage(props) {
 
 async function fetchPosts(category) {
   const allPosts = await fetchRepositoryPosts()
-  throwErrorJsonIfError(allPosts)
   return allPosts[category]
 }
 

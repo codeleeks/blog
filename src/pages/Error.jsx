@@ -1,31 +1,27 @@
 import { useEffect, useState } from 'react'
-import { useRouteError } from 'react-router-dom'
+import { isRouteErrorResponse, useRouteError } from 'react-router-dom'
 import { decode } from 'html-entities'
 
 export default function ErrorPage() {
   const error = useRouteError()
   let title = 'Error occurred!'
+  let message = 'something went wrong'
 
-  const [message, setMessage] = useState('something went wrong')
-  useEffect(() => {
-    async function handleError() {
-      if (error?.json) {
-        const message = await error.json()
-        setMessage(decode(message))
-      }
-    }
-
-    handleError()
-  }, [error])
+  console.log(error)
+  console.log(JSON.parse(error.message))
+  console.log(isRouteErrorResponse(error))
 
   if (error.status === 404) {
-    title = 'could not fetch page or resource'
+    title = 'Not found!'
+    message = 'Could not find resource or page.'
   }
-
+  if (isRouteErrorResponse(error) && error.status === 500) {
+    message = error.data.message
+  }
   return (
     <section className='error'>
       <h2>{title}</h2>
-      <p>{message}</p>
+      <p>{decode(message)}</p>
     </section>
   )
 }

@@ -1,8 +1,6 @@
 import GithubSlugger from 'github-slugger'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import TableOfContentsItem from './TableOfContentsItem'
-import { useDispatch } from 'react-redux'
-import { setIntersectionObserver } from '../../store/post-store'
 
 function getTableOfContents(contents) {
   const slugger = new GithubSlugger()

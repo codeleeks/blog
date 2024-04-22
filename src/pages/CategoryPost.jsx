@@ -13,6 +13,7 @@ import PostsNavigation from '../components/Post/PostsNavigation'
 
 import 'highlight.js/styles/github-dark-dimmed.min.css'
 import PostContents from '../components/Post/PostContents'
+import AsyncError from './AsyncError'
 
 export default function CategoryPostPage(props) {
   const { category, postFileName } = useParams()
@@ -24,7 +25,7 @@ export default function CategoryPostPage(props) {
     <section className='post-page'>
       <nav>
         <Suspense fallback={<LoadingIndicator />}>
-          <Await resolve={posts}>
+          <Await resolve={posts} errorElement={<AsyncError />}>
             {(fetchedPosts) => {
               return (
                 <section>
@@ -73,7 +74,6 @@ export default function CategoryPostPage(props) {
 
 async function fetchPosts() {
   const allPosts = await fetchRepositoryPosts()
-  throwErrorJsonIfError(allPosts)
   return allPosts
 }
 

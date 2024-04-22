@@ -1,5 +1,4 @@
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
-import { Provider } from 'react-redux'
 
 import RootPage from './pages/Root'
 import ErrorPage from './pages/Error'
@@ -10,7 +9,6 @@ import ProloguePage, { loader as fetchPostsLoader } from './pages/Prologue'
 import CategoryPostPage, {
   loader as fetchPostLoader,
 } from './pages/CategoryPost'
-import { store } from './store/store.js'
 
 const router = createBrowserRouter([
   {
@@ -43,11 +41,7 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  return (
-    <Provider store={store}>
-      <RouterProvider router={router}></RouterProvider>
-    </Provider>
-  )
+  return <RouterProvider router={router}></RouterProvider>
 }
 
 export default App

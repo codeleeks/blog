@@ -220,38 +220,36 @@ const updateGithubBranchRef = async (
 // Github Dir Read API
 export async function fetchRepositoryPosts() {
   const { token, owner, repo, branch } = config
+  console.log(token)
   const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=true`
-  try {
-    const resp = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${token}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-    })
-    if (!resp.ok) {
-      throwErrorJson(resp.status, 'could not fetch repository&apos;s trees')
-    }
 
-    const { tree } = await resp.json()
-
-    const postTree = tree
-      .filter((tree) => tree.mode === '040000')
-      .reduce((acc, cur) => {
-        acc[cur.path] = [
-          ...tree.filter(
-            (tree) =>
-              tree.mode === '100644' && tree.path.startsWith(cur.path + '/')
-          ),
-        ]
-        return acc
-      }, {})
-
-    return postTree
-  } catch (err) {
-    return JSON.parse(err.message)
+  const resp = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${token}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  })
+  if (!resp.ok) {
+    throwErrorJson(resp.status, 'could not fetch repository&apos;s trees')
   }
+
+  const { tree } = await resp.json()
+
+  const postTree = tree
+    .filter((tree) => tree.mode === '040000')
+    .reduce((acc, cur) => {
+      acc[cur.path] = [
+        ...tree.filter(
+          (tree) =>
+            tree.mode === '100644' && tree.path.startsWith(cur.path + '/')
+        ),
+      ]
+      return acc
+    }, {})
+
+  return postTree
 }
 
 // Github File Contents Read API
@@ -263,26 +261,23 @@ export async function fetchRepositoryFileContents(path) {
   }
 
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`
-  try {
-    const resp = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/vnd.github.raw+json',
-        Authorization: `Bearer ${token}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-    })
 
-    if (!resp.ok) {
-      throwErrorJson(resp.status, 'could not fetch file contents')
-    }
+  const resp = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/vnd.github.raw+json',
+      Authorization: `Bearer ${token}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  })
 
-    const content = new TextDecoder().decode(
-      new Uint8Array(await resp.arrayBuffer())
-    )
-
-    return content
-  } catch (err) {
-    return JSON.parse(err.message)
+  if (!resp.ok) {
+    throwErrorJson(resp.status, 'could not fetch file contents')
   }
+
+  const content = new TextDecoder().decode(
+    new Uint8Array(await resp.arrayBuffer())
+  )
+
+  return content
 }
