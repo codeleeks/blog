@@ -1,17 +1,12 @@
 ---
-title: "DOM 생성, 수정, 삭제"
-categories:
-  - study
-tags:
-  - html
-  - css
-  - javascript
-  - typescript
+summary: DOM 생성, 수정, 삭제에 대해 정리합니다.
+date: 2024-02-21
 ---
 
-# DOM 생성, 수정, 삭제
+#
 
 ## document.createElement
+
 - 메모리에만 존재하는 새 html 요소 생성
 
 ```javascript
@@ -19,6 +14,7 @@ const el = document.createElement('div')
 ```
 
 ## E.prepend / E.append
+
 - 노드를 요소의 첫 번째 혹은 마지막 자식으로 삽입
 
 ```javascript
@@ -30,6 +26,7 @@ parentEl.append(el)
 ```
 
 ## E.remove
+
 - 요소를 제거
 
 ```javascript
@@ -38,6 +35,7 @@ el.remove()
 ```
 
 ## E.insertAdjacentElement
+
 - 대상 요소의 지정한 위치에 새로운 요소를 삽입
 - 대상요소.insertAdjacentElement(위치, 새로운요소)
 
@@ -60,6 +58,7 @@ parentEl.insertAdjacentElement('beforebegin', el)
 ```
 
 ## N.insertBefore
+
 - 부모 노드의 자식인 참조 노드의 이전 형제에 새로운 노드를 삽입
 - 부모노드.insertBefore(노드, 참조노드)
 
@@ -73,6 +72,7 @@ parentEl.insertBefore(el, childEl)
 ```
 
 ## N.contains
+
 - 주어진 노드가 노드의 자신을 포함한 후손인지 확인
 - 노드.contains(주어진 노드)
 
@@ -84,34 +84,41 @@ console.log(document.body.contains(document.body)) //true
 ## N.textContent, E.innerHtml
 
 ## E.dataset
+
 - 요소의 각 'data-' 속성 값을 얻거나 저장
 
 ## E.tagName
+
 - 요소의 태그 이름을 대문자로 반환
 
 ## E.id
+
 - 요소의 id 속성을 얻거나 지정
 
 ## E.className
+
 - 요소의 클래스를 얻거나 지정
 - classList 사용 권장
 
 ## E.classList
+
 - 요소의 class 속성 값을 제어
 - add, remove, toggle, contains 제공
 
 ## E.style
+
 - 요소의 인라인 스타일의 CSS 속성값을 얻거나 지정
 - 꼭 필요할 때만 사용. 일반적인 경우에는 권장하지 않음
 
 ```javascript
 Object.assign(el.style, {
   width: '100px',
-  fontSize: '20px'
+  fontSize: '20px',
 })
 ```
 
 ## window.getComputedStyle
+
 - 요소에 적용된 스타일 객체를 반환
 
 ```javascript
@@ -119,7 +126,9 @@ const style = window.getComputedStyle(el)
 ```
 
 ## E.getAttribute / E.setAttribute
+
 - 요소에서 특정 속성을 얻거나 지정
 
 ## E.hasAttribute / E.removeAttribute
+
 - 요소에서 특정 속성을 확인하거나 제거

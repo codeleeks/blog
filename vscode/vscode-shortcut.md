@@ -1,12 +1,6 @@
 ---
-title: "vs code 단축키"
-categories:
-  - study
-tags:
-  - html
-  - css
-  - javascript
-  - typescript
+summary: VSCODE 단축키 모음
+date: 2024-01-19
 ---
 
 # 단축키
@@ -19,18 +13,22 @@ tags:
 - ctrl + alt + f = 찾은 텍스트 바꾸기
 
 ##
+
 - alt + up = 해당 줄이 위로 이동
 - alt + down = 해당 줄이 아래로 이동
 - alt + shift + down = 해당 줄을 아래에 복붙
 - alt + shift + up = 해당 줄을 위에 복붙
 
 ##
+
 - shift + tab = 내어쓰기
 
 ##
+
 - ctrl + / = 주석
 
 ##
+
 - ctrl + \ = 창 분할하여 탭 복제
 - ctrl + shift + [ : 이전 탭으로 이동
 - ctrl + shift + ] : 다음 탭으로 이동

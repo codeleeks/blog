@@ -1,12 +1,6 @@
 ---
-title: "SWIPER"
-categories:
-  - study
-tags:
-  - html
-  - css
-  - javascript
-  - typescript
+summary: SWIPER 라이브러리를 사용하기 위한 quickstart 코드!
+date: 2024-01-26
 ---
 
 # SWIPER
@@ -15,6 +9,7 @@ tags:
 - 다양한 슬라이드 UI를 구현할 수 있도록 제공.
 
 ## quickstart
+
 - https://swiperjs.com/get-started#use-swiper-from-cdn 에서 link와 script 복사하여 프로젝트에 붙여넣기.
 - swiper > swiper-wrapper > swiper-slide 형태로 요소 작성.
 
@@ -33,16 +28,17 @@ tags:
 ```
 
 ## new Swiper()
-- ```new Swiper(swiper 클래스, 옵션)```
-- ```class="swiper"```를 갖는 요소를 가져와 옵션으로 슬라이드 정의.
+
+- `new Swiper(swiper 클래스, 옵션)`
+- `class="swiper"`를 갖는 요소를 가져와 옵션으로 슬라이드 정의.
 
 ```javascript
 //수직방향으로 자동재생 및 무한재생하는 슬라이드 정의.
 new Swiper('.notice-line .swiper', {
   direction: 'vertical',
   autoplay: true,
-  loop: true
-});
+  loop: true,
+})
 ```
 
 ```javascript
