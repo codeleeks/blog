@@ -261,15 +261,95 @@ main {
 .prologue-posts {
   margin-top: 20px;
   margin-bottom: 16px;
-  border-radius: var(--main-border-radius);
   padding: 0 5px;
 
-  .header {
-    font-family: var(--title-font);
-    font-size: 22px;
-    font-weight: 700;
-    font-style: italic;
-    line-height: 2;
+  // Hero
+  figure {
+    --spacing: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 50px;
+    .canvas {
+      width: 100%;
+      height: clamp(300px, 50vw, 1000px);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-image: url('./assets/행복한나.jpg');
+      border-radius: var(--main-border-radius);
+      overflow: hidden;
+      position: relative;
+
+      @mixin twinkle($width: 3) {
+        top: percentage(calc(random(100) / 100));
+        left: percentage(calc(random(100) / 100));
+        width: 10px + random($width);
+        height: 10px + random($width);
+        opacity: random();
+      }
+
+      @mixin twinkles {
+      }
+      // star의 공통 속성
+      & > .star {
+        position: absolute;
+        border-radius: 50%;
+        background-color: rgb(255, 193, 200);
+
+        //star의 개별 속성
+        $width: 3;
+        @for $i from 1 through 200 {
+          &:nth-child(#{$i}) {
+            animation-name: twinkling#{$i};
+            animation-delay: random() + s;
+            animation-duration: random() + 5s;
+            animation-iteration-count: infinite;
+
+            @keyframes twinkling#{$i} {
+              0% {
+                top: percentage(calc(random(100) / 100));
+                left: percentage(calc(random(100) / 100));
+                width: 10px + random($width);
+                height: 10px + random($width);
+                opacity: random();
+              }
+              100% {
+                opacity: random();
+              }
+            }
+          }
+        }
+      }
+    }
+    img {
+      width: 100%;
+      object-fit: cover;
+      border-radius: var(--main-border-radius);
+    }
+    figcaption {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      text-align: center;
+      font-family: var(--title-font);
+      h2 {
+        font-size: 30px;
+      }
+      blockquote {
+        line-height: 1.5;
+        text-transform: uppercase;
+        .happy {
+          color: #ffff22;
+        }
+        .healthy {
+          color: var(--highlight-color);
+        }
+        .realistic {
+          color: #c170ff;
+        }
+      }
+    }
   }
 }
 .error {
