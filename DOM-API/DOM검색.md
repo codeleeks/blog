@@ -1,6 +1,7 @@
 ---
 summary: DOM 검색 API를 정리합니다.
 date: 2024-04-22
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/DOM-API/DOM검색/title.png'
 ---
 
 ## document.getElementById
