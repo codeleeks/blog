@@ -1,6 +1,7 @@
 ---
 summary: lodash 라이브러리를 사용하기 위한 quickstart 코드!
 date: 2024-01-26
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/libraries/lodash/title.png'
 ---
 
 # lodash
