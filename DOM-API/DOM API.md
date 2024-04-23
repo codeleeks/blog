@@ -1,6 +1,7 @@
 ---
 summary: DOM API의 정의와 개발시 유용한 로직을 살펴봅니다.
 date: 2024-04-19
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/7170ea038bc9f650bac8e6a9e572b8448ca7369d/DOM-API/DOM%20API/title.svg'
 ---
 
 # DOM API
