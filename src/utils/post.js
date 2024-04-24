@@ -97,3 +97,19 @@ export function skipMetadata(contents) {
 
   return contents.slice(metadata.length + 8)
 }
+
+export function extractTitleImage(contents) {
+    const { found, metadata } = findMetadataArea(contents)
+    if (!found) {
+      return contents
+    }
+
+    const pattern = /(?<=title\-image\:\s*\').+(?=\'\s)/m
+    const titleImage = metadata.match(pattern)    
+    console.log(titleImage)
+    if (titleImage) {
+      return titleImage[0]
+    }
+
+    return titleImage
+}

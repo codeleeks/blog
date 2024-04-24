@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, json } from 'react-router-dom'
 import Card from './UI/Card'
 import { fetchRepositoryFileContents } from '../utils/github'
-import { extractDate, extractSummary, extractTitle } from '../utils/post'
+import { extractDate, extractSummary, extractTitle, extractTitleImage } from '../utils/post'
 
 export default (props) => {
   const { post } = props
@@ -22,10 +22,11 @@ export default (props) => {
   const title = extractTitle(post.path)
   const date = extractDate(contents)
   const summary = extractSummary(contents)
+  const titleImage = extractTitleImage(contents)
 
   return (
     <Link to={post.path} key={post.path}>
-      <Card title={title} date={date}>{summary}</Card>
+      <Card imgSrc={titleImage} title={title} date={date}>{summary}</Card>
     </Link>
   )
 }

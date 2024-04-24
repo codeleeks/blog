@@ -121,12 +121,13 @@ li {
 
 .card {
   @include brightenOnHover(0.9);
+  --card-height: 350px;
   color: var(--font-title-color);
   box-sizing: border-box;
   padding: 8px;
   border-radius: 10px;
   box-shadow: 0 0 2px 0 rgba(255, 255, 255, 0.7);
-  height: 350px;
+  height: var(--card-height);
   &:hover {
     box-shadow: 0 0 2px 0 rgba(255, 255, 255, 1);
   }
@@ -137,6 +138,13 @@ li {
     gap: 5px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
+    img {
+      height: calc(var(--card-height) * .6);
+      object-fit: cover;
+      object-position: left;
+      border-radius: var(--main-border-radius);
+      box-shadow: 0 0 8px 0 rgb(255, 193, 200, .7);
+    }
     h3 {
       font-family: var(--title-font);
       font-size: 22px;
