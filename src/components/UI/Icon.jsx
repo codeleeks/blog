@@ -1,4 +1,4 @@
 export default (props) => {
-  const {children} = props
-  return <span className='icon material-symbols-outlined'>{children}</span>
+  const {className, children} = props
+  return <span className={`icon material-icons ${className}`}>{children}</span>
 }

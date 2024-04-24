@@ -139,11 +139,11 @@ li {
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
     img {
-      height: calc(var(--card-height) * .6);
+      height: calc(var(--card-height) * 0.6);
       object-fit: cover;
       object-position: left;
       border-radius: var(--main-border-radius);
-      box-shadow: 0 0 8px 0 rgb(255, 193, 200, .7);
+      box-shadow: 0 0 8px 0 rgb(255, 193, 200, 0.7);
     }
     h3 {
       font-family: var(--title-font);
@@ -451,6 +451,63 @@ main {
       object-position: top left;
       border-radius: var(--main-border-radius);
       box-shadow: 0 0 10px 0 var(--highlight-color-8);
+    }
+
+    .message-box {
+      --spacing: 3em;
+      --font-color: #121212;
+      --background-color: #b7d8ae;
+      --border-color: #007936;
+      --icon-url: url('https://raw.githubusercontent.com/google/material-design-icons/9beae745bb758f3ad56654fb377ea5cf62be4915/src/action/info/materialicons/24px.svg');
+      --icon-background-color: var(--border-color);
+
+      &.warning {
+        --background-color: #fef6d5;
+        --border-color: #e86e30;
+        --icon-url: url('https://raw.githubusercontent.com/google/material-design-icons/9beae745bb758f3ad56654fb377ea5cf62be4915/src/alert/warning/materialicons/24px.svg');
+      }
+
+      box-sizing: content-box;
+      position: relative;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: flex-start;
+
+      background-color: var(--background-color);
+      border-left: 4px solid var(--border-color);
+      border-top-right-radius: var(--main-border-radius);
+      border-bottom-right-radius: var(--main-border-radius);
+      padding: 1em 1em 1em var(--spacing);
+      margin: 20px 0;
+
+      * {
+        color: var(--font-color);
+      }
+
+      p {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        align-items: flex-start;
+      }
+
+      &::before {
+        --width: 24px;
+        content: '';
+        display: block;
+        width: var(--width);
+        height: 24px;
+        mask-image: var(--icon-url);
+        mask-repeat: no-repeat;
+        mask-position: center;
+        mask-size: contain;
+        background-color: var(--icon-background-color);
+        position: absolute;
+        left: calc(var(--spacing) / 2 - (var(--width) / 2));
+        top: 1em;
+      }
     }
 
     .contents {
