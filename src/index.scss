@@ -444,6 +444,14 @@ main {
       color: var(--font-title-color-bright);
       line-height: 1.5;
     }
+    img.title-image {
+      width: 100%;
+      height: 350px;
+      object-fit: cover;
+      object-position: top left;
+      border-radius: var(--main-border-radius);
+      box-shadow: 0 0 10px 0 var(--highlight-color-8);
+    }
 
     .contents {
       @for $i from 1 to 6 {
