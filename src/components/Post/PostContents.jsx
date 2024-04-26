@@ -3,7 +3,6 @@ import rehypeHighlight from 'rehype-highlight'
 import rehypeSlug from 'rehype-slug'
 import rehypeRaw from 'rehype-raw'
 import { extractTitleImage, skipMetadata } from '../../utils/post'
-import MessageBox from './MessageBox'
 import {
   extractTitle,
   extractLevel,
