@@ -90,7 +90,7 @@ export function extractDate(contents) {
 }
 
 export function skipMetadata(contents) {
-  const {found, metadata} = findMetadataArea(contents)
+  const { found, metadata } = findMetadataArea(contents)
   if (!found) {
     return contents
   }
@@ -99,17 +99,16 @@ export function skipMetadata(contents) {
 }
 
 export function extractTitleImage(contents) {
-    const { found, metadata } = findMetadataArea(contents)
-    if (!found) {
-      return contents
-    }
+  const { found, metadata } = findMetadataArea(contents)
+  if (!found) {
+    return contents
+  }
 
-    const pattern = /(?<=title\-image\:\s*\').+(?=\'\s)/m
-    const titleImage = metadata.match(pattern)    
-    console.log(titleImage)
-    if (titleImage) {
-      return titleImage[0]
-    }
+  const pattern = /(?<=title\-image\:\s*\').+(?=\'\s)/m
+  const titleImage = metadata.match(pattern)
+  if (titleImage) {
+    return titleImage[0]
+  }
 
-    return titleImage
+  return titleImage
 }

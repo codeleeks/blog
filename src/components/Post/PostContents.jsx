@@ -4,21 +4,41 @@ import rehypeSlug from 'rehype-slug'
 import rehypeRaw from 'rehype-raw'
 import { extractTitleImage, skipMetadata } from '../../utils/post'
 import MessageBox from './MessageBox'
+import {
+  extractTitle,
+  extractLevel,
+  extractBody,
+  findAllMessageBoxArea,
+} from '../../utils/messagebox'
+
+function replaceMessagebox(skipped) {
+  let replaced = skipped
+  for (const messageBoxArea of findAllMessageBoxArea(skipped)) {
+    const level = extractLevel(messageBoxArea.str)
+    const title = extractTitle(messageBoxArea.str)
+    const body = extractBody(messageBoxArea.str)
+
+    replaced = replaced.replace(
+      messageBoxArea.str,
+      `<div class='message-box ${level}'>
+        <h5 class='message-title'>${title}</h5>
+        <p class='message-contents'>${body}</p>
+      </div>`
+    )
+  }
+
+  return replaced
+}
 
 export default (props) => {
   const { title, contents } = props
   const titleImg = extractTitleImage(contents)
+  const skipped = skipMetadata(contents)
+  const replaced = replaceMessagebox(skipped)
   return (
     <>
       <h1 className='title'>{title}</h1>
       <img src={titleImg} alt={title} className='title-image' />
-      <MessageBox title='Good News!' level='warning'>
-        <span>
-          The page you requested doesn't exist in Korean but it exists in
-          English
-        </span>
-        <a href='codeleeks.github.io/blog'>Go to my blog~</a>
-      </MessageBox>
       <Markdown
         rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeSlug]}
         className='contents'
@@ -34,7 +54,7 @@ export default (props) => {
           },
         }}
       >
-        {skipMetadata(contents)}
+        {replaced}
       </Markdown>
     </>
   )
