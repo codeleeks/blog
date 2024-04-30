@@ -105,3 +105,20 @@ text-overflow: ellipsis '[...]';
 메시지 유형(레벨)을 나타내는 아이콘과 제목 부분 높이를 맞추는 게 핵심이다.
 
 제목 부분은 `padding`으로 박스 내에서 위치를 잡았다. 아이콘은 `before` 가상클래스를 사용하고, `absolute` 포지션을 통해 위치를 잡아 제목 부분과 높이를 맞췄다.
+
+### PostPage 만들기
+
+- `flex` 컨테이너 내의 아이템은 `sticky` 포지션이더라도 flex 영역을 차지함.
+- 반응형을 위해 nav, aside 영역을 숨겨야 할 때, `translate`로 옮겨도 이전 영역을 차지하고 있음.
+- 방법은 `fixed`로 flex 밖으로 벗어나 버린다.
+- `sticky` 영역은 블록 쌓임 맥락을 지키면서 위치를 잡는다. 상위에 블록 요소가 있을 때 그 height의 밑에 쌓이게 된다. 스크롤 요소가 body이고 `top: 0`으로 잡아도 상위 블록 요소의 height 위치에 자리잡는다.
+
+
+### navigation Toggling UI 만들기
+- nav 요소는 scroll-contents, toggler, bg 로 구성한다.
+- nav는 flex로 지정하여 각 자식 요소를 가로로 배치한다.
+- nav는 sticky, toggler는 absolute, bg는 fixed로 위치를 잡는다.
+- scroll-contents는 특정 화면 너비에 진입하면 ```translate(-100%, 0)```을 통해 화면 밖으로 이동하고(사라지고), nav는 fixed로 변경된다. 이에 따라 toggler는 nav의 위치 기준으로 위치를 변경한다.(최좌측)
+- toggler를 클릭하면 nav의 class에 ```nav--open```을 토글하여, scroll-contents가 ```translate(0,0)``` 을 통해 제자리로 돌아온다.
+  - 돌아올 때는 toggler가 바로 우측에 위치할 수 있도록 scroll-contents의 width를 지정해준다.
+- z-index는 쌓임 맥락에 따라 bg가 다른 요소를 흐림 처리할 수 있도록 적당히 지정한다.

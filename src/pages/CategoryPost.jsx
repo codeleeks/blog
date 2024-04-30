@@ -14,36 +14,23 @@ import PostsNavigation from '../components/Post/PostsNavigation'
 import 'highlight.js/styles/github-dark-dimmed.min.css'
 import PostContents from '../components/Post/PostContents'
 import AsyncError from './AsyncError'
+import PostsNavigationContents from '../components/Post/PostsNavigationContents'
 
 export default function CategoryPostPage(props) {
   const { category, postFileName } = useParams()
   const { contents, posts } = useLoaderData()
 
   const title = extractTitle(`${category}/${postFileName}`)
-
+  console.log('recalled!')
   return (
     <section className='post-page'>
-      <nav>
+      <PostsNavigation>
         <Suspense fallback={<LoadingIndicator />}>
           <Await resolve={posts} errorElement={<AsyncError />}>
-            {(fetchedPosts) => {
-              return (
-                <section>
-                  {Object.entries(fetchedPosts).map(([category, posts]) => {
-                    return (
-                      <PostsNavigation
-                        key={category}
-                        category={category}
-                        posts={posts}
-                      />
-                    )
-                  })}
-                </section>
-              )
-            }}
+            <PostsNavigationContents />
           </Await>
         </Suspense>
-      </nav>
+      </PostsNavigation>
       <section className='post'>
         <Suspense fallback={<LoadingIndicator />}>
           <Await resolve={contents}>

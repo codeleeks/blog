@@ -1,22 +1,29 @@
-import { NavLink } from "react-router-dom"
-import { extractTitle } from '../../utils/post'
-
+import { useState } from 'react'
+import Icon from '../UI/Icon'
 
 export default (props) => {
-  const {category, posts} = props
+  const { children } = props
+  const [isOpen, setIsOpen] = useState(false)
+
+  const navToggleHandler = () => {
+    setIsOpen((prevIsOpen) => !prevIsOpen)
+    document.body.classList.toggle('nav--open')
+  }
+
+  const navCloseHandler = (e) => {
+    setIsOpen(false)
+    document.body.classList.remove('nav--open')
+  }
 
   return (
-    <article>
-      <h5>{category}</h5>
-      <ul>
-        {posts.map((post) => (
-          <li key={post.sha}>
-            <NavLink to={`${import.meta.env.BASE_URL}/${post.path}`}>
-              {extractTitle(post.path)}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
-    </article>
+    <nav className={isOpen ? 'nav--open' : ''}>
+      <div className='nav__scroll-area'>
+        <div className='nav__contents-area'>{children}</div>
+      </div>
+      <div className='nav-toggler' onClick={navToggleHandler}>
+        <Icon>menu</Icon>
+      </div>
+      <div className='nav-bg' onClick={navCloseHandler}></div>
+    </nav>
   )
 }
