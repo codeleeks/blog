@@ -4,8 +4,6 @@ date: 2024-02-21
 title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/DOM-API/DOM%EC%83%9D%EC%84%B1%2C%EC%88%98%EC%A0%95%2C%EC%82%AD%EC%A0%9C/title.png'
 ---
 
-#
-
 ## document.createElement
 
 - 메모리에만 존재하는 새 html 요소 생성
