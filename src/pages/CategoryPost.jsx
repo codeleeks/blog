@@ -3,8 +3,7 @@ import {
   fetchRepositoryFileContents,
   fetchRepositoryPosts,
 } from '../utils/github'
-import { throwErrorJsonIfError } from '../utils/loader-error'
-import { Suspense, useEffect } from 'react'
+import { Suspense } from 'react'
 import LoadingIndicator from '../components/UI/LoadingIndicator'
 import { extractTitle } from '../utils/post'
 
@@ -15,13 +14,13 @@ import 'highlight.js/styles/github-dark-dimmed.min.css'
 import PostContents from '../components/Post/PostContents'
 import AsyncError from './AsyncError'
 import PostsNavigationContents from '../components/Post/PostsNavigationContents'
+import TableOfContentsContents from '../components/Post/TableOfContentsContents'
 
 export default function CategoryPostPage(props) {
   const { category, postFileName } = useParams()
   const { contents, posts } = useLoaderData()
 
   const title = extractTitle(`${category}/${postFileName}`)
-  console.log('recalled!')
   return (
     <section className='post-page'>
       <PostsNavigation>
@@ -40,20 +39,13 @@ export default function CategoryPostPage(props) {
           </Await>
         </Suspense>
       </section>
-      <aside>
+      <TableOfContents>
         <Suspense fallback={<LoadingIndicator />}>
           <Await resolve={contents}>
-            {(fetchedContents) => {
-              return (
-                <TableOfContents
-                  key={fetchedContents}
-                  contents={fetchedContents}
-                />
-              )
-            }}
+            <TableOfContentsContents key={contents}/>
           </Await>
         </Suspense>
-      </aside>
+      </TableOfContents>
     </section>
   )
 }

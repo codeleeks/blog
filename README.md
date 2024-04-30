@@ -122,3 +122,11 @@ text-overflow: ellipsis '[...]';
 - toggler를 클릭하면 nav의 class에 ```nav--open```을 토글하여, scroll-contents가 ```translate(0,0)``` 을 통해 제자리로 돌아온다.
   - 돌아올 때는 toggler가 바로 우측에 위치할 수 있도록 scroll-contents의 width를 지정해준다.
 - z-index는 쌓임 맥락에 따라 bg가 다른 요소를 흐림 처리할 수 있도록 적당히 지정한다.
+
+### anchor를 통한 heading 이동시 강조 애니메이션 추가
+- table of contents에서 특정 anchor 클릭시 상응하는 heading으로 스크롤한다.
+- 이 때, 해당 heading에 highlight 컬러를 씌워서 스크롤하는 목표가 해당 요소임을 보여준다.
+- component 내의 로컬 변수로 slug를 저장하려고 했으나 실패했다.
+  - useRef는 타이머를 잘 제거했지만, 문자열 변수는 이전 값을 제대로 저장하지 못했다.
+  - local 변수로도 처리할 수 없었다.
+- 전역 변수로 처리하여 이전 slug의 클래스를 제거했다.

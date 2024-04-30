@@ -526,6 +526,10 @@ main {
       @for $i from 1 to 6 {
         h#{$i} {
           margin-top: calc(40px - #{$i * 5}px);
+          transition: 1s;
+          &.active {
+            color: var(--highlight-color-8);
+          }
         }
       }
       ul {

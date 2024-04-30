@@ -3,7 +3,6 @@ import PostsNavigationItem from './PostsNavigationItem'
 
 export default (props) => {
   const fetchedPosts = useAsyncValue()
-  console.log('recalled')
   return (
     <div className='nav__contents'>
       {Object.entries(fetchedPosts).map(([category, posts]) => {
