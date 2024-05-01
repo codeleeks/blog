@@ -757,10 +757,6 @@ main {
         padding-left: var(--spacing);
         width: $nav-width;
 
-        .nav-toggler,
-        .nav__scroll-area {
-          z-index: 8;
-        }
         .nav-toggler {
           left: $nav-width;
         }

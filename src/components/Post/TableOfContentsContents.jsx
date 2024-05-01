@@ -37,8 +37,9 @@ export default (props) => {
   const contents = useAsyncValue()
   const tableOfContents = getTableOfContents(contents)
   useEffect(() => {
+    const postPageEl = document.querySelector('.post-page')
     const headingItemEls = Array.from(
-      document.querySelectorAll('.post-page aside ul li')
+      postPageEl.querySelectorAll('aside ul li')
     )
     // console.log(document.querySelector('.post-page aside ul li'))
     // console.log(headingItemEls)
@@ -49,6 +50,7 @@ export default (props) => {
 
     const io = new IntersectionObserver((entries, observer) => {
       entries.forEach((entry) => {
+        console.log(entry.target.id, slugToAnchor[entry.target.id])
         if (entry.intersectionRatio > 0) {
           slugToAnchor[entry.target.id].classList.add('visible')
         } else {
@@ -57,15 +59,24 @@ export default (props) => {
       })
     })
 
-    const contentsHeadingEls = document
-      .querySelector('.post-page .post .contents')
+    const contentsHeadingEls = postPageEl
+      .querySelector('.post .contents')
       .querySelectorAll('h1,h2,h3,h4,h5,h6')
 
     // console.log(document.querySelector('.post-page .post .contents'))
     // console.log(contentsHeadingEls)
     contentsHeadingEls.forEach((el) => {
-      io.observe(el)
+      if (
+        el.textContent &&
+        tableOfContents.some((heading) => heading.slug === el.id)
+      ) {
+        io.observe(el)
+      }
     })
+
+    return () => {
+      io.disconnect()
+    }
   }, [tableOfContents])
 
   return (

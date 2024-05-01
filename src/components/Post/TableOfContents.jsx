@@ -1,9 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { throttle } from 'lodash'
 import Icon from '../UI/Icon'
 
 export default (props) => {
   const { children } = props
   const [isOpen, setIsOpen] = useState()
+
+  useEffect(() => {
+    const handler = throttle(() => {
+      setIsOpen(false)
+      document.body.classList.remove('nav--open')
+    })
+
+    window.addEventListener('resize', handler)
+
+    return () => {
+      window.removeEventListener('resize', handler)
+    }
+  }, [])
 
   const toggleHandler = () => {
     setIsOpen((prevIsOpen) => !prevIsOpen)
@@ -11,7 +25,6 @@ export default (props) => {
   }
 
   const closeHandler = () => {
-    console.log('clicked')
     setIsOpen(false)
     document.body.classList.remove('toc--open')
   }
