@@ -166,9 +166,13 @@ li {
 .loading-indicator {
   position: fixed;
   top: 0;
+  bottom: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  right: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background-color: rgba(0, 0, 0, 0.2);
 
   &::before {
@@ -180,9 +184,6 @@ li {
     border-radius: 50%;
     width: 100px;
     height: 100px;
-    position: fixed;
-    top: 50%;
-    left: 50%;
     animation: loading 1s ease-in-out infinite;
   }
 
