@@ -6,7 +6,7 @@ export default (props) => {
   const { posts } = props
 
   return (
-    <section className={`prologue-posts`}>
+    <section className='prologue-posts inner'>
       <Hero />
       <PreviewPosts posts={posts} />
     </section>

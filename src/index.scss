@@ -46,10 +46,6 @@ body.toc--open {
 }
 
 // global mixin
-@mixin inner {
-  max-width: 88%;
-  margin: 0 auto;
-}
 @mixin brightenOnHover($initialOpacity: 0.4, $hoverOpacity: 1) {
   opacity: $initialOpacity;
   transition: opacity 0.4s;
@@ -201,9 +197,13 @@ li {
 }
 .posts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   column-gap: 30px;
   row-gap: 30px;
+}
+.inner {
+  max-width: 88%;
+  margin: 0 auto;
 }
 
 // Header
@@ -216,140 +216,148 @@ li {
 
   background-color: var(--background-color);
 
-  @include inner;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: var(--header-height);
-
-  a {
-    --px: 24px;
-
+  .main-header__contents {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    font-family: var(--title-font);
-    gap: 10px;
 
-    img {
-      width: var(--px);
-    }
-    h1 {
-      font-size: var(--px);
-      font-weight: 700;
-      text-transform: uppercase;
-      @include brightenOnHover(0.8);
-    }
-  }
+    height: var(--header-height);
 
-  .menu {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    li {
-      .image-icon {
-        width: 25px;
-        border-radius: 50%;
-        @include brightenOnHover;
-      }
-      .icon {
-        margin-left: 10px;
-        font-size: 25px;
-        @include brightenOnHover;
-      }
-      .menu__items__text {
-        display: none;
-      }
-    }
-  }
-  .menu-toggler {
-    display: none;
-  }
+    position: relative;
 
-  @media (max-width: 500px) {
-    .menu {
-      position: fixed;
-      top: var(--header-height);
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 9;
-
-      flex-direction: column;
-
-      background-color: var(--background-color);
-
-      visibility: hidden;
-      opacity: 0;
-
-      transform: translate(0, -10px);
-
-      transition: 0.4s;
-
-      li {
-        width: 100%;
-        padding: 5px 0;
-
-        border-bottom: 1px solid var(--border-color);
-
-        &:last-child {
-          border-bottom: none;
-        }
-        .image-icon {
-          width: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          cursor: pointer;
-          .menu__items__text {
-            display: inline;
-          }
-        }
-      }
-    }
-
-    .menu-toggler {
-      // absolute로 위치 잡는 자식이 있으면 width, height를 지정해야 함.
-      width: 48px;
-      height: 24px;
+    a {
+      --px: 24px;
 
       display: flex;
       align-items: center;
-      gap: 2px;
+      font-family: var(--title-font);
+      gap: 10px;
 
-      cursor: pointer;
+      img {
+        width: var(--px);
+      }
+      h1 {
+        font-size: var(--px);
+        font-weight: 700;
+        text-transform: uppercase;
+        @include brightenOnHover(0.8);
+      }
+    }
 
-      .menu-toggler__icons {
-        width: 100%;
-        height: 100%;
+    .menu {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      li {
+        .image-icon {
+          width: 25px;
+          border-radius: 50%;
+          @include brightenOnHover;
+        }
+        .icon {
+          margin-left: 10px;
+          font-size: 25px;
+          @include brightenOnHover;
+        }
+        .menu__items__text {
+          display: none;
+        }
+      }
+    }
+    .menu-toggler {
+      display: none;
+    }
+  }
+
+  @media (max-width: 500px) {
+    .main-header__contents {
+      .menu {
+        position: fixed;
+        top: var(--header-height);
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 9;
+
+        flex-direction: column;
+
+        background-color: var(--background-color);
+
+        visibility: hidden;
+        opacity: 0;
+
+        transform: translate(0, -10px);
+
+        transition: 0.4s;
+
+        li {
+          width: 100%;
+          padding: 5px 0;
+
+          border-bottom: 1px solid var(--border-color);
+
+          &:last-child {
+            border-bottom: none;
+          }
+          .image-icon {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            .menu__items__text {
+              display: inline;
+            }
+          }
+        }
+      }
+
+      .menu-toggler {
+        // absolute로 위치 잡는 자식이 있으면 width, height를 지정해야 함.
+        width: 48px;
+        height: 24px;
+
         display: flex;
         align-items: center;
-        .menu--open,
-        .menu--close {
-          position: absolute;
-          transition: 0.4s;
-        }
-        .menu--close {
-          visibility: hidden;
-          opacity: 0;
+        gap: 2px;
+
+        cursor: pointer;
+
+        .menu-toggler__icons {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          .menu--open,
+          .menu--close {
+            position: absolute;
+            transition: 0.4s;
+          }
+          .menu--close {
+            visibility: hidden;
+            opacity: 0;
+          }
         }
       }
     }
 
     &.--opened {
-      .menu {
-        visibility: visible;
-        opacity: 1;
-        transform: translate(0, 0);
-      }
-      .menu-toggler {
-        .menu-toggler__icons {
-          .menu--open {
-            visibility: hidden;
-            opacity: 0;
-          }
-          .menu--close {
-            visibility: visible;
-            opacity: 1;
+      .main-header__contents {
+        .menu {
+          visibility: visible;
+          opacity: 1;
+          transform: translate(0, 0);
+        }
+        .menu-toggler {
+          .menu-toggler__icons {
+            .menu--open {
+              visibility: hidden;
+              opacity: 0;
+            }
+            .menu--close {
+              visibility: visible;
+              opacity: 1;
+            }
           }
         }
       }
@@ -359,7 +367,6 @@ li {
 
 // main (wrapping outlet, footer)
 main {
-  @include inner;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -591,8 +598,6 @@ main {
   .post {
     --title-font-size: 60px;
     flex-grow: 1;
-    max-width: 88%;
-    margin: 0 auto;
     padding: 20px calc(var(--spacing) * 6);
 
     h1.title {
@@ -901,7 +906,6 @@ main {
 
 // Footer
 footer {
-  @include inner;
   margin-top: var(--footer-margin-top);
   padding-bottom: 10px;
   border-top: 1px solid;

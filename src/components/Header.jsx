@@ -16,45 +16,47 @@ export default (props) => {
 
   return (
     <header className={`main-header ${isMenuOpen ? '--opened' : ''}`}>
-      <Link to={import.meta.env.BASE_URL}>
-        <img src={avatarImg} alt='avatar of this blog' />
-        <h1>Codeleeks</h1>
-      </Link>
-      <ul className='menu'>
-        <li key='github'>
-          <ImageIcon
-            src={githubImg}
-            alt='github icon'
-            href='https://github.com/codeleeks/blog'
-          >
-            <span className='menu__items__text'>Github</span>
-          </ImageIcon>
-        </li>
-        <li key='linkedin'>
-          <ImageIcon
-            src={linkedinImg}
-            alt='linkedin icon'
-            href='https://www.linkedin.com/in/kasong-lee-17533b149'
-          >
-            <span className='menu__items__text'>LinkedIn</span>
-          </ImageIcon>
-        </li>
-        <li key='codepen'>
-          <ImageIcon
-            src={codepenImg}
-            alt='codepen icon'
-            href='https://codepen.io/kasong-lee'
-          >
-            <span className='menu__items__text'>Codepen</span>
-          </ImageIcon>
-        </li>
-      </ul>
-      <div className='menu-toggler' onClick={menuToggleHandler}>
-        <div className='menu-toggler__icons'>
-          <Icon className='menu--open'>menu</Icon>
-          <Icon className='menu--close'>close</Icon>
+      <div className='main-header__contents inner'>
+        <Link to={import.meta.env.BASE_URL}>
+          <img src={avatarImg} alt='avatar of this blog' />
+          <h1>Codeleeks</h1>
+        </Link>
+        <ul className='menu'>
+          <li key='github'>
+            <ImageIcon
+              src={githubImg}
+              alt='github icon'
+              href='https://github.com/codeleeks/blog'
+            >
+              <span className='menu__items__text'>Github</span>
+            </ImageIcon>
+          </li>
+          <li key='linkedin'>
+            <ImageIcon
+              src={linkedinImg}
+              alt='linkedin icon'
+              href='https://www.linkedin.com/in/kasong-lee-17533b149'
+            >
+              <span className='menu__items__text'>LinkedIn</span>
+            </ImageIcon>
+          </li>
+          <li key='codepen'>
+            <ImageIcon
+              src={codepenImg}
+              alt='codepen icon'
+              href='https://codepen.io/kasong-lee'
+            >
+              <span className='menu__items__text'>Codepen</span>
+            </ImageIcon>
+          </li>
+        </ul>
+        <div className='menu-toggler' onClick={menuToggleHandler}>
+          <div className='menu-toggler__icons'>
+            <Icon className='menu--open'>menu</Icon>
+            <Icon className='menu--close'>close</Icon>
+          </div>
+          <span>메뉴</span>
         </div>
-        <span>메뉴</span>
       </div>
     </header>
   )

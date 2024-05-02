@@ -30,7 +30,7 @@ export default function CategoryPostPage(props) {
           </Await>
         </Suspense>
       </PostsNavigation>
-      <section className='post'>
+      <section className='post inner'>
         <Suspense fallback={<LoadingIndicator />}>
           <Await resolve={contents}>
             {(fetchedContents) => {
