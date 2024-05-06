@@ -85,6 +85,7 @@
       font-size: var(--title-font-size);
       color: var(--font-title-color-bright);
       line-height: 1.5;
+      word-break: break-all;
     }
     img.title-image {
       width: 100%;

@@ -1,36 +1,13 @@
-import { useEffect, useState } from 'react'
-import { throttle } from 'lodash'
 import Icon from '../UI/Icon'
+import { useClassToggle } from '../../hooks/useClassToggle.js'
 
 export default (props) => {
   const { children } = props
-  const [isOpen, setIsOpen] = useState()
-
-  useEffect(() => {
-    const handler = throttle(() => {
-      setIsOpen(false)
-      document.body.classList.remove('nav--open')
-    })
-
-    window.addEventListener('resize', handler)
-
-    return () => {
-      window.removeEventListener('resize', handler)
-    }
-  }, [])
-
-  const toggleHandler = () => {
-    setIsOpen((prevIsOpen) => !prevIsOpen)
-    document.body.classList.toggle('toc--open')
-  }
-
-  const closeHandler = () => {
-    setIsOpen(false)
-    document.body.classList.remove('toc--open')
-  }
+  const className = 'toc--open'
+  const { isOpen, toggleHandler, closeHandler } = useClassToggle(className)
 
   return (
-    <aside className={isOpen ? 'toc--open' : ''}>
+    <aside className={isOpen ? className : ''}>
       <div className='toc-bg' onClick={closeHandler}></div>
       <div className='toc-toggler' onClick={toggleHandler}>
         <Icon>segment</Icon>

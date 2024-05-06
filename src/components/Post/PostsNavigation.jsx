@@ -1,41 +1,18 @@
-import { useEffect, useState } from 'react'
-import { throttle } from 'lodash'
 import Icon from '../UI/Icon'
+import {useClassToggle} from '../../hooks/useClassToggle'
 
 export default (props) => {
   const { children } = props
-  const [isOpen, setIsOpen] = useState(false)
-
-  useEffect(() => {
-    const handler = throttle(() => {
-      setIsOpen(false)
-      document.body.classList.remove('nav--open')
-    })
-
-    window.addEventListener('resize', handler)
-
-    return () => {
-      window.removeEventListener('resize', handler)
-    }
-  }, [])
-
-  const navToggleHandler = () => {
-    setIsOpen((prevIsOpen) => !prevIsOpen)
-    document.body.classList.toggle('nav--open')
-  }
-
-  const navCloseHandler = (e) => {
-    setIsOpen(false)
-    document.body.classList.remove('nav--open')
-  }
+  const className = 'nav--open'
+  const {isOpen, toggleHandler, closeHandler} = useClassToggle(className)
 
   return (
-    <nav className={isOpen ? 'nav--open' : ''}>
-      <div className='nav-bg' onClick={navCloseHandler}></div>
+    <nav className={isOpen ? className : ''}>
+      <div className='nav-bg' onClick={closeHandler}></div>
       <div className='nav__scroll-area'>
         <div className='nav__contents-area'>{children}</div>
       </div>
-      <div className='nav-toggler' onClick={navToggleHandler}>
+      <div className='nav-toggler' onClick={toggleHandler}>
         <Icon>menu</Icon>
       </div>
     </nav>

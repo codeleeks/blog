@@ -1,5 +1,3 @@
-import CopyableText from './UI/CopyableText'
-
 export default (props) => {
   return (
     <footer className='inner'>
