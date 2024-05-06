@@ -1,0 +1,126 @@
+// Prolouge
+.prologue-posts {
+  margin-top: 60px;
+  margin-bottom: 16px;
+  // Hero
+  figure {
+    --top-spacing: 100px;
+    --selfi-width: 900px;
+    --selfi-height: calc(var(--selfi-width) * 0.67);
+    --name-font-size: 200px;
+    --name-top-position: -0.75em;
+    --name-left-poistion: -1.5em;
+    --spacing: 50px;
+
+    @media (max-width: 1720px) {
+      --name-font-size: 150px;
+    }
+
+    @media (max-width: 1480px) {
+      --name-font-size: 120px;
+      --selfi-width: 600px;
+    }
+    @media (max-width: 1060px) {
+      --name-font-size: 100px;
+      --selfi-width: 500px;
+    }
+
+    display: flex;
+    gap: 50px;
+    padding-top: var(--top-spacing);
+    margin-bottom: 60px;
+
+    img {
+      width: var(--selfi-width);
+      height: var(--selfi-height);
+      object-fit: cover;
+    }
+    figcaption {
+      position: relative;
+      flex-grow: 1;
+      h1 {
+        position: absolute;
+        top: 0;
+        left: 0;
+        font-size: var(--name-font-size);
+        line-height: 1;
+        color: var(--highlight-color);
+        transform: translate(
+          var(--name-left-poistion),
+          var(--name-top-position)
+        );
+        span {
+          display: block;
+          text-indent: 0.6em;
+        }
+      }
+      .brief {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform: translate(0, calc(var(--name-font-size) + var(--spacing)));
+        p {
+          white-space: nowrap;
+        }
+        .tags {
+          padding-top: 5px;
+          display: flex;
+          gap: 10px;
+        }
+      }
+      .skills {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform: translate(
+          0,
+          calc(var(--name-font-size) + var(--spacing) * 2.5)
+        );
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 0 10px 0 var(--highlight-color-8);
+        padding: 20px;
+
+        &::before {
+          content: '[ Skills ]';
+          position: absolute;
+          top: -10px;
+          left: 5%;
+          background-color: var(--background-color);
+        }
+
+        li {
+          --px: 24px;
+          img {
+            width: var(--px);
+            height: var(--px);
+          }
+        }
+      }
+    }
+
+    @media (max-width: 920px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      margin-bottom: 500px;
+      --name-font-size: clamp(60px, 10vw, 100px);
+      --top-spacing: 0;
+      figcaption {
+        flex-grow: 0;
+        h1 {
+          font-size: var(--name-font-size);
+          top: 0;
+          left: 0;
+          transform: translate(0, calc(-1em * 0.8));
+        }
+      }
+      img {
+        width: 100%;
+      }
+    }
+  }
+}

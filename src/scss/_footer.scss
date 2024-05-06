@@ -1,0 +1,14 @@
+// Footer
+footer {
+  margin-top: var(--footer-margin-top);
+  padding-bottom: 10px;
+  border-top: 1px solid;
+  flex-shrink: 0;
+  p {
+    margin-top: 20px;
+    font-family: var(--title-font);
+    font-size: 16px;
+    font-weight: 400;
+    text-align: center;
+  }
+}

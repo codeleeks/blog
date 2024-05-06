@@ -1,0 +1,217 @@
+:root {
+  --title-font: 'Roboto Slab', sans-serif;
+
+  --header-height: 80px;
+  --footer-margin-top: 120px;
+
+  --main-border-radius: 10px;
+
+  // --main-color: #fff;
+  // --main-color-hover: #fff;
+  --font-color: rgba(255, 255, 253, 0.8);
+  --font-color-bright: rgba(255, 255, 253, 1);
+  --font-title-color: rgba(255, 255, 255, 0.8);
+  --font-title-color-bright: rgba(255, 255, 255, 1);
+
+  --border-color: rgba(255, 255, 255, 0.4);
+  --background-color: #121212;
+  --highlight-color: #9acd32;
+  --highlight-color-8: rgba(154, 205, 50, 0.8);
+
+  font-family: sans-serif;
+  line-height: 1.4;
+  font-weight: 400;
+  background-color: var(--background-color);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  word-break: keep-all;
+}
+html {
+  color-scheme: dark;
+  color: var(--font-color);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body.nav--open,
+body.toc--open {
+  overflow-y: hidden;
+}
+
+// global mixin
+@mixin brightenOnHover($initialOpacity: 0.4, $hoverOpacity: 1) {
+  opacity: $initialOpacity;
+  transition: opacity 0.4s;
+  &:hover {
+    opacity: $hoverOpacity;
+  }
+}
+
+// 요소 선택자 공통 스타일.
+* {
+  box-sizing: border-box;
+}
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  display: block;
+}
+a {
+  text-decoration: none;
+  color: var(--font-color);
+}
+button {
+  outline: none;
+  border: none;
+  padding: 0.8em 2em;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: transparent;
+  @include brightenOnHover;
+}
+@for $i from 1 through 6 {
+  h#{$i} {
+    font-family: var(--title-font);
+    $weight: 700;
+    $height: 2;
+    @if $i > 2 {
+      $weight: 600;
+      $height: 1.5;
+    }
+    font-size: calc(34px - #{$i * 4}px);
+    font-weight: $weight;
+    line-height: $height;
+  }
+}
+p,
+li {
+  line-height: 1.4;
+}
+
+// 가상 요소 공통 스타일
+::selection {
+  background-color: var(--highlight-color-8);
+}
+
+// 클래스 선택자 공통 스타일.
+.date {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  gap: 10px;
+}
+.icon {
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.card {
+  @include brightenOnHover(0.9);
+  --card-height: 350px;
+  color: var(--font-title-color);
+  box-sizing: border-box;
+  padding: 8px;
+  border-radius: 10px;
+  box-shadow: 0 0 2px 0 rgba(255, 255, 255, 0.7);
+  height: var(--card-height);
+  &:hover {
+    box-shadow: 0 0 2px 0 rgba(255, 255, 255, 1);
+  }
+
+  header {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    img {
+      height: calc(var(--card-height) * 0.6);
+      object-fit: cover;
+      object-position: left;
+      border-radius: var(--main-border-radius);
+      box-shadow: 0 0 8px 0 rgb(255, 193, 200, 0.7);
+    }
+    h3 {
+      font-family: var(--title-font);
+      font-size: 22px;
+      font-weight: 700;
+    }
+  }
+  p {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+    padding: 5px 0 0;
+    font-size: 16px;
+    font-weight: 400;
+  }
+}
+.loading-indicator {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.2);
+
+  &::before {
+    content: '';
+    display: block;
+    border: 10px solid transparent;
+    border-top-color: var(--border-color);
+    border-right-color: var(--border-color);
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    animation: loading 1s ease-in-out infinite;
+  }
+
+  @keyframes loading {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+}
+.posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  column-gap: 30px;
+  row-gap: 30px;
+}
+.inner {
+  max-width: 88%;
+  margin: 0 auto;
+}
+.error {
+  width: 30vw;
+  height: 20vh;
+  margin: 0 auto;
+  margin-top: 15vh;
+  background-color: rgba(255, 192, 203, 0.6);
+  text-align: center;
+  overflow: hidden;
+
+  p {
+    padding: 8px;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+}

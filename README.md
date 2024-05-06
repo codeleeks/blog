@@ -113,20 +113,48 @@ text-overflow: ellipsis '[...]';
 - 방법은 `fixed`로 flex 밖으로 벗어나 버린다.
 - `sticky` 영역은 블록 쌓임 맥락을 지키면서 위치를 잡는다. 상위에 블록 요소가 있을 때 그 height의 밑에 쌓이게 된다. 스크롤 요소가 body이고 `top: 0`으로 잡아도 상위 블록 요소의 height 위치에 자리잡는다.
 
-
 ### navigation Toggling UI 만들기
+
 - nav 요소는 scroll-contents, toggler, bg 로 구성한다.
 - nav는 flex로 지정하여 각 자식 요소를 가로로 배치한다.
 - nav는 sticky, toggler는 absolute, bg는 fixed로 위치를 잡는다.
-- scroll-contents는 특정 화면 너비에 진입하면 ```translate(-100%, 0)```을 통해 화면 밖으로 이동하고(사라지고), nav는 fixed로 변경된다. 이에 따라 toggler는 nav의 위치 기준으로 위치를 변경한다.(최좌측)
-- toggler를 클릭하면 nav의 class에 ```nav--open```을 토글하여, scroll-contents가 ```translate(0,0)``` 을 통해 제자리로 돌아온다.
+- scroll-contents는 특정 화면 너비에 진입하면 `translate(-100%, 0)`을 통해 화면 밖으로 이동하고(사라지고), nav는 fixed로 변경된다. 이에 따라 toggler는 nav의 위치 기준으로 위치를 변경한다.(최좌측)
+- toggler를 클릭하면 nav의 class에 `nav--open`을 토글하여, scroll-contents가 `translate(0,0)` 을 통해 제자리로 돌아온다.
   - 돌아올 때는 toggler가 바로 우측에 위치할 수 있도록 scroll-contents의 width를 지정해준다.
 - z-index는 쌓임 맥락에 따라 bg가 다른 요소를 흐림 처리할 수 있도록 적당히 지정한다.
 
 ### anchor를 통한 heading 이동시 강조 애니메이션 추가
+
 - table of contents에서 특정 anchor 클릭시 상응하는 heading으로 스크롤한다.
 - 이 때, 해당 heading에 highlight 컬러를 씌워서 스크롤하는 목표가 해당 요소임을 보여준다.
 - component 내의 로컬 변수로 slug를 저장하려고 했으나 실패했다.
   - useRef는 타이머를 잘 제거했지만, 문자열 변수는 이전 값을 제대로 저장하지 못했다.
   - local 변수로도 처리할 수 없었다.
 - 전역 변수로 처리하여 이전 slug의 클래스를 제거했다.
+
+## 리팩토링
+
+프로토타입 개발 완료 후 리팩토링을 진행합니다.
+
+- SCSS 파일을 기능 별로 분리
+- 컴포넌트 재사용
+- 불필요 코드 제거
+
+
+### SCSS 파일 분리
+
+scss에서는 ```partials```를 지원합니다.
+
+파일을 분리하되, 각 파일을 컴파일하지 않고 하나의 scss로 만든 뒤 컴파일합니다.
+
+성능, 관리 상의 이점을 볼 수 있습니다.
+
+메인 파일 이외의 scss 파일은 이름 앞에 ```_```를 붙입니다.
+
+#### 이슈
+
+vscode에서 css variable의 code navigtaion이 동작하지 않습니다.
+
+깃헙에 [이슈](https://github.com/microsoft/vscode/issues/212064) 제기를 한 상태입니다. 
+
+workaround로는 scss variable를 쓰는 방법이 있습니다.
