@@ -1,8 +1,6 @@
-import { gsap } from 'gsap'
-import ScrollToPlugin from 'gsap/ScrollToPlugin'
 import { useRef, useState } from 'react'
+import { scrollTo } from '../../utils/gsap'
 
-gsap.registerPlugin(ScrollToPlugin)
 let headingSlug
 export default (props) => {
   const { heading } = props
@@ -12,7 +10,7 @@ export default (props) => {
     e.preventDefault()
 
     const slug = e.target.attributes.href.value
-    gsap.to(window, {
+    scrollTo(window, {
       duration: 1,
       scrollTo: {
         y: slug,
