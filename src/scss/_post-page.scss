@@ -128,18 +128,73 @@
         white-space: pre-wrap;
       }
 
+      table {
+        margin: 10px 0;
+        tr {
+          &:nth-child(2n) {
+            background-color: rgba(255, 255, 255, 0.1);
+          }
+        }
+        th,
+        td {
+          border: 1px solid #333333;
+          padding: 5px;
+          vertical-align: middle;
+        }
+        th {
+          font-weight: 600;
+          background-color: #281b10;
+        }
+        td {
+          white-space: nowrap;
+        }
+      }
+
+      blockquote {
+        min-height: 50px;
+        margin: 5px 0;
+        padding-left: 1em;
+
+        position: relative;
+
+        display: flex;
+        align-items: center;
+
+        border-left: 5px solid #9b9b9b;
+
+        &::before {
+          content: '';
+          display: block;
+          width: 24px;
+          height: 24px;
+
+          position: absolute;
+          left: -14px;
+
+          background-color: #9b9b9b;
+          background-image: url('/quote.png');
+
+          background-size: 100%;
+          background-position: center;
+          background-repeat: no-repeat;
+
+          // border: 1px solid red;
+          border-radius: 6px;
+        }
+      }
+
       .message-box {
         --spacing: 3em;
         --font-color: #121212;
         --background-color: #b7d8ae;
-        --border-color: #007936;
+        $border-color: #007936;
         --icon-url: url('https://raw.githubusercontent.com/google/material-design-icons/9beae745bb758f3ad56654fb377ea5cf62be4915/src/action/info/materialicons/24px.svg');
-        --icon-background-color: var(--border-color);
+        --icon-background-color: $border-color;
 
         &.warning {
           --background-color: #fef6d5;
-          --border-color: #e86e30;
           --icon-url: url('https://raw.githubusercontent.com/google/material-design-icons/9beae745bb758f3ad56654fb377ea5cf62be4915/src/alert/warning/materialicons/24px.svg');
+          border-left: 4px solid #e86e30;
         }
 
         box-sizing: content-box;
@@ -151,7 +206,7 @@
         align-items: flex-start;
 
         background-color: var(--background-color);
-        border-left: 4px solid var(--border-color);
+        border-left: 4px solid #007936;
         border-top-right-radius: var(--main-border-radius);
         border-bottom-right-radius: var(--main-border-radius);
         padding: 1em 1em 1em var(--spacing);

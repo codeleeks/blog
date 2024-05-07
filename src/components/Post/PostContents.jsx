@@ -2,6 +2,7 @@ import Markdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeSlug from 'rehype-slug'
 import rehypeRaw from 'rehype-raw'
+import remarkGfm from 'remark-gfm'
 import { extractTitleImage, skipMetadata } from '../../utils/post'
 import {
   extractTitle,
@@ -39,7 +40,7 @@ export default (props) => {
       <h1 className='title'>{title}</h1>
       <img src={titleImg} alt={title} className='title-image' />
       <Markdown
-        rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeSlug]}
+        rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeSlug, remarkGfm]}
         className='contents'
         components={{
           code(props) {
