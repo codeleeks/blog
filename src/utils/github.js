@@ -248,6 +248,7 @@ export async function fetchRepositoryPosts() {
       return acc
     }, {})
 
+  console.log(postTree)
   return postTree
 }
 
@@ -271,6 +272,7 @@ export async function fetchRepositoryFileContents(path) {
   })
 
   if (!resp.ok) {
+    console.error(resp)
     throwErrorJson(resp.status, 'could not fetch file contents')
   }
 

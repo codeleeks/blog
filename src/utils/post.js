@@ -1,17 +1,26 @@
 export function extractTitle(path) {
   let s = -1,
     e = -1
+  if (
+    path[path.length - 3] === '.' &&
+    path[path.length - 2] === 'm' &&
+    path[path.length - 1] === 'd'
+  ) {
+    e = path.length - 3
+  }
+
   for (let i = path.length - 1; i >= 0; i--) {
     if (path[i] === '/') {
       s = i + 1
       break
-    } else if (path[i] === '.') {
-      e = i
     }
   }
 
-  if (s > 0 && e > 0) {
-    return path.substring(s, e)
+  if (s > 0) {
+    if (e > 0) {
+      return path.substring(s, e)
+    }
+    return path.substring(s)
   }
 }
 

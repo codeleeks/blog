@@ -15,6 +15,7 @@ import PostContents from '../components/Post/PostContents'
 import AsyncError from './AsyncError'
 import PostsNavigationContents from '../components/Post/PostsNavigationContents'
 import TableOfContentsContents from '../components/Post/TableOfContentsContents'
+import AsyncBlock from '../components/AsyncBlock'
 
 export default function CategoryPostPage(props) {
   const { category, postFileName } = useParams()
@@ -24,27 +25,21 @@ export default function CategoryPostPage(props) {
   return (
     <section className='post-page'>
       <PostsNavigation>
-        <Suspense fallback={<LoadingIndicator />}>
-          <Await resolve={posts} errorElement={<AsyncError />}>
-            <PostsNavigationContents />
-          </Await>
-        </Suspense>
+        <AsyncBlock resolve={posts}>
+          <PostsNavigationContents />
+        </AsyncBlock>
       </PostsNavigation>
       <section className='post inner'>
-        <Suspense fallback={<LoadingIndicator />}>
-          <Await resolve={contents}>
-            {(fetchedContents) => {
-              return <PostContents title={title} contents={fetchedContents} />
-            }}
-          </Await>
-        </Suspense>
+        <AsyncBlock resolve={contents}>
+          {(fetchedContents) => {
+            return <PostContents title={title} contents={fetchedContents} />
+          }}
+        </AsyncBlock>
       </section>
       <TableOfContents>
-        <Suspense fallback={<LoadingIndicator />}>
-          <Await resolve={contents}>
-            <TableOfContentsContents key={contents}/>
-          </Await>
-        </Suspense>
+        <AsyncBlock resolve={contents}>
+          <TableOfContentsContents key={contents} />
+        </AsyncBlock>
       </TableOfContents>
     </section>
   )
