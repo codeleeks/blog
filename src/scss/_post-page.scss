@@ -8,6 +8,8 @@
   $media-medium: calc($contents-width + $aside-width + 150px);
   $media-small: 770px;
 
+  width: 100%;
+
   display: flex;
   --spacing: 10px;
   align-items: flex-start;
@@ -78,6 +80,7 @@
   }
   .post {
     --title-font-size: 60px;
+    width: 100%;
     flex-grow: 1;
     padding: 20px calc(var(--spacing) * 6);
 
@@ -89,9 +92,10 @@
     }
     img.title-image {
       width: 100%;
-      height: 350px;
+      max-height: 470px;
+      margin-bottom: 20px;
       object-fit: cover;
-      object-position: top left;
+
       border-radius: var(--main-border-radius);
       box-shadow: 0 0 10px 0 var(--highlight-color-8);
     }
@@ -117,7 +121,8 @@
       }
 
       pre {
-        max-width: 100%;
+        // max-width: 100%;
+        // width: 20px;
         margin: 10px 0;
         code {
           line-height: 1.4;
@@ -152,7 +157,7 @@
 
       blockquote {
         min-height: 50px;
-        margin: 5px 0;
+        margin: 20px 0;
         padding-left: 1em;
 
         position: relative;

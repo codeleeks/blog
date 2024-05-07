@@ -23,13 +23,13 @@ export default function CategoryPostPage(props) {
 
   const title = extractTitle(`${category}/${postFileName}`)
   return (
-    <section className='post-page'>
+    <section className='post-page inner'>
       <PostsNavigation>
         <AsyncBlock resolve={posts}>
           <PostsNavigationContents />
         </AsyncBlock>
       </PostsNavigation>
-      <section className='post inner'>
+      <section className='post'>
         <AsyncBlock resolve={contents}>
           {(fetchedContents) => {
             return <PostContents title={title} contents={fetchedContents} />
