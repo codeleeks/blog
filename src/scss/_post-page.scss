@@ -2,22 +2,20 @@
 .post-page {
   $nav-width: 300px;
   $aside-width: 200px;
-  $contents-width: 800px;
+  --post-page__contents-width: 1200px;
+  --post-page__contents-padding: 10px;
 
-  $media-large: calc($nav-width + $contents-width + $aside-width + 150px);
-  $media-medium: calc($contents-width + $aside-width + 150px);
+  $media-large: calc($nav-width + 1200px + $aside-width + 150px);
+  $media-medium: calc(1200px + $aside-width + 150px);
   $media-small: 770px;
-
-  @media (max-width: $media-small) {
-    $contents-width: 600px;
-  }
 
   width: 100%;
 
   display: flex;
-  --spacing: 10px;
+
   align-items: flex-start;
   justify-content: space-between;
+  word-break: break-all;
 
   nav {
     position: sticky;
@@ -86,9 +84,9 @@
   }
   .post {
     --title-font-size: 60px;
-    max-width: $contents-width;
+    max-width: var(--post-page__contents-width);
     flex-grow: 1;
-    padding: 20px calc(var(--spacing) * 6);
+    padding: 20px calc(var(--post-page__contents-padding) * 6);
 
     h1.title {
       font-size: var(--title-font-size);
@@ -149,7 +147,7 @@
       table {
         margin: 10px 0;
         table-layout: fixed;
-        width: calc($contents-width - 2 * 60px);
+        width: calc(var(--post-page__contents-width) - 2 * var(--post-page__contents-padding));
         margin-bottom: 60px;
 
         thead {
@@ -338,8 +336,8 @@
       .toc__contents-area {
         h4 {
           line-height: 1.2;
-          padding-bottom: var(--spacing);
-          margin-bottom: var(--spacing);
+          padding-bottom: 10px;
+          margin-bottom: 10px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.4);
         }
         ul {
@@ -420,7 +418,7 @@
       }
 
       &.nav--open {
-        padding-left: var(--spacing);
+        padding-left: 10px;
         width: $nav-width;
 
         .nav-toggler {
@@ -473,5 +471,9 @@
         }
       }
     }
+  }
+  @media (max-width: $media-small) {
+    --post-page__contents-width: 330px;
+    --post-page__contents-padding: 1px;
   }
 }
