@@ -8,11 +8,16 @@
   $media-medium: calc($contents-width + $aside-width + 150px);
   $media-small: 770px;
 
+  @media (max-width: $media-small) {
+    $contents-width: 600px;
+  }
+
   width: 100%;
 
   display: flex;
   --spacing: 10px;
   align-items: flex-start;
+  justify-content: space-between;
 
   nav {
     position: sticky;
@@ -24,6 +29,7 @@
     flex-shrink: 0;
     max-width: $nav-width;
     height: 100vh;
+    padding-left: 10px;
 
     .nav-toggler,
     .nav-bg {
@@ -80,7 +86,7 @@
   }
   .post {
     --title-font-size: 60px;
-    width: 100%;
+    max-width: $contents-width;
     flex-grow: 1;
     padding: 20px calc(var(--spacing) * 6);
 
@@ -101,9 +107,11 @@
     }
 
     .contents {
+      max-width: 100%;
       @for $i from 1 to 6 {
         h#{$i} {
-          margin-top: calc(40px - #{$i * 5}px);
+          margin-top: calc(60px - #{$i * 5}px);
+          margin-bottom: 20px;
           transition: 1s;
           &.active {
             color: var(--highlight-color-8);
@@ -114,6 +122,7 @@
         list-style-image: none;
         list-style-position: inside;
         list-style-type: revert;
+        margin: 10px 0;
         padding: 2px 8px;
         li {
           padding: 2px 0;
@@ -121,8 +130,6 @@
       }
 
       pre {
-        // max-width: 100%;
-        // width: 20px;
         margin: 10px 0;
         code {
           line-height: 1.4;
@@ -133,8 +140,27 @@
         white-space: pre-wrap;
       }
 
+      @media (hover: hover) {
+        a:hover {
+          text-decoration: underline;
+        }
+      }
+
       table {
         margin: 10px 0;
+        table-layout: fixed;
+        width: calc($contents-width - 2 * 60px);
+        margin-bottom: 60px;
+
+        thead {
+          tr {
+            th {
+              &:first-child {
+                width: 20%;
+              }
+            }
+          }
+        }
         tr {
           &:nth-child(2n) {
             background-color: rgba(255, 255, 255, 0.1);
@@ -144,6 +170,7 @@
         td {
           border: 1px solid #333333;
           padding: 5px;
+
           vertical-align: middle;
         }
         th {
@@ -151,13 +178,19 @@
           background-color: #281b10;
         }
         td {
-          white-space: nowrap;
+          &:first-child {
+            word-break: break-all;
+          }
+          line-height: 2;
+          code.hljs {
+            padding: 0;
+          }
         }
       }
 
       blockquote {
         min-height: 50px;
-        margin: 20px 0;
+        margin: 40px 0;
         padding-left: 1em;
 
         position: relative;
@@ -183,24 +216,24 @@
           background-position: center;
           background-repeat: no-repeat;
 
-          // border: 1px solid red;
           border-radius: 6px;
         }
       }
 
       .message-box {
-        --spacing: 3em;
-        --font-color: #121212;
-        --background-color: #b7d8ae;
+        $spacing: 3em;
+        $font-color: #121212;
+        $background-color: #b7d8ae;
         $border-color: #007936;
-        --icon-url: url('https://raw.githubusercontent.com/google/material-design-icons/9beae745bb758f3ad56654fb377ea5cf62be4915/src/action/info/materialicons/24px.svg');
-        --icon-background-color: $border-color;
+        $icon-url: url('https://raw.githubusercontent.com/google/material-design-icons/9beae745bb758f3ad56654fb377ea5cf62be4915/src/action/info/materialicons/24px.svg');
 
         &.warning {
-          --background-color: #fef6d5;
-          --icon-url: url('https://raw.githubusercontent.com/google/material-design-icons/9beae745bb758f3ad56654fb377ea5cf62be4915/src/alert/warning/materialicons/24px.svg');
-          border-left: 4px solid #e86e30;
+          $background-color: #fef6d5;
+          $icon-url: url('https://raw.githubusercontent.com/google/material-design-icons/9beae745bb758f3ad56654fb377ea5cf62be4915/src/alert/warning/materialicons/24px.svg');
+          $border-color: #e86e30;
         }
+
+        $icon-background-color: $border-color;
 
         box-sizing: content-box;
         position: relative;
@@ -210,15 +243,15 @@
         gap: 10px;
         align-items: flex-start;
 
-        background-color: var(--background-color);
-        border-left: 4px solid #007936;
+        background-color: $background-color;
+        border-left: 4px solid $border-color;
         border-top-right-radius: var(--main-border-radius);
         border-bottom-right-radius: var(--main-border-radius);
-        padding: 1em 1em 1em var(--spacing);
+        padding: 1em 1em 1em $spacing;
         margin: 20px 0;
 
         * {
-          color: var(--font-color);
+          color: $font-color;
         }
 
         .message-title {
@@ -238,18 +271,18 @@
         }
 
         &::before {
-          --width: 24px;
+          $width: 24px;
           content: '';
           display: block;
-          width: var(--width);
+          width: $width;
           height: 24px;
-          mask-image: var(--icon-url);
+          mask-image: $icon-url;
           mask-repeat: no-repeat;
           mask-position: center;
           mask-size: contain;
-          background-color: var(--icon-background-color);
+          background-color: $icon-background-color;
           position: absolute;
-          left: calc(var(--spacing) / 2 - (var(--width) / 2));
+          left: calc($spacing / 2 - ($width / 2));
           top: 1em;
         }
       }
@@ -407,6 +440,7 @@
     }
   }
   @media (max-width: $media-medium) {
+    justify-content: space-around;
     aside {
       position: fixed;
       top: var(--header-height);
@@ -439,9 +473,5 @@
         }
       }
     }
-  }
-  @media (max-width: $media-small) {
-    --contents-width: 350px;
-    --spacing: 1px;
   }
 }

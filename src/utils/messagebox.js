@@ -29,7 +29,7 @@ export function extractTitle(messageBoxArea) {
 }
 
 export function extractBody(messageBoxArea) {
-  const startPattern = 'body: '
+  const startPattern = 'body:'
   const endPattern = '///'
   let s = messageBoxArea.indexOf(startPattern)
   if (s > 0) {
