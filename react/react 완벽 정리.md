@@ -182,12 +182,13 @@ title: text directionality
 body: '텍스트를 왼쪽에서 오른쪽으로 읽어야 하는지, 아니면 그 반대인지 지정'
 
 예시)
+```html
 <textarea name='comment' dirname='comment-direction' dir='auto'>왼쪽에서 오른쪽으로 읽는 한글</textarea>
+```
 👉 https://www.example.com/submit?comment=[인코딩된 innerText]&comment-direction=ltr
 
 - rtl: 오른쪽에서 왼쪽으로 읽음
 - ltr: 왼쪽에서 오른쪽으로 읽음
-
 ///
 
 ### `<label>` 태그
