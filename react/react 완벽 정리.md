@@ -40,6 +40,7 @@ dialog {
 title: dialog transform 애니메이션 적용시 주의사항.
 body:
 dialog[open]은 display 속성이 none에서 block으로 되는 것이기 때문에, transition이 먹지 않는다.
+
 display를 block으로 미리 설정하거나, keyframes를 사용해야 한다.
 ///
 
@@ -102,7 +103,7 @@ https://codepen.io/fmontes/pen/yLveywJ?editors=1111
 
 ///message-box --level=info
 title: 한 페이지에 중복하여 form 사용할 수 없다.
-body: 'form 내부에 form을 사용하는 것은 불가하며, 한 페이지에 중복하는 것조차 안 된다.'
+body: form 내부에 form을 사용하는 것은 불가하며, 한 페이지에 중복하는 것조차 안 된다.
 ///
 
 ### `<input>` 태그
@@ -212,7 +213,10 @@ title: value가 다른 의미로 사용.
 body:
 select 태그 안의 option 태그의 value는 formData로 보낼 값을 의미하고, 사용자에게 보여질 값은 innerText에 넣어야 한다.
 
-예시) <option value='서버에 보낼 값'>사용자에게 보이는 값</option>
+예시) 
+```html
+<option value='서버에 보낼 값'>사용자에게 보이는 값</option>
+```
 ///
 
 | 속성      | 설명                                                              |
@@ -277,13 +281,15 @@ unchecked된 checkbox는 FormData에 포함되지 않는다.
 checkbox에는 uncheck시 기본값을 지정해주는 속성은 없다.
 방법은 hidden 타입 input 태그를 추가하고, 동일한 name을 준다.
 
+```html
 <label>
   <input type='hidden' name='hello' value='false'/>
   IP 보안
   <input type='checkbox' name='ip-security' value='true'>
 </label>
+```
 
-참고: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox#:~:text=subscribe%3Don.-,Note%3A,-If%20a%20checkbox
+참고: <a href='https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox#:~:text=subscribe%3Don.-,Note%3A,-If%20a%20checkbox' target='_blank'>MDN 관련 문서 링크</a>
 ///
 
 #### 입력값 검증하기(validation)
