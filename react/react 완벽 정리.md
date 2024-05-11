@@ -244,3 +244,125 @@ select 태그 안의 option 태그의 value는 formData로 보낼 값을 의미�
 | button           | 일반적인 푸시 버튼 |
 
 ### 리액트에서 폼 다루기.
+
+#### 폼 제출하기
+
+[코드로 보기](https://codepen.io/kasong-lee/pen/eYaYVrR)
+
+- `<form>`의 `onSubmit` 속성으로 제출 핸들러를 단다.
+- `FormData`를 사용하여 제출된 입력값을 가져온다.
+- `event.target.reset`을 이용하여 필요하면 입력값을 초기화한다.
+
+> form 객체(event.target) ➡️ `FormData` ➡️ `Object.fromEntries(fd.entries())`
+
+```javascript
+const submitHandler = (e) => {
+  e.preventDefault()
+  const fd = new FormData(e.target)
+  const data = Object.fromEntries(fd.entries())
+  data.aquisition = fd.getAll('aquisition') //fieldset 안의 체크박스들.
+  console.log(data)
+  // 결과
+  // {aquisition: ['naver', 'kakao', 'google'],
+  // email: "codeleeks@naver.com",
+  // password: "asd",
+  // password-retype: "asd"}
+}
+```
+
+///message-box --level=warning
+title: unchecked된 checkbox는 FormData에 포함되지 않음.
+body:
+unchecked된 checkbox는 FormData에 포함되지 않는다.
+checkbox에는 uncheck시 기본값을 지정해주는 속성은 없다.
+방법은 hidden 타입 input 태그를 추가하고, 동일한 name을 준다.
+
+<label>
+  <input type='hidden' name='hello' value='false'/>
+  IP 보안
+  <input type='checkbox' name='ip-security' value='true'>
+</label>
+
+참고: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox#:~:text=subscribe%3Don.-,Note%3A,-If%20a%20checkbox
+///
+
+#### 입력값 검증하기(validation)
+
+[코드로 보기](https://codepen.io/kasong-lee/pen/PovwoYo)
+
+- blur일 때 입력값 검증 & 타이핑을 시작할 때 에러 메시지 제거
+- Form 제출시 입력값 검증
+
+인풋 검증은 common case이기 때문에 나만의 라이브러리로 만들어뒀다.
+
+`blur일 때 입력값 검증 & 타이핑을 시작할 때 에러 메시지 제거` 방식으로 검증하고 에러를 표시한다.
+
+```javascript
+// 커스텀 hook
+export function useInputValidation(inputValue, validateFunctions) {
+  const [inputErrors, setInputErrors] = useState([])
+  const changeHandler = (e) => {
+    setInputErrors([])
+  }
+
+  const blurHandler = (e) => {
+    setInputErrors(
+      validateFunctions
+        .map((fn) => fn(inputValue))
+        .filter((result) => result !== undefined)
+    )
+  }
+
+  return {
+    inputErrors,
+    changeHandler,
+    blurHandler,
+  }
+}
+
+// 메인 컴포넌트
+const inputRefs = {
+  email: useRef(),
+  password: useRef(),
+}
+
+const {
+  inputErrors: emailInputErrors,
+  changeHandler: emailChangeHandler,
+  blurHandler: emailBlurHandler,
+} = useInputValidation(inputRefs.email?.current?.value ?? '', [
+  (value) => {
+    if (value !== '' && !value.match('[0-9a-z]+@[0-9a-z.]+')) {
+      return {
+        key: 'email-error',
+        message: '이메일 형식이 아닙니다.',
+      }
+    }
+  },
+])
+
+const {
+  inputErrors: passwordInputErrors,
+  changeHandler: passwordChangeHandler,
+  blurHandler: passwordBlurHandler,
+} = useInputValidation(inputRefs.password?.current?.value ?? '', [
+  (value) => {
+    if (value !== '' && !value.match('[0-9a-z]{3,}')) {
+      return {
+        key: 'password-error',
+        message: '비밀번호 형식 아닙니다. 적어도 세 자 이상 적어주세요',
+      }
+    }
+  },
+])
+
+const inputErrors = [...emailInputErrors, ...passwordInputErrors]
+
+let error = (
+  <p className='signin__error'>
+    {inputErrors.map((error) => {
+      return <li key={error.key}>{error.message}</li>
+    })}
+  </p>
+)
+```
