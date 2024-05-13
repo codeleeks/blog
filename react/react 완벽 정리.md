@@ -39,9 +39,7 @@ dialog {
 ///message-box --level=warning
 title: dialog transform 애니메이션 적용시 주의사항.
 body:
-dialog[open]은 display 속성이 none에서 block으로 되는 것이기 때문에, transition이 먹지 않는다.
-
-display를 block으로 미리 설정하거나, keyframes를 사용해야 한다.
+dialog[open]은 display 속성이 none에서 block으로 되는 것이기 때문에, transition이 먹지 않는다. <br /> display를 block으로 미리 설정하거나, keyframes를 사용해야 한다.
 ///
 
 ```scss
