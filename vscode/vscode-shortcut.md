@@ -22,7 +22,7 @@ title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/
   ```
 
   <a href='' target='_blank'>링크~</a>
-  ' />
+  '></MessageBox>
 
 <hr />
 
