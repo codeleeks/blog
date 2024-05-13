@@ -13,7 +13,7 @@ title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/
 - ctrl + f = 텍스트 찾기
 - ctrl + alt + f = 찾은 텍스트 바꾸기
 
-<MessageBox level='info' title='제목 입니다~' contents=`
+<MessageBox level='info' title='제목 입니다~'>
   내용입니다~👉
 
   ```js
@@ -22,7 +22,7 @@ title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/
   ```
 
   <a href='' target='_blank'>링크~</a>
-  `></MessageBox>
+</MessageBox>
 
 <hr />
 
