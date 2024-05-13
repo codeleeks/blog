@@ -50,7 +50,6 @@ export default (props) => {
 
     const io = new IntersectionObserver((entries, observer) => {
       entries.forEach((entry) => {
-        console.log(entry.target.id, slugToAnchor[entry.target.id])
         if (entry.intersectionRatio > 0) {
           slugToAnchor[entry.target.id].classList.add('visible')
         } else {

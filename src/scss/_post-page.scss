@@ -147,7 +147,10 @@
       table {
         margin: 10px 0;
         table-layout: fixed;
-        width: calc(var(--post-page__contents-width) - 2 * var(--post-page__contents-padding));
+        width: calc(
+          var(--post-page__contents-width) - 2 *
+            var(--post-page__contents-padding)
+        );
         margin-bottom: 60px;
 
         thead {
@@ -248,9 +251,7 @@
         padding: 1em 1em 1em $spacing;
         margin: 20px 0;
 
-        * {
-          color: $font-color;
-        }
+        color: $font-color;
 
         .message-title {
           margin: 0;
@@ -262,10 +263,14 @@
           flex-direction: column;
           gap: 4px;
           align-items: flex-start;
+        }
 
-          a {
-            text-decoration: underline;
-          }
+        a {
+          color: $font-color;
+        }
+
+        pre {
+          white-space: pre-wrap;
         }
 
         &::before {
