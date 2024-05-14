@@ -36,13 +36,11 @@ dialog {
 
 예시로, open할 때에 slide-up 애니메이션을, close할 때는 scale-down 애니메이션을 적용했다.
 
-///message-box --level=warning
-title: dialog transform 애니메이션 적용시 주의사항.
-body:
-dialog[open]은 display 속성이 none에서 block으로 되는 것이기 때문에, transition이 먹지 않는다.
+<MessageBox title='dialog transform 애니메이션 적용시 주의사항.' level='warning'>
+  dialog[open]은 display 속성이 none에서 block으로 되는 것이기 때문에, transition이 먹지 않는다.
 
-display를 block으로 미리 설정하거나, keyframes를 사용해야 한다.
-///
+  display를 block으로 미리 설정하거나, keyframes를 사용해야 한다.
+</MessageBox>
 
 ```scss
 dialog {
@@ -101,10 +99,9 @@ https://codepen.io/fmontes/pen/yLveywJ?editors=1111
 
 제출을 하면 form 안에서 입력된 값(input의 텍스트, 선택된 option 등)이 method에 명시된 방식으로 action에 명시된 서버 측 처리 로직에 전달된다.
 
-///message-box --level=info
-title: 한 페이지에 중복하여 form 사용할 수 없다.
-body: form 내부에 form을 사용하는 것은 불가하며, 한 페이지에 중복하는 것조차 안 된다.
-///
+<MessageBox title='한 페이지에 중복하여 form 사용할 수 없다.' level='info'>
+  form 내부에 form을 사용하는 것은 불가하며, 한 페이지에 중복하는 것조차 안 된다.
+</MessageBox>
 
 ### `<input>` 태그
 
@@ -177,19 +174,18 @@ body: form 내부에 form을 사용하는 것은 불가하며, 한 페이지에 
 | rows        | 보이는 영역의 라인 수를 명시                                                                                                                                                                                          |
 | wrap        | 제출시 입력된 글자들의 줄바꿈을 어떻게 전처리할 건지 지정. <br /> - `hard`: `cols`가 지정되어야 하고, 한 줄이 control의 width보다 길어질 수 없게 강제로 개행문자 삽입. <br /> - `soft`: 기본값. 별도로 건드리지 않음. |
 
-///message-box --level=info
-title: text directionality
-body: '텍스트를 왼쪽에서 오른쪽으로 읽어야 하는지, 아니면 그 반대인지 지정'
+<MessageBox title='text directionality' level='info'>
+  텍스트를 왼쪽에서 오른쪽으로 읽어야 하는지, 아니면 그 반대인지 지정
+  예시)
+  ```html
+  <textarea name='comment' dirname='comment-direction' dir='auto'>왼쪽에서 오른쪽으로 읽는 한글</textarea>
+  ```
+  👉 https://www.example.com/submit?comment=[인코딩된 innerText]&comment-direction=ltr
 
-예시)
-```html
-<textarea name='comment' dirname='comment-direction' dir='auto'>왼쪽에서 오른쪽으로 읽는 한글</textarea>
-```
-👉 https://www.example.com/submit?comment=[인코딩된 innerText]&comment-direction=ltr
+  - rtl: 오른쪽에서 왼쪽으로 읽음
+  - ltr: 왼쪽에서 오른쪽으로 읽음
+</MessageBox>
 
-- rtl: 오른쪽에서 왼쪽으로 읽음
-- ltr: 왼쪽에서 오른쪽으로 읽음
-///
 
 ### `<label>` 태그
 
@@ -209,16 +205,13 @@ body: '텍스트를 왼쪽에서 오른쪽으로 읽어야 하는지, 아니면 
 
 드랍다운 메뉴 컨트롤.
 
-///message-box --level=warning
-title: value가 다른 의미로 사용.
-body:
-select 태그 안의 option 태그의 value는 formData로 보낼 값을 의미하고, 사용자에게 보여질 값은 innerText에 넣어야 한다.
-
-예시) 
-```html
-<option value='서버에 보낼 값'>사용자에게 보이는 값</option>
-```
-///
+<MessageBox title='value가 다른 의미로 사용.' level='warning'>
+  select 태그 안의 option 태그의 value는 formData로 보낼 값을 의미하고, 사용자에게 보여질 값은 innerText에 넣어야 한다.
+  예시) 
+  ```html
+  <option value='서버에 보낼 값'>사용자에게 보이는 값</option>
+  ```
+</MessageBox>
 
 | 속성      | 설명                                                              |
 | --------- | ----------------------------------------------------------------- |
@@ -275,12 +268,11 @@ const submitHandler = (e) => {
 }
 ```
 
-///message-box --level=warning
-title: unchecked된 checkbox는 FormData에 포함되지 않음.
-body:
-unchecked된 checkbox는 FormData에 포함되지 않는다.
-checkbox에는 uncheck시 기본값을 지정해주는 속성은 없다.
-방법은 hidden 타입 input 태그를 추가하고, 동일한 name을 준다.
+<MessageBox title='unchecked된 checkbox는 FormData에 포함되지 않음.' level='warning'>
+  unchecked된 checkbox는 FormData에 포함되지 않는다.
+  checkbox에는 uncheck시 기본값을 지정해주는 속성은 없다.
+  방법은 hidden 타입 input 태그를 추가하고, 동일한 name을 준다.
+</MessageBox>
 
 ```html
 <label>
