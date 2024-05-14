@@ -10,6 +10,7 @@ import {
   extractBody,
   findAllMessageBoxArea,
 } from '../../utils/messagebox'
+import MarkdownView from './MarkdownView'
 
 function replaceMessagebox(skipped) {
   let replaced = skipped
@@ -34,28 +35,13 @@ export default (props) => {
   const { title, contents } = props
   const titleImg = extractTitleImage(contents)
   const skipped = skipMetadata(contents)
-  const replaced = replaceMessagebox(skipped)
   return (
     <>
       <h1 className='title'>{title}</h1>
       <img src={titleImg} alt={title} className='title-image' />
-      <Markdown
-        rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeSlug, remarkGfm]}
-        className='contents'
-        components={{
-          code(props) {
-            const { children, className, node, ...rest } = props
-            const match = /^hljs\s/.test(className)
-            return (
-              <code {...rest} className={match ? className : 'hljs'}>
-                {children}
-              </code>
-            )
-          },
-        }}
-      >
-        {replaced}
-      </Markdown>
+      <div className='contents'>
+        <MarkdownView text={skipped} />
+      </div>
     </>
   )
 }

@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { scrollTo } from '../../utils/gsap'
 
-let headingSlug
 export default (props) => {
   const { heading } = props
   const timer = useRef()
+  let headingSlug
 
   const clickHandler = (e) => {
     e.preventDefault()
@@ -23,7 +23,6 @@ export default (props) => {
     }
 
     if (headingSlug) {
-      console.log(headingSlug)
       const headingEl = document.querySelector(headingSlug)
       headingEl.classList.remove('active')
     }
