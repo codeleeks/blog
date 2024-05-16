@@ -365,3 +365,274 @@ let error = (
   </p>
 )
 ```
+
+## Context API
+
+`props drilling`을 해결하기 위해, 전역 상태 스토어 개념을 도입한다.
+
+Context의 상태값과 상태변경함수를 세팅하려면 가장 기본적인 방법으로 `useState`를 이용한다.
+
+Context를 사용하려면(최신 값을 가져오거나, 최신 값을 변경하거나) `useContext`로 값과 함수를 얻어온다.
+
+### 핵심 함수
+
+- `const ctx = createContext(...)`: 전역 상태 context를 생성
+- `<ctx.Provider value={{...}}></ctx.Provider>`: context provider 컴포넌트. 하위 컴포넌트는 context에 접근 가능. value는 useState에 연결해야 함.
+- `const {...} = useContext(ctx)`: 하위 컴포넌트에서 context에 접근할 때 사용하는 함수.
+
+### 아코디언 UI 예제
+
+```js
+// Accordion.js
+import { createContext, useContext, useState } from 'react'
+
+// createContext로 도메인에 대한 context 생성
+// 기본값은 개발툴의 auto complete를 위해 작성
+const accordionContext = createContext({
+  openedItem: undefined,
+  openItem: (id) => {},
+  closeItem: () => {},
+})
+
+//context를 공유할 컴포넌트의 최상단에 프로바이더 컴포넌트로 래핑.
+function AccordionContextProvider({ value, children }) {
+  return (
+    <accordionContext.Provider value={value}>
+      {children}
+    </accordionContext.Provider>
+  )
+}
+
+//하위 컴포넌트에서 context에 접근할 때 용이하게 하기 위해 커스텀 훅으로 제작.
+export function useAccordionContext() {
+  return useContext(accordionContext)
+}
+
+// useState와 context의 value를 매핑함으로써, 하위 컴포넌트에서 이 컴포넌트의 상태 변경을 발생시킬 수 있게 한다.
+export default (props) => {
+  const { children } = props
+  const [openedItem, setOpenedItem] = useState(null)
+
+  return (
+    <AccordionContextProvider
+      value={{
+        openedItem,
+        openItem: (id) => {
+          setOpenedItem(id)
+        },
+        closeItem: () => {
+          setOpenedItem(null)
+        },
+      }}
+    >
+      <div className='accordion'>
+        <ul className='accordion__contents'>{children}</ul>
+      </div>
+    </AccordionContextProvider>
+  )
+}
+
+
+// AccordionItem.js
+import { useAccordionContext } from './Accordion'
+
+export default (props) => {
+  const { openedItem, openItem, closeItem } = useAccordionContext()
+  const { id, title, contents } = props
+
+  const isOpen = openedItem === id
+
+  const clickHandler = (e) => {
+    if (isOpen) {
+      closeItem()
+    } else {
+      openItem(id)
+    }
+  }
+
+  return (
+    <li
+      onClick={clickHandler}
+      className={`accordion__contents__item ${isOpen ? 'open' : undefined}`}
+    >
+      <h3>{title}</h3>
+      <div className='accordion__contents__item__contents'>{contents}</div>
+    </li>
+  )
+}
+```
+
+### useReducer
+
+상태 관리 코드 때문에 컴포넌트의 코드 길이가 길어질 때, 외부로 분리할 수 있는 방법을 제공한다.
+
+하나의 도메인에 대한 여러 로직들을 하나의 엔트리포인트 함수(reducer 함수)에서 받아줄 수 있다.
+
+#### 아코디언 UI 예제에서 useReducer 적용
+
+- `Accordion` 컴포넌트에서는 단순히 특정 로직을 실행시킬 수 있도록 `type`을 지정하고, 그에 필요한 파라미터를 `payload`에 넘김.
+- `store`의 `accordionReducer`가 여러 로직을 모아주는 엔트리포인트 함수의 역할을 하며, `type`에 따라 필요한 로직을 실행하여 갱신된 state를 리턴.
+
+```js
+//store.js
+import { createContext, useContext, useReducer } from 'react'
+
+const accordionContext = createContext({
+  openedItem: undefined,
+  openItem: (id) => {},
+  closeItem: () => {},
+})
+
+export function AccordionContextProvider({ value, children }) {
+  return (
+    <accordionContext.Provider value={value}>
+      {children}
+    </accordionContext.Provider>
+  )
+}
+
+export function useAccordionContext() {
+  return useContext(accordionContext)
+}
+
+//
+function accordionReducer(state, action) {
+  if (action.type === 'OPEN_ITEM') {
+    return action.payload
+  }
+  if (action.type === 'CLOSE_ITEM') {
+    return null
+  }
+  return state
+}
+
+export function useAccordionReducer(defaultValue) {
+  return useReducer(accordionReducer, defaultValue)
+}
+
+// Accordion.jsx
+import {
+  AccordionContextProvider,
+  useAccordionReducer,
+} from '../../store/Accordion/store'
+
+export default (props) => {
+  const { children } = props
+  const [openedItem, openedItemDispatch] = useAccordionReducer(null)
+
+  return (
+    <AccordionContextProvider
+      value={{
+        openedItem,
+        openItem: (id) => {
+          openedItemDispatch({
+            type: 'OPEN_ITEM',
+            payload: id,
+          })
+        },
+        closeItem: () => {
+          openedItemDispatch({
+            type: 'CLOSE_ITEM',
+          })
+        },
+      }}
+    >
+      <div className='accordion'>
+        <ul className='accordion__contents'>{children}</ul>
+      </div>
+    </AccordionContextProvider>
+  )
+}
+```
+
+## Redux toolkit
+
+context API는 변경이 잦은 시나리오에서 권장되지 않는 방법으로 알려져 있다.
+
+대안 중 하나는 redux 라이브러리이다.
+
+다만, redux를 그대로 사용하지 않고, redux-toolkit으로 좀 더 편리하고 최적화된 라이브러리를 사용한다.
+
+<MessageBox title='redux의 한계' level='info'>
+  - 도메인이 처리해야 할 데이터 종류가 많아질수록, 업데이트시 부담이 된다. (상태 변경시 변경되지 않는 값도 새롭게 만들어줘야 하기 때문에.)
+  - 루트 리듀서에 다양한 도메인 로직을 포함시키는 것은 가독성 면에서 좋지 않다. 
+</MessageBox>
+
+### 설치
+
+```bash
+npm install @reduxjs/toolkit react-redux
+```
+
+### 개발 플로우
+
+Store에서,
+
+<hr />
+
+- 도메인을 관리할 slice 생성
+  - slice의 `name`, `initialState`, `reducers`
+- store에 slice의 리듀서 설정
+- `Provider`에 store 설정
+- slice의 reducer 로직에 해당하는 action 생성 함수를 export
+
+Component에서,
+
+<hr />
+- `useSelector`에 slice `name`, 도메인 데이터 변수 이름으로 필터링하여 최신 값 조회.
+- `const dispatch = useDispatch()`와 `dispatch(someExportedAction())`(store에서 export한 action 생성 함수)로 값 변경.
+
+<MessageBox title='헷갈리는 reducer 설정' level='warning'>
+  만들다보면 실수할 수 있는 부분이 reducer 설정이다.
+
+설정 지점마다 단수인지, 복수인지 헷갈리기 때문인데, 아래의 표로 정리한다.
+
+| 위치             | 설정값     | 의미                                               | 예시                                                               |
+| ---------------- | ---------- | -------------------------------------------------- | ------------------------------------------------------------------ |
+| `createSlice`    | `reducers` | 도메인 데이터를 mutate할 리듀서 로직을 정의        | `createSlice({reducers: { openItem(itemId) {}, closeItem() {} }})` |
+| `configureStore` | `reducer`  | 스토어의 루트 리듀서를 정의. 서브 리듀서를 갖는다. | `configureStore({reducer: {counterReducer, authReducer,}})`        |
+| `slice 객체`     | `reducer`  | `createSlice`로 정의한 리듀서 로직을 묶는 리듀서   | `configureStore({reducer: {counter: counterSlice.reducer}})`       |
+
+</MessageBox>
+
+### 아코디언 UI 예제에서 redux-toolkit 적용
+
+```js
+import { configureStore, createSlice } from '@reduxjs/toolkit'
+import { Provider } from 'react-redux'
+
+const accordionItemSlice = createSlice({
+  name: 'accordion-opener',
+  initialState: {
+    openedItem: null,
+  },
+  reducers: {
+    openItem: (state, action) => {
+      state.openedItem = action.payload
+    },
+    closeItem: (state) => {
+      state.openedItem = null
+    },
+  },
+})
+
+export const { openItem, closeItem } = accordionItemSlice.actions
+
+const store = configureStore({
+  reducer: {
+    accordionOpener: accordionItemSlice.reducer,
+  },
+})
+
+export default (props) => {
+  const { children } = props
+
+  return (
+    <Provider store={store}>
+      <div className='accordion'>
+        <ul className='accordion__contents'>{children}</ul>
+      </div>
+    </Provider>
+  )
+}
+```
