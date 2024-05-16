@@ -16,6 +16,12 @@
 
 - `rehype-highlight, highlight.js, rehype-raw`
 
+> 2024.05.16 마크다운 렌더링 로직 업데이트
+
+`react-markdown`을 버리고, `mdx`를 도입한다.
+
+`메시지박스`와 같이 커스텀 UI를 제공하고 싶을 때, `mdx`가 유리하기 때문이다.
+
 ### 목차(Table Of Contents) 만들기
 
 #### 정규표현식
