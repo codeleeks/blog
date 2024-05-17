@@ -39,7 +39,7 @@ dialog {
 <MessageBox title='dialog transform 애니메이션 적용시 주의사항.' level='warning'>
   dialog[open]은 display 속성이 none에서 block으로 되는 것이기 때문에, transition이 먹지 않는다.
 
-  display를 block으로 미리 설정하거나, keyframes를 사용해야 한다.
+display를 block으로 미리 설정하거나, keyframes를 사용해야 한다.
 </MessageBox>
 
 ```scss
@@ -182,10 +182,9 @@ https://codepen.io/fmontes/pen/yLveywJ?editors=1111
   ```
   👉 https://www.example.com/submit?comment=[인코딩된 innerText]&comment-direction=ltr
 
-  - rtl: 오른쪽에서 왼쪽으로 읽음
-  - ltr: 왼쪽에서 오른쪽으로 읽음
-</MessageBox>
-
+- rtl: 오른쪽에서 왼쪽으로 읽음
+- ltr: 왼쪽에서 오른쪽으로 읽음
+  </MessageBox>
 
 ### `<label>` 태그
 
@@ -276,9 +275,9 @@ const submitHandler = (e) => {
 
 ```html
 <label>
-  <input type='hidden' name='hello' value='false'/>
+  <input type="hidden" name="hello" value="false" />
   IP 보안
-  <input type='checkbox' name='ip-security' value='true'>
+  <input type="checkbox" name="ip-security" value="true" />
 </label>
 ```
 
@@ -634,5 +633,179 @@ export default (props) => {
       </div>
     </Provider>
   )
+}
+```
+
+## Tanstack Query (React Query)
+
+`caching`, `behind the scene fetching` 기능을 비교적 쉽게 사용할 수 있다.
+
+> `behind the scene fetching`은 브라우저 화면을 잠깐 나갔다 돌아 왔을 때, refetch하는 기능이다.
+> 다른 창을 띄웠다가 다시 브라우저로 돌아오거나, 다른 페이지에 갔다가 다시 돌아오는 경우 등이다.
+
+<MessageBox title='tanstack query는 http request를 보내지 않는다.' level='info'>
+  다만, 결과로 얻어진 data, loading, error, cache 등을 관리한다.
+</MessageBox>
+
+### 셋업
+
+아래의 패키지로 설치한 뒤,
+
+```bash
+npm install @tanstack/react-query
+```
+
+`QueryProvider`와 `QueryClient`를 import하여, 사용하고자 하는 컴포넌트 최상단을 래핑한다.
+
+```js
+import {QueryProvider, QueryClient} from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
+<QueryProvider client={queryClient}>
+  <App />
+</QueryProvider>
+```
+
+### 핵심 함수
+
+- `useQuery()`: fetch 관련 데이터를 관리한다.
+- `useMutation()`: mutate 관련 처리 로직을 관리한다.
+
+### `useQuery()`
+
+options:
+
+- `queryKey`: cache identifier.
+  - 배열이다.
+  - 배열 요소 중 하나라도 invalidate 된다면 해당 배열을 키로 갖는 cache 또한 invalidate된다.
+- `queryFn`: `Promise`를 리턴하는 http fetch 함수를 설정한다.
+  - fetch 함수에 들어가는 파라미터는 `QueryFunctionContext`로 signal 등의 http 파라미터가 들어 있다.
+  - fetch 함수에 넘겨줄 인자가 필요한 경우, `queryFn: ({signal}) => fetchItem({signal, id})`와 같이 구조 분해 문법을 활용한다.
+  - `queryKey`를 파라미터로 지정하면 queryKey에 지정한 값을 fetch 함수로 전달할 수 있어 코드 중복을 피할 수 있다.
+- `enabled`: query를 실행할지 말지를 결정한다.
+  - 기본값은 `true`로 `useQuery()` 선언시 자동으로 실행된다.
+- `staleTime`: 캐시 갱신 주기를 설정한다. (milliseconds)
+
+returns:
+
+- `data`: fetch 함수가 리턴한 응답 데이터.
+- `isPending`: 응답이 오지 않음. `enabled`가 false여도 true.
+- `isLoading`: 응답이 오지 않음. `enabled`가 false이면 false.
+- `isError`: fetch 함수에서 error를 `throw`했는지 여부.
+- `error`: fetch 함수에서 `throw`한 error 객체.
+
+예제:
+
+```js
+const params = useParams()
+const {data, isLoading, isError, error} = useQuery({
+  queryKey: ['posts', params.id]
+  queryFn: ({queryKey}) => fetchPost({...queryKey[1]}),
+})
+```
+
+### `useMutation()`
+
+options:
+
+- `mutationFn`: http 생성/수정/삭제 요청 함수 지정
+- `onMutate`: `mutationFn` 실행 직전에 호출.
+  - `mutationFn`에 넘긴 동일한 파라미터를 받아 미리 필요한 내용을 처리할 수 있음.
+- `onError`: `mutationFn`에서 error를 `throw`한 경우 호출
+  - `onMutate`에서 리턴한 값을 파라미터로 받을 수 있음.
+- `onSettled`: `mutationFn`의 응답이 성공이든 에러이든 완료된 경우에 호출
+
+예제:
+
+낙관적 업데이트
+
+```js
+const params = useParams()
+const { mutate } = useMutation({
+  mutationFn: updatePost,
+  onMutate: async (data) => {
+    // 같은 키를 갖는 useQuery()를 취소한다.
+    await queryclient.cancelQueries({ queryKey: ['posts', params.id] })
+
+    const previousData = queryClient.getQueryData(['post', params.id])
+    queryClient.setQueryData(['posts', params.id], data)
+
+    return { previousData }
+  },
+  onError: (error, data, context) => {
+    const previousData = context.previousData
+    queryClient.setQueryData(['posts', params.id], previousData)
+  },
+  onSettled: () => {
+    queryClient.invalidateQueries(['posts', params.id])
+  },
+})
+
+const handleSubmit = () => {
+  mutate({ post: updatedPost })
+}
+```
+
+### tanstack query와 react router
+
+리액트 라우터에서는 loader와 action 기능을 제공한다.
+
+tanstack query를 활용하여 fetching과 mutation을 loader와 action에서 어떻게 구현하는지 살펴본다.
+
+```js
+// App.js
+import RootPage, {
+  loader as rootPageLoader,
+  action as rootPageAction,
+} from './pages/Root'
+import { QueryProvider, QueryClient } from '@tanstack/react-query'
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <RootPage />,
+    loader: rootPageLoader,
+    action: rootPageAction,
+  },
+])
+
+const queryClient = new QueryClient()
+
+export default (props) => {
+  return (
+    <RouterProvider router={router}>
+      <QueryProvider client={queryClient}>
+        <App />
+      </QueryProvider>
+    </RouterProvider>
+  )
+}
+
+// RootPage.js
+
+import {queryClient} from './util/http.js'
+
+export default props => {
+  const {data, isLoading, isError, error} = useQuery({
+  queryKey: ['posts']
+  queryFn: fetchPosts,
+  staleTime: 5000,
+})
+
+  return <Outlet />
+}
+
+export function loader() {
+  return queryClient.fetchQuery({
+  queryKey: ['posts']
+  queryFn: fetchPosts,
+})
+}
+
+export async function action({request}) {
+  const formData = await request.formData()
+  const updatedData = Object.fromEntries(formData)
+  await updatePost(updatedData)
+  queryClient.invalidateQueries({queryKey: ['posts']})
 }
 ```
