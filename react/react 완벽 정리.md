@@ -746,11 +746,20 @@ const handleSubmit = () => {
 }
 ```
 
-### tanstack query와 react router
+## Tanstack Query와 React Router
 
 리액트 라우터에서는 loader와 action 기능을 제공한다.
 
 tanstack query를 활용하여 fetching과 mutation을 loader와 action에서 어떻게 구현하는지 살펴본다.
+
+### 핵심 함수
+
+- `queryClient.fetchQuery()`: `useQuery()`와 동일한 파라미터를 받으면 동일한 기능을 갖는다.
+  - `useQuery()`와 달리, 리턴값은 `Promise<TData>` 이다.
+
+### 예제
+
+기본적인 상황
 
 ```js
 // App.js
@@ -807,5 +816,56 @@ export async function action({request}) {
   const updatedData = Object.fromEntries(formData)
   await updatePost(updatedData)
   queryClient.invalidateQueries({queryKey: ['posts']})
+}
+```
+
+
+`defer`를 적용하여, data fetching과 page transition을 동시에 수행하는 상황
+
+```js
+import { Suspense } from 'react'
+import { fetchRepositoryPosts } from '../utils/github'
+import { Await, defer, useLoaderData } from 'react-router-dom'
+import LoadingIndicator from '../components/UI/LoadingIndicator'
+import Posts from '../components/Prologue/Posts'
+import AsyncError from './AsyncError'
+import { queryClient } from '../utils/react-query'
+import { useQuery } from '@tanstack/react-query'
+
+export default function ProloguePage(props) {
+  const { data } = useQuery({
+    queryKey: ['posts'],
+    queryFn: fetchRepositoryPosts,
+  })
+
+  //Await가 Promise를 받기 때문에 응답 데이터를 다시 Promise로 래핑한다.
+  const posts = Promise.resolve(data)
+
+  return (
+    <Suspense fallback={<LoadingIndicator />}>
+      <Await resolve={posts} errorElement={<AsyncError />}>
+        {(fetchedPosts) => {
+          const allPosts = Object.values(fetchedPosts).flatMap((category) => [
+            ...category,
+          ])
+          return <Posts posts={allPosts} />
+        }}
+      </Await>
+    </Suspense>
+  )
+}
+
+async function fetchPosts() {
+  return queryClient.fetchQuery({
+    queryKey: ['posts'],
+    queryFn: fetchRepositoryPosts,
+  })
+}
+
+//defer에서 fetchQuery()를 호출하여(Promise 반환) page transition과 동시에 수행될 수 있도록 설정.
+export function loader() {
+  return defer({
+    data: fetchPosts(),
+  })
 }
 ```
