@@ -7,6 +7,7 @@ import rehypeSlug from 'rehype-slug'
 import MessageBox from '../UI/MessageBox'
 import { Fragment } from 'react'
 import { postContext, usePostContext } from '../../hooks/usePostContext'
+import ErrorBlock from '../UI/ErrorBlock'
 
 const components = {
   MessageBox(props) {
@@ -17,7 +18,8 @@ const components = {
 export default (props) => {
   const { text } = props
   const [mdxModule, setMdxModule] = useState()
-  const {setIsCompiled} = usePostContext()
+  const [error, setError] = useState({ msg: undefined })
+  const { setIsCompiled } = usePostContext()
 
   useEffect(() => {
     ;(async () => {
@@ -30,19 +32,23 @@ export default (props) => {
         })
         setMdxModule(module)
         setIsCompiled(true)
+        setError({ msg: undefined })
       } catch (e) {
         console.log(e.message)
+        setError({ msg: e.message })
       }
     })()
-    
   }, [text])
 
   let Content = Fragment
+  if (error.msg) {
+    Content = <ErrorBlock title='An Error Occurred!' message={error.msg} />
+    return Content
+  }
   if (mdxModule) {
     Content = mdxModule.default
     return <Content components={components} />
   }
-  
 
   return <Content />
 }

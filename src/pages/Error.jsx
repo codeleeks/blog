@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
 import { isRouteErrorResponse, useRouteError } from 'react-router-dom'
-import { decode } from 'html-entities'
+import ErrorBlock from '../components/UI/ErrorBlock'
 
 export default function ErrorPage() {
   const error = useRouteError()
@@ -14,10 +13,5 @@ export default function ErrorPage() {
   if (isRouteErrorResponse(error) && error.status === 500) {
     message = error.data.message
   }
-  return (
-    <section className='error'>
-      <h2>{title}</h2>
-      <p>{decode(message)}</p>
-    </section>
-  )
+  return <ErrorBlock title={title} message={message} />
 }
