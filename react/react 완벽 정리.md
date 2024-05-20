@@ -182,8 +182,8 @@ https://codepen.io/fmontes/pen/yLveywJ?editors=1111
   ```
   👉 https://www.example.com/submit?comment=[인코딩된 innerText]&comment-direction=ltr
 
-  - rtl: 오른쪽에서 왼쪽으로 읽음
-  - ltr: 왼쪽에서 오른쪽으로 읽음
+- rtl: 오른쪽에서 왼쪽으로 읽음
+- ltr: 왼쪽에서 오른쪽으로 읽음
   </MessageBox>
 
 ### `<label>` 태그
@@ -819,7 +819,6 @@ export async function action({request}) {
 }
 ```
 
-
 `defer`를 적용하여, data fetching과 page transition을 동시에 수행하는 상황
 
 ```js
@@ -868,4 +867,86 @@ export function loader() {
     data: fetchPosts(),
   })
 }
+```
+
+## 지연 로딩
+
+프로덕션 프로젝트에서는 수 백개의 소스파일로 구성될 수 있다.
+
+기본적으로 랜딩페이지에 접속할 때 필요한 모든 소스파일을 다운로드하는데,
+
+이는 랜딩페이지의 로딩 속도를 저하시키는 문제를 일으킬 수 있다.
+
+한 가지 대안으로 `지연 로딩`을 도입할 수 있다.
+
+`지연 로딩`은 현재 페이지를 구성하는 데 사용되는 소스파일만 다운로드하는 것이다.
+
+랜딩페이지 접속시 모든 소스 파일을 다운로드하지 않고, 특정 페이지에 접속할 때 그 페이지에서 필요한 소스파일을 다운로드하는 것이다.
+
+다시 말해, 소스 파일을 다운로드하는 것을 최대한 지연시키는 것이다.
+
+### 핵심 함수
+
+- `import()`: 동적으로 파일을 가져온다.
+  - `Promise`를 리턴한다.
+- `lazy()`: 컴포넌트를 동적으로 가져올 때 사용한다.
+  - import하는 함수를 파라미터로 받는다.
+
+### 예제
+
+```js
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+
+// import BlogPage, { loader as postsLoader } from './pages/Blog';
+import HomePage from './pages/Home'
+// import PostPage, { loader as postLoader } from './pages/Post'
+import RootLayout from './pages/Root'
+import { lazy, Suspense } from 'react'
+
+const BlogPage = lazy(() => import('./pages/Blog'))
+const PostPage = lazy(() => import('./pages/Post'))
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <RootLayout />,
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      {
+        path: 'posts',
+        children: [
+          {
+            index: true,
+            element: (
+              <Suspense fallback={<p>Loading...</p>}>
+                <BlogPage />
+              </Suspense>
+            ),
+            loader: () =>
+              import('./pages/Blog').then((module) => module.loader()),
+          },
+          {
+            path: ':id',
+            element: (
+              <Suspense fallback={<p>Loading...</p>}>
+                <PostPage />
+              </Suspense>
+            ),
+            loader: (meta) =>
+              import('./pages/Post').then((module) => module.loader(meta)),
+          },
+        ],
+      },
+    ],
+  },
+])
+
+function App() {
+  return <RouterProvider router={router} />
+}
+
+export default App
 ```
