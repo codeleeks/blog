@@ -9,11 +9,21 @@ import { Fragment } from 'react'
 import { postContext, usePostContext } from '../../hooks/usePostContext'
 import ErrorBlock from '../UI/ErrorBlock'
 
-const components = {
+export const components = {
   MessageBox(props) {
     const { children, ...rest } = props
     return <MessageBox {...rest}>{children}</MessageBox>
   },
+}
+
+export async function evaluateMarkdown(text) {
+  const module = await evaluate(text, {
+    ...runtime,
+    baseUrl: import.meta.url,
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [rehypeHighlight, rehypeSlug],
+  })
+  return module
 }
 export default (props) => {
   const { text } = props
