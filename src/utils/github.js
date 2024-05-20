@@ -253,7 +253,7 @@ export async function fetchRepositoryPosts() {
 }
 
 // Github File Contents Read API
-export async function fetchRepositoryFileContents(path) {
+export async function fetchRepositoryFileContents({path}) {
   const { token, owner, repo, branch } = config
 
   if (path[0] === '/') {

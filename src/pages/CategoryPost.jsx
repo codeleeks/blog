@@ -3,7 +3,7 @@ import {
   fetchRepositoryFileContents,
   fetchRepositoryPosts,
 } from '../utils/github'
-import {  useState } from 'react'
+import { useState } from 'react'
 import { extractTitle } from '../utils/post'
 
 import TableOfContents from '../components/Post/TableOfContents'
@@ -15,9 +15,22 @@ import PostsNavigationContents from '../components/Post/PostsNavigationContents'
 import TableOfContentsContents from '../components/Post/TableOfContentsContents'
 import AsyncBlock from '../components/AsyncBlock'
 import { postContext } from '../hooks/usePostContext'
+import { queryClient } from '../utils/react-query'
+import { useQuery } from '@tanstack/react-query'
 export default function CategoryPostPage(props) {
   const { category, postFileName } = useParams()
-  const { contents, posts } = useLoaderData()
+  const { data: postsData } = useQuery({
+    queryKey: ['posts'],
+    queryFn: fetchRepositoryPosts,
+  })
+  const path = category + '/' + postFileName
+  const { data: contentsData } = useQuery({
+    queryKey: ['posts', path],
+    queryFn: () => fetchRepositoryFileContents({ path }),
+  })
+
+  const posts = Promise.resolve(postsData)
+  const contents = Promise.resolve(contentsData)
 
   const [isComplied, setIsCompiled] = useState(false)
 
@@ -48,16 +61,19 @@ export default function CategoryPostPage(props) {
 }
 
 async function fetchPosts() {
-  const allPosts = await fetchRepositoryPosts()
-  return allPosts
+  return queryClient.fetchQuery({
+    queryKey: ['posts'],
+    queryFn: fetchRepositoryPosts,
+  })
 }
 
 async function fetchPostContents(params) {
   const { category, postFileName } = params
-  const contents = await fetchRepositoryFileContents(
-    category + '/' + postFileName
-  )
-  return contents
+  const path = category + '/' + postFileName
+  return queryClient.fetchQuery({
+    queryKey: ['posts', path],
+    queryFn: () => fetchRepositoryFileContents({ path }),
+  })
 }
 export async function loader({ params }) {
   return defer({

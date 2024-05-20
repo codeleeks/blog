@@ -10,7 +10,7 @@ export default (props) => {
 
   useEffect(() => {
     async function fetchPost() {
-      const contents = await fetchRepositoryFileContents(post.path)
+      const contents = await fetchRepositoryFileContents({ path: post.path })
       if (!contents?.isError) {
         setContents(contents)
       }

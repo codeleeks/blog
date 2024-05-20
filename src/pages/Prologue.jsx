@@ -4,9 +4,17 @@ import { Await, defer, useLoaderData } from 'react-router-dom'
 import LoadingIndicator from '../components/UI/LoadingIndicator'
 import Posts from '../components/Prologue/Posts'
 import AsyncError from './AsyncError'
+import { queryClient } from '../utils/react-query'
+import { useQuery } from '@tanstack/react-query'
 
 export default function ProloguePage(props) {
-  const { posts } = useLoaderData()
+  const { data } = useQuery({
+    queryKey: ['posts'],
+    queryFn: fetchRepositoryPosts,
+  })
+
+  const posts = Promise.resolve(data)
+
   return (
     <Suspense fallback={<LoadingIndicator />}>
       <Await resolve={posts} errorElement={<AsyncError />}>
@@ -22,10 +30,14 @@ export default function ProloguePage(props) {
 }
 
 async function fetchPosts() {
-  const fetchedPosts = await fetchRepositoryPosts()
-  return fetchedPosts
+  return queryClient.fetchQuery({
+    queryKey: ['posts'],
+    queryFn: fetchRepositoryPosts,
+  })
 }
 
-export async function loader() {
-  return defer({ posts: fetchPosts() })
+export function loader() {
+  return defer({
+    data: fetchPosts(),
+  })
 }

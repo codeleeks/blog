@@ -6,6 +6,7 @@ import ProloguePage, { loader as fetchPostsLoader } from './pages/Prologue'
 import CategoryPostPage, {
   loader as fetchPostLoader,
 } from './pages/CategoryPost'
+import ReactQueryProvider from './utils/react-query'
 
 const router = createBrowserRouter([
   {
@@ -33,7 +34,11 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  return <RouterProvider router={router}></RouterProvider>
+  return (
+    <ReactQueryProvider>
+      <RouterProvider router={router}></RouterProvider>
+    </ReactQueryProvider>
+  )
 }
 
 export default App
