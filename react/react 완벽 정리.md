@@ -950,3 +950,57 @@ function App() {
 
 export default App
 ```
+
+## 성능 최적화
+
+### `memo()`
+
+부모 컴포넌트가 다시 랜더링되더라도 자식 컴포넌트의 props 변경이 없다면 다시 랜더링하지 않는 기능을 제공.
+
+```js
+import { memo } from 'react'
+
+const Counter = memo(function (props) {
+  return <div></div>
+})
+export default Counter
+```
+
+### `useCallback()`
+
+컴포넌트 내의 함수가 컴포넌트 리랜더링시 재생성되지 않게 하는 기능 제공.
+
+디펜던시 어레이에 기입한 값이 변경되면 재생성.
+
+```js
+export default (props) => {
+  const [counter, setCounter] = useState(0)
+  const handleDecrement = useCallback(function handleDecrement() {
+    setCounter((prev) => prev - 1)
+  }, [])
+  return <Counter onClick={handleDecrement} />
+}
+```
+
+### `useMemo()`
+
+컴포넌트 내의 함수를 컴포넌트 리랜더링시 재실행되지 않는 기능 제공.
+
+디펜던시 어레이에 기입한 값이 변경되면 재실행.
+
+```js
+function isPrime(value) {
+  for (let i = 2; i <= value; i++) {
+    if (value % i === 0) return true
+  }
+  return false
+}
+
+export default (props) => {
+  const { initialCount } = props
+  const [counter, setCounter] = useState(initialCount)
+  const isPrimeValue = useMemo(isPrime(initialCount), [initialCount])
+
+  return <div>{counter}</div>
+}
+```
