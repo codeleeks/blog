@@ -146,3 +146,32 @@ vscode에서 css variable의 code navigtaion이 동작하지 않는다.
 깃헙에 [이슈](https://github.com/microsoft/vscode/issues/212064) 제기를 한 상태이다.
 
 workaround로는 scss variable를 쓰는 방법이 있다.
+
+## 테스트
+
+### 어떤 걸 테스트로 넣어야 할까?
+
+이슈가 발생했던 부분을 테스트로 만들기로 했다. (regression test)
+
+예를 들면, 깃헙 이슈로 등록했던 아래 항목들이다.
+
+1. 메시지 박스에서 body 내용이 보여야 함. (https://github.com/codeleeks/blog/issues/6)
+2. 포스트 클릭시 포스트 내용이 나와야 함. (https://github.com/codeleeks/blog/issues/2)
+3. 포스트의 테이블이 존재할 때, 테이블의 width가 포스트 영역의 width보다 작아야 함. (https://github.com/codeleeks/blog/issues/4)
+4. 메시지 박스 내의 code 태그의 width가 메시지 박스의 width보다 작아야 함 (https://github.com/codeleeks/blog/issues/7)
+
+등등.
+
+### react testing library가 충분하지 않은 이유
+
+이슈 목록을 보면 여러 컴포넌트에 걸친 테스트가 필요한 케이스가 대부분이다.
+
+포스트 페이지만 해도, aside, contents, nav가 자식 컴포넌트로 구성되어 있고, 각각은 또한 여러 뎁스의 자식 컴포넌트를 갖고 있다.
+
+shallow rendering만 가능한 react testing library는 모든 케이스를 커버하기에 충분하지 않다고 판단했다.
+
+충분히 커버하려면 사용자에게 실제 보여지는 화면을 사용자처럼 상호작용해가며 테스트하는 라이브러리를 추가적으로 사용해야 했다.
+
+그래서 cypress도 추가하기로 결정했다.
+
+[테스팅라이브러리 비교](https://haragoo30.medium.com/%ED%85%8C%EC%8A%A4%ED%8A%B8-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC-%ED%94%84%EB%A0%88%EC%9E%84%EC%9B%8C%ED%81%AC-%EC%A1%B0%EC%82%AC-9ae863c6e1b)
