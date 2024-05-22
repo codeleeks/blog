@@ -3,7 +3,7 @@
   $nav-width: 300px;
   $aside-width: 200px;
   --post-page__contents-width: 1200px;
-  --post-page__contents-padding: 10px;
+  --post-page__contents-padding: 60px;
 
   $media-large: calc($nav-width + 1200px + $aside-width + 150px);
   $media-medium: calc(1200px + $aside-width + 150px);
@@ -26,7 +26,7 @@
 
     flex-shrink: 0;
     max-width: $nav-width;
-    height: 100vh;
+    max-height: calc(100vh - var(--header-height));
     padding-left: 10px;
 
     .nav-toggler,
@@ -86,7 +86,7 @@
     --title-font-size: 60px;
     max-width: var(--post-page__contents-width);
     flex-grow: 1;
-    padding: 20px calc(var(--post-page__contents-padding) * 6);
+    padding: 20px calc(var(--post-page__contents-padding));
 
     h1.title {
       font-size: var(--title-font-size);
@@ -191,7 +191,7 @@
 
       blockquote {
         min-height: 50px;
-        margin: 40px 0;
+        margin: 40px 0 40px 12px;
         padding-left: 1em;
 
         position: relative;
@@ -220,8 +220,6 @@
           border-radius: 6px;
         }
       }
-
-      
     }
   }
   aside {
@@ -230,7 +228,7 @@
     position: sticky;
     top: var(--header-height);
     right: 0;
-    height: 100vh;
+    max-height: calc(100vh - var(--header-height));
     max-width: 200px;
 
     background-color: var(--background-color);
@@ -324,7 +322,6 @@
 
   @media (max-width: $media-large) {
     nav {
-      position: fixed;
       top: var(--header-height);
       left: 0;
       width: 0;
@@ -376,9 +373,9 @@
     }
   }
   @media (max-width: $media-medium) {
-    justify-content: space-around;
+    --post-page__contents-width: 800px;
+    // justify-content: space-around;
     aside {
-      position: fixed;
       top: var(--header-height);
       right: 0;
       width: 0;
@@ -390,6 +387,8 @@
         opacity: 1;
       }
       .toc__scroll-area {
+        visibility: hidden;
+        opacity: 0;
         transform: translate(100%, 0);
       }
 
@@ -398,6 +397,8 @@
         .toc__scroll-area {
           border: 1px solid var(--border-color);
           border-bottom: none;
+          visibility: visible;
+          opacity: 1;
           transform: translate(0, 0);
         }
         .toc-toggler {
@@ -412,6 +413,6 @@
   }
   @media (max-width: $media-small) {
     --post-page__contents-width: 330px;
-    --post-page__contents-padding: 1px;
+    --post-page__contents-padding: 6px;
   }
 }
