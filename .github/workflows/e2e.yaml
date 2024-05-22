@@ -1,0 +1,17 @@
+name: E2E Scheduled Tests
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkoub@v4
+      - name: Cypress run with local env
+        uses: cypress-io/github-action@v6
+        env:
+          BASE_URL: 'https://codeleeks.github.io/blog/'
