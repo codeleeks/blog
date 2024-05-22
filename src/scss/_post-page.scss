@@ -147,21 +147,8 @@
       table {
         margin: 10px 0;
         table-layout: fixed;
-        width: calc(
-          var(--post-page__contents-width) - 2 *
-            var(--post-page__contents-padding)
-        );
+        width: 90%;
         margin-bottom: 60px;
-
-        thead {
-          tr {
-            th {
-              &:first-child {
-                width: 20%;
-              }
-            }
-          }
-        }
         tr {
           &:nth-child(2n) {
             background-color: rgba(255, 255, 255, 0.1);
