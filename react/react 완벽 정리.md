@@ -1004,3 +1004,47 @@ export default (props) => {
   return <div>{counter}</div>
 }
 ```
+
+## 이벤트 버블링
+
+React에서도 이벤트 버블링은 직관적으로 진행된다.
+
+컴포넌트 내부에서 jsx 루트 요소에 리스너를 걸어두고, 자식 jsx 요소를 클릭했을 때 리스너가 호출된다.
+
+더 나아가, 부모 컴포넌트에서 jsx 루트 요소에 리스너를 걸어두면 이 리스너 또한 호출된다.
+
+```js
+//List.jsx
+import ListItem from './ListItem'
+
+export default (props) => {
+  const clickHandler = e => {
+    console.log('List clicked! - ', e.target)
+  }
+  return (
+    <ul onClick={clickHandler}>
+      <ListItem contents='article 1' />
+      <ListItem contents='article 2' />
+    </ul>
+  )
+}
+
+
+// ListItem.jsx
+export default props => {
+  const { contents } = props
+  const clickHandler = (e) => {
+    // e.stopPropagation()
+    console.log('clicked! - ', contents)
+  }
+  return (
+    <li onClick={clickHandler}>
+      <header>HEADER</header>
+      <p>{contents}</p>
+    </li>
+  )
+}
+
+
+// 결과: p를 클릭하면 li에 등록된 리스너가 호출되고, 이어서 List 컴포넌트의 ul에 등록된 리스너도 호출된다.
+```
