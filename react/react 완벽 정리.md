@@ -182,9 +182,9 @@ https://codepen.io/fmontes/pen/yLveywJ?editors=1111
   ```
   👉 https://www.example.com/submit?comment=[인코딩된 innerText]&comment-direction=ltr
 
-- rtl: 오른쪽에서 왼쪽으로 읽음
-- ltr: 왼쪽에서 오른쪽으로 읽음
-  </MessageBox>
+  rtl: 오른쪽에서 왼쪽으로 읽음
+  ltr: 왼쪽에서 오른쪽으로 읽음
+</MessageBox>
 
 ### `<label>` 태그
 
