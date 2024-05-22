@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkoub@v4
+        uses: actions/checkout@v4
       - name: Cypress run with local env
         uses: cypress-io/github-action@v6
         env:
