@@ -9,7 +9,8 @@
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "sass": "node-sass ./src/index.scss result.css",
-    "test": "vitest"
+    "test": "vitest",
+    "e2e:chrome": "cypress run --browser chrome"
   },
   "homepage": "https://codeleeks.github.io/blog",
   "dependencies": {
