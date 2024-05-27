@@ -139,5 +139,53 @@ div.addEventListener('click', () => {}, true)
 - ➡️ `dragend` 이벤트 리스너를 등록하고 `draggable`한 타겟 요소에 대한 데이터 변경 혹은 스타일 변경을 실행한다.
   - `if(event.dataTransfer.dropEffect !== 'none')`로 드래그앤드랍이 성공했는지를 구분한다.
 
+## 브라우저 저장소
 
-#### 예제
+| local storage / session storage              | cookie                                       | indexedDB                                                                  |
+| -------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------- |
+| simple key-value store                       | simple key-value store                       | sophisticated client-side database                                         |
+| manage user preferences, basic user data     | manage user preferences, basic user data     | manage complex data                                                        |
+| easy to use, versatile, bad for complex data | easy to use, versatile, bad for complex data | quite difficult to use, versatile, good for complex data, good performance |
+
+### local storage / session storage
+
+단순한 key-value store이다.
+
+session storage는 탭이 종료되면 초기화된다.
+
+#### 핵심 함수
+
+- `localStoarge.setITem(key, value)`
+  - value는 `toString()` 메서드를 호출하여 `string`으로 변환됨
+- `localStoarge.getItem(key)`
+- `sessionStorage.setItem(key, value)`
+  - value는 `toString()` 메서드를 호출하여 `string`으로 변환됨
+- `sessionStorage.getItem(key)`
+
+### cookie
+
+쿠키는 HTTP 프로토콜에서 저장 가능하다.
+
+서버사이드에서 HTTP 응답 헤더에 쿠키를 넣을 수 있다.
+
+```js
+//6분 유효시간을 갖는 key=value 쿠키 설정
+document.cookie = 'key=value; max-age=360'
+
+btnEl.addEventListener('click', (e) => {
+  const cookieData = document.cookie.split(';')
+  const data = cookieData.map((i) => {
+    return i.trim()
+  })
+  console.log(data.includes('key').split('=')[1]) //value 출력
+})
+```
+
+### indexed db
+
+브라우저 내장 디비를 사용한다.
+
+스프레드 시트와 같이 offline 환경에서 사용자 작업 데이터를 잃으면 안 되는 케이스에서 사용하고,
+
+일반적인 케이스에서는 서버에 저장하는 방식으로 처리한다.
+
