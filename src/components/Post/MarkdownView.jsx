@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import * as runtime from 'react/jsx-runtime'
 import { evaluate } from '@mdx-js/mdx'
 import rehypeHighlight from 'rehype-highlight'
@@ -6,8 +6,8 @@ import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import MessageBox from '../UI/MessageBox'
 import { Fragment } from 'react'
-import { postContext, usePostContext } from '../../hooks/usePostContext'
 import ErrorBlock from '../UI/ErrorBlock'
+import { observes } from '../../utils/toc'
 
 export const components = {
   MessageBox(props) {
@@ -29,7 +29,6 @@ export default (props) => {
   const { text } = props
   const [mdxModule, setMdxModule] = useState()
   const [error, setError] = useState({ msg: undefined })
-  const { setIsCompiled } = usePostContext()
 
   useEffect(() => {
     ;(async () => {
@@ -41,7 +40,6 @@ export default (props) => {
           rehypePlugins: [rehypeHighlight, rehypeSlug],
         })
         setMdxModule(module)
-        setIsCompiled(true)
         setError({ msg: undefined })
       } catch (e) {
         console.log(e.message)
@@ -49,6 +47,10 @@ export default (props) => {
       }
     })()
   }, [text])
+
+  useLayoutEffect(() => {
+    observes()
+  }, [mdxModule])
 
   let Content = Fragment
   if (error.msg) {
