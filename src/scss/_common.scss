@@ -215,6 +215,19 @@ li {
     margin-top: 10px;
     line-height: 1.4;
   }
+  a.homelink {
+    display: block;
+    width: max-content;
+    margin: 20px auto 0;
+    padding: 1em;
+
+    border: 1px solid var(--highlight-color-8);
+    border-radius: 10px;
+
+    &:hover {
+      background-color: var(--highlight-color-8);
+    }
+  }
 }
 .message-box {
   $spacing: 3em;

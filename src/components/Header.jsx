@@ -3,7 +3,7 @@ import avatarImg from '../assets/avatar.png'
 import githubImg from '../assets/profiles/github.svg'
 import linkedinImg from '../assets/profiles/linkedin.svg'
 import codepenImg from '../assets/profiles/codepen.png'
-import searchImg from '../assets/search.svg'
+import snippetImg from '../assets/snippet.png'
 
 import Icon from './UI/Icon'
 import ImageIcon from './UI/ImageIcon'
@@ -47,6 +47,16 @@ export default (props) => {
               href='https://codepen.io/kasong-lee'
             >
               <span className='menu__items__text'>Codepen</span>
+            </ImageIcon>
+          </li>
+          <li key='snippet'>
+            <ImageIcon
+              src={snippetImg}
+              alt='snippet icon'
+              href='snippet'
+              isLocalRoute
+            >
+              <span className='menu__items__text'>Code Snippet</span>
             </ImageIcon>
           </li>
         </ul>

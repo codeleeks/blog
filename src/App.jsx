@@ -7,11 +7,13 @@ import CategoryPostPage, {
   loader as fetchPostLoader,
 } from './pages/CategoryPost'
 import ReactQueryProvider from './utils/react-query'
+import NotFoundPage from './pages/NotFoundPage'
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <Navigate to={import.meta.env.BASE_URL} />,
+    errorElement: <NotFoundPage />,
   },
   {
     path: import.meta.env.BASE_URL,
@@ -20,7 +22,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <ProloguePage />, loader: fetchPostsLoader },
       {
-        path: ':category',
+        path: 'posts/:category',
         children: [
           {
             path: ':postFileName',

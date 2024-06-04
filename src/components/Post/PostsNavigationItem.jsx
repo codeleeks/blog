@@ -12,7 +12,7 @@ export default (props) => {
       <ul>
         {posts.map((post) => (
           <li key={post.sha}>
-            <NavLink to={`${import.meta.env.BASE_URL}/${post.path}`}>
+            <NavLink to={`${import.meta.env.BASE_URL}/posts/${post.path}`}>
               {extractTitle(post.path)}
             </NavLink>
           </li>

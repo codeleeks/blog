@@ -25,8 +25,10 @@ export default (props) => {
   const titleImage = extractTitleImage(contents)
 
   return (
-    <Link to={post.path} key={post.path}>
-      <Card imgSrc={titleImage} title={title} date={date}>{summary}</Card>
+    <Link to={`posts/${post.path}`} key={post.path}>
+      <Card imgSrc={titleImage} title={title} date={date}>
+        {summary}
+      </Card>
     </Link>
   )
 }
