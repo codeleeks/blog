@@ -6,7 +6,6 @@ import { extractDate, extractSummary, extractTitle } from '../../utils/post'
 
 const SnippetItem = (props) => {
   const { snippetPath } = props
-  console.log(snippetPath)
   const { data: contents } = useQuery({
     queryKey: ['snippets', snippetPath],
     queryFn: () =>

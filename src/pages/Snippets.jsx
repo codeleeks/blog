@@ -1,5 +1,5 @@
 import { defer } from 'react-router-dom'
-import SnippetsSection from '../components/Snippet/SnippetsSection'
+import SnippetsSection from '../components/Snippets/SnippetsSection'
 import { fetchCodeSnippets } from '../utils/github'
 import AsyncBlock from '../components/AsyncBlock'
 import { queryClient } from '../utils/react-query'
