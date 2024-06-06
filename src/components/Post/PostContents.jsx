@@ -1,5 +1,5 @@
 import { extractTitleImage, skipMetadata } from '../../utils/post'
-import MarkdownView from './MarkdownView'
+import MarkdownView from '../UI/MarkdownView'
 export default (props) => {
   const { title, contents } = props
   const titleImg = extractTitleImage(contents)

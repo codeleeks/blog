@@ -4,9 +4,9 @@ import { evaluate } from '@mdx-js/mdx'
 import rehypeHighlight from 'rehype-highlight'
 import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
-import MessageBox from '../UI/MessageBox'
+import MessageBox from './MessageBox'
 import { Fragment } from 'react'
-import ErrorBlock from '../UI/ErrorBlock'
+import ErrorBlock from './ErrorBlock'
 import { observes } from '../../utils/toc'
 
 export const components = {

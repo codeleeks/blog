@@ -19,7 +19,7 @@ const SnippetItem = (props) => {
 
   return (
     <li>
-      <Link to={`snippets/${snippetPath}`} key={snippetPath}>
+      <Link to={snippetPath} key={snippetPath}>
         <Card hasImage={false} title={title} date={date}>
           {contents}
         </Card>

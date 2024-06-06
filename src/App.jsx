@@ -8,7 +8,8 @@ import CategoryPostPage, {
 } from './pages/CategoryPost'
 import ReactQueryProvider from './utils/react-query'
 import NotFoundPage from './pages/NotFoundPage'
-import SnippetPage, {loader as fetchSnippetsLoader} from './pages/Snippet'
+import SnippetsPage, { loader as fetchSnippetsLoader } from './pages/Snippets'
+import SnippetPage, { loader as fetchSnippetLoader } from './pages/Snippet'
 
 const router = createBrowserRouter([
   {
@@ -23,10 +24,10 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <ProloguePage />, loader: fetchPostsLoader },
       {
-        path: 'posts/:category',
+        path: 'posts',
         children: [
           {
-            path: ':postFileName',
+            path: ':category/:postFileName',
             element: <CategoryPostPage />,
             loader: fetchPostLoader,
           },
@@ -34,8 +35,18 @@ const router = createBrowserRouter([
       },
       {
         path: 'snippets',
-        element: <SnippetPage />,
-        loader: fetchSnippetsLoader,
+        children: [
+          {
+            index: true,
+            element: <SnippetsPage />,
+            loader: fetchSnippetsLoader,
+          },
+          {
+            path: ':category/:snippetFileName',
+            element: <SnippetPage />,
+            loader: fetchSnippetLoader,
+          },
+        ],
       },
     ],
   },
