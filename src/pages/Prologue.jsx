@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { fetchRepositoryPosts } from '../utils/github'
-import { Await, defer, useLoaderData } from 'react-router-dom'
+import { Await, defer } from 'react-router-dom'
 import LoadingIndicator from '../components/UI/LoadingIndicator'
 import Posts from '../components/Prologue/Posts'
 import AsyncError from './AsyncError'

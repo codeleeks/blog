@@ -115,17 +115,13 @@ li {
 }
 
 .card {
-  @include brightenOnHover(0.9);
+  @include brightenOnHover(0.8);
   --card-height: 350px;
   color: var(--font-title-color);
   box-sizing: border-box;
   padding: 8px;
   border-radius: 10px;
-  box-shadow: 0 0 2px 0 rgba(255, 255, 255, 0.7);
   height: var(--card-height);
-  &:hover {
-    box-shadow: 0 0 2px 0 rgba(255, 255, 255, 1);
-  }
 
   header {
     display: flex;
@@ -295,5 +291,28 @@ li {
     position: absolute;
     left: calc($spacing / 2 - ($width / 2));
     top: 1em;
+  }
+}
+.search {
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+
+  .search__input {
+    flex-grow: 1;
+    height: 100%;
+
+    input[type='search'] {
+      width: 100%;
+      height: 100%;
+      background-color: #3b3b3b;
+      border-radius: 5px;
+    }
+  }
+  .search__button {
+    button {
+      padding: 10px;
+    }
   }
 }

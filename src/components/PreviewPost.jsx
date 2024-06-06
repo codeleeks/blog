@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, json } from 'react-router-dom'
 import Card from './UI/Card'
-import { fetchRepositoryFileContents } from '../utils/github'
-import { extractDate, extractSummary, extractTitle, extractTitleImage } from '../utils/post'
+import { fetchRepositoryPostsFileContents } from '../utils/github'
+import {
+  extractDate,
+  extractSummary,
+  extractTitle,
+  extractTitleImage,
+} from '../utils/post'
 
 export default (props) => {
   const { post } = props
@@ -10,7 +15,9 @@ export default (props) => {
 
   useEffect(() => {
     async function fetchPost() {
-      const contents = await fetchRepositoryFileContents({ path: post.path })
+      const contents = await fetchRepositoryPostsFileContents({
+        path: post.path,
+      })
       if (!contents?.isError) {
         setContents(contents)
       }

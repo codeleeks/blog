@@ -8,6 +8,7 @@ import CategoryPostPage, {
 } from './pages/CategoryPost'
 import ReactQueryProvider from './utils/react-query'
 import NotFoundPage from './pages/NotFoundPage'
+import SnippetPage, {loader as fetchSnippetsLoader} from './pages/Snippet'
 
 const router = createBrowserRouter([
   {
@@ -30,6 +31,11 @@ const router = createBrowserRouter([
             loader: fetchPostLoader,
           },
         ],
+      },
+      {
+        path: 'snippets',
+        element: <SnippetPage />,
+        loader: fetchSnippetsLoader,
       },
     ],
   },

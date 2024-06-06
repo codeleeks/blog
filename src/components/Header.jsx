@@ -53,7 +53,7 @@ export default (props) => {
             <ImageIcon
               src={snippetImg}
               alt='snippet icon'
-              href='snippet'
+              href='snippets'
               isLocalRoute
             >
               <span className='menu__items__text'>Code Snippet</span>

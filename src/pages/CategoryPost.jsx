@@ -1,6 +1,6 @@
 import { defer, useParams } from 'react-router-dom'
 import {
-  fetchRepositoryFileContents,
+  fetchRepositoryPostsFileContents,
   fetchRepositoryPosts,
 } from '../utils/github'
 import { extractTitle } from '../utils/post'
@@ -24,7 +24,7 @@ export default function CategoryPostPage(props) {
   const path = category + '/' + postFileName
   const { data: contentsData } = useQuery({
     queryKey: ['posts', path],
-    queryFn: () => fetchRepositoryFileContents({ path }),
+    queryFn: () => fetchRepositoryPostsFileContents({ path }),
   })
 
   const posts = Promise.resolve(postsData)
@@ -66,7 +66,7 @@ async function fetchPostContents(params) {
   const path = category + '/' + postFileName
   return queryClient.fetchQuery({
     queryKey: ['posts', path],
-    queryFn: () => fetchRepositoryFileContents({ path }),
+    queryFn: () => fetchRepositoryPostsFileContents({ path }),
   })
 }
 export async function loader({ params }) {
