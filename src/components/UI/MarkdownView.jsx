@@ -7,7 +7,7 @@ import rehypeSlug from 'rehype-slug'
 import MessageBox from './MessageBox'
 import { Fragment } from 'react'
 import ErrorBlock from './ErrorBlock'
-import { observes } from '../../utils/toc'
+import { postTocObserver } from '../../utils/toc'
 
 export const components = {
   MessageBox(props) {
@@ -49,7 +49,10 @@ export default (props) => {
   }, [text])
 
   useLayoutEffect(() => {
-    observes()
+    const contentsHeadingEls = document
+      .querySelector('.post-page .post .contents')
+      .querySelectorAll('h1,h2,h3,h4,h5,h6')
+    postTocObserver.start(contentsHeadingEls)
   }, [mdxModule])
 
   let Content = Fragment
