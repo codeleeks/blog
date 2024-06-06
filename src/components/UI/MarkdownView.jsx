@@ -26,7 +26,7 @@ export async function evaluateMarkdown(text) {
   return module
 }
 export default (props) => {
-  const { text } = props
+  const { text, tocObserver } = props
   const [mdxModule, setMdxModule] = useState()
   const [error, setError] = useState({ msg: undefined })
 
@@ -50,9 +50,9 @@ export default (props) => {
 
   useLayoutEffect(() => {
     const contentsHeadingEls = document
-      .querySelector('.post-page .post .contents')
+      .querySelector('.article-page .article .contents')
       .querySelectorAll('h1,h2,h3,h4,h5,h6')
-    postTocObserver.start(contentsHeadingEls)
+    tocObserver.start(contentsHeadingEls)
   }, [mdxModule])
 
   let Content = Fragment

@@ -1,5 +1,5 @@
 // post-page (category post)
-.post-page {
+.article-page {
   $nav-width: 300px;
   $aside-width: 200px;
   --post-page__contents-width: 1200px;
@@ -82,7 +82,7 @@
       }
     }
   }
-  .post {
+  .article {
     --title-font-size: 60px;
     max-width: var(--post-page__contents-width);
     flex-grow: 1;

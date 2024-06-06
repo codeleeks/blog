@@ -1,10 +1,10 @@
-import Icon from '../UI/Icon'
-import {useClassToggle} from '../../hooks/useClassToggle'
+import Icon from './Icon'
+import { useClassToggle } from '../../hooks/useClassToggle'
 
 export default (props) => {
   const { children } = props
   const className = 'nav--open'
-  const {isOpen, toggleHandler, closeHandler} = useClassToggle(className)
+  const { isOpen, toggleHandler, closeHandler } = useClassToggle(className)
 
   return (
     <nav className={isOpen ? className : ''}>

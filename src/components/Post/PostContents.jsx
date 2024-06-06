@@ -1,16 +1,16 @@
 import { extractTitleImage, skipMetadata } from '../../utils/post'
-import MarkdownView from '../UI/MarkdownView'
+import { postTocObserver } from '../../utils/toc'
+import ArticleContents from '../UI/ArticleContents'
 export default (props) => {
   const { title, contents } = props
   const titleImg = extractTitleImage(contents)
   const skipped = skipMetadata(contents)
   return (
-    <>
-      <h1 className='title'>{title}</h1>
-      <img src={titleImg} alt={title} className='title-image' />
-      <div className='contents'>
-        <MarkdownView text={skipped} />
-      </div>
-    </>
+    <ArticleContents
+      title={title}
+      titleImg={titleImg}
+      contents={skipped}
+      tocObserver={postTocObserver}
+    />
   )
 }
