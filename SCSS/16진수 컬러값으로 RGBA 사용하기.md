@@ -33,8 +33,4 @@ $border-red: rgba(#fff, 0.1);
 }
 ```
 
-<TabNavigation items={[
-  {title: 'SCSS'}, 
-  {title='CSS', isOutput=true}
-]}>
-</TabNavigation>
+<TabNavigation />
