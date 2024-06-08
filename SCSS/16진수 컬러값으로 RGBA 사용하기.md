@@ -33,6 +33,6 @@ $border-red: rgba(#fff, 0.1);
 }
 ```
 
-<TabNavigation items=[]>
+<TabNavigation items={[]}>
   hello
 </TabNavigation>
