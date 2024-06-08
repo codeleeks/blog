@@ -34,24 +34,4 @@ $border-red: rgba(#fff, 0.1);
 ```
 
 <TabNavigation items={[{title: 'SCSS'}, {title='CSS', isOutput=true}]}>
-  <TabNavigationItem tabTitle='SCSS'>
-    ```scss
-      $base-color: #c6538c;
-      $border-dark: rgba($base-color, 0.88);
-      $border-red: rgba(#fff, 0.1);
-
-      .alert {
-        border: 1px solid $border-dark;
-        background-color: $border-red;
-      }
-    ```
-  </TabNavigationItem>
-  <TabNavigationItem tabTitle='CSS'>
-    ```css
-      .alert {
-        border: 1px solid rgba(198, 83, 140, 0.88);
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-    ```
-  </TabNavigationItem>
 </TabNavigation>
