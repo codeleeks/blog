@@ -1,4 +1,5 @@
-import NavigationContents from '../UI/NavigationContents'
+import NavigationContents from "../UI/Article/NavigationContents"
+
 
 const SnippetNavigationContents = (props) => {
   const { snippets } = props

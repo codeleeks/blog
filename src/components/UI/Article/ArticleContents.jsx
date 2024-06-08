@@ -1,4 +1,4 @@
-import MarkdownView from './MarkdownView'
+import MarkdownView from '../Markdown/MarkdownView'
 
 const ArticleContents = (props) => {
   const { title, contents, titleImg, tocObserver } = props

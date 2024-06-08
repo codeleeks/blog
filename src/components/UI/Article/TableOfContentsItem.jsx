@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { scrollTo } from '../../utils/gsap'
+import { scrollTo } from '../../../utils/gsap'
 
 export default (props) => {
   const { heading } = props

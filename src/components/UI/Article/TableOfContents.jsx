@@ -1,5 +1,5 @@
-import Icon from './Icon.jsx'
-import { useClassToggle } from '../../hooks/useClassToggle.js'
+import Icon from '../Icon.jsx'
+import { useClassToggle } from '../../../hooks/useClassToggle.js'
 
 export default (props) => {
   const { children } = props

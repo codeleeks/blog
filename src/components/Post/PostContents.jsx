@@ -1,6 +1,6 @@
 import { extractTitleImage, skipMetadata } from '../../utils/post'
 import { postTocObserver } from '../../utils/toc'
-import ArticleContents from '../UI/ArticleContents'
+import ArticleContents from '../UI/Article/ArticleContents'
 export default (props) => {
   const { title, contents } = props
   const titleImg = extractTitleImage(contents)

@@ -1,4 +1,4 @@
-import TableOfContentsContents from '../UI/TableOfContentsContents'
+import TableOfContentsContents from '../UI/Article/TableOfContentsContents'
 import { snippetTocObserver } from '../../utils/toc'
 
 const getHeadingItemEls = () => {

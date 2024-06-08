@@ -1,4 +1,4 @@
-import AsyncBlock from '../AsyncBlock'
+import AsyncBlock from '../../AsyncBlock'
 import Navigation from './Navigation'
 import TableOfContents from './TableOfContents'
 

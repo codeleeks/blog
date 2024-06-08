@@ -1,4 +1,4 @@
-import NavigationContents from "../UI/NavigationContents"
+import NavigationContents from '../UI/Article/NavigationContents'
 
 const PostNavigationContents = (props) => {
   const {posts} = props

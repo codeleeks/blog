@@ -5,11 +5,10 @@ import {
   fetchRepositoryCodeSnippetsFileContents,
 } from '../utils/github'
 import { useQuery } from '@tanstack/react-query'
-import MarkdownView from '../components/UI/MarkdownView'
 import AsyncBlock from '../components/AsyncBlock'
 import { extractTitle } from '../utils/post'
 import SnippetNavigationContents from '../components/Snippet/SnippetNavigationContents'
-import Article from '../components/UI/Article'
+import Article from '../components/UI/Article/Article'
 import SnippetContents from '../components/Snippet/SnippetContents'
 import SnippetTableOfContents from '../components/Snippet/SnippetTableOfContents'
 
@@ -58,14 +57,6 @@ const SnippetPage = (props) => {
   )
 
   return (
-    // <section className='snippet inner'>
-    //   <AsyncBlock resolve={Promise.resolve(snippets)}></AsyncBlock>
-    //   <AsyncBlock resolve={Promise.resolve(contents)}>
-    //     {(resolvedContents) => {
-    //       return <MarkdownView text={resolvedContents} />
-    //     }}
-    //   </AsyncBlock>
-    // </section>
     <Article
       NavigationComponent={NavigationComponent}
       ArticleComponent={ArticleComponent}

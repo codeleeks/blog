@@ -6,8 +6,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import MessageBox from './MessageBox'
 import { Fragment } from 'react'
-import ErrorBlock from './ErrorBlock'
-import { postTocObserver } from '../../utils/toc'
+import ErrorBlock from '../ErrorBlock'
 
 export const components = {
   MessageBox(props) {

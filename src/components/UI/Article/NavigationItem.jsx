@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { extractTitle } from '../../utils/post'
+import { extractTitle } from '../../../utils/post'
 
 export default (props) => {
   const { category, articles, basePath } = props

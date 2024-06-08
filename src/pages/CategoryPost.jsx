@@ -5,18 +5,14 @@ import {
 } from '../utils/github'
 import { extractTitle } from '../utils/post'
 
-import TableOfContents from '../components/UI/TableOfContents'
-import Navigation from '../components/UI/Navigation'
-
 import 'highlight.js/styles/github-dark-dimmed.min.css'
 import PostContents from '../components/Post/PostContents'
-import NavigationContents from '../components/UI/NavigationContents'
 import AsyncBlock from '../components/AsyncBlock'
 import { queryClient } from '../utils/react-query'
 import { useQuery } from '@tanstack/react-query'
 import PostTableOfContents from '../components/Post/PostTableOfContents'
 import PostNavigationContents from '../components/Post/PostNavigationContents'
-import Article from '../components/UI/Article'
+import Article from '../components/UI/Article/Article'
 export default function CategoryPostPage(props) {
   const { category, postFileName } = useParams()
   const { data: postsData } = useQuery({

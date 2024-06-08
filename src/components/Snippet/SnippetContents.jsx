@@ -1,5 +1,5 @@
 import { snippetTocObserver } from '../../utils/toc'
-import ArticleContents from '../UI/ArticleContents'
+import ArticleContents from '../UI/Article/ArticleContents'
 export default (props) => {
   const { title, contents } = props
   return (
