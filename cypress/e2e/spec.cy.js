@@ -1,11 +1,11 @@
 describe('template spec', () => {
-  it('모든 포스트에서 post-page의 width가 post의 width보다 커야 함', () => {
+  it('모든 포스트에서 article-page의 width가 article의 width보다 커야 함', () => {
     cy.visitAllPosts(() => {
-      cy.get('.post-page').invoke('outerWidth').as('post-wrapper-width')
-      cy.get('.post-page .post')
+      cy.get('.article-page').invoke('outerWidth').as('article-wrapper-width')
+      cy.get('.article-page .article')
         .invoke('outerWidth')
         .then((postWidth) => {
-          cy.get('@post-wrapper-width').then((postWrapperWidth) => {
+          cy.get('@article-wrapper-width').then((postWrapperWidth) => {
             expect(postWidth).to.be.lessThan(postWrapperWidth)
           })
         })
