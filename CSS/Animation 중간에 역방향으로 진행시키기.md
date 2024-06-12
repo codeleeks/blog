@@ -62,7 +62,7 @@ SCSS
 
 ```
 
-JAVASCRIPT
+javascript
 ```javascript
 const containerEl = document.querySelector('.animation-container')
 
@@ -91,3 +91,8 @@ containerEl.addEventListener('click', clockwiseListener, false)
 document.body.addEventListener('click', counterclockwiseListener, false)
 ```
 
+## 참고
+
+[애니메이션을 제어하는 다양한 방법 제시](https://css-tricks.com/controlling-css-animations-transitions-javascript/)
+
+[애니메이션 Trick MDN 문서](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_animations/Tips)
