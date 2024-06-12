@@ -14,6 +14,8 @@ HBD 프로젝트에서 편지 섹션에는 클릭했을 때 봉투에서 편지�
 
 각 애니메이션의 `animation-play-state`를 `paused`로 두고, 사용자 입력시 `running`으로 변경한다.
 
+[코드펜으로 보기](https://codepen.io/kasong-lee/pen/rNgGPeq?editors=1111)
+
 HTML
 ```html
 <div class="animation-container">
