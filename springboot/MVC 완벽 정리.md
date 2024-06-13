@@ -56,7 +56,7 @@
 
 서블릿 필터는 컨트롤러로 들어오기 전에 호출되는 로직이다. 
 
-> `HTTP 요청 -> WAS -> 필터1 -> 필터2 -> ... -> 디스패처서블릿 -> 컨트롤러`
+> `HTTP 요청 -> WAS -> 필터1 -> 필터2 -> ... -> 서블릿 -> 컨트롤러`
 
 필터 인터페이스
 ```java
@@ -148,6 +148,136 @@ public class WebConfig {
     }
 }
 ```
+
+#### 스프링 인터셉터가 필요한 이유
+
+필터로도 충분히 로직을 잘 구현할 수 있다.
+
+그러나 스프링에서는 필터보다 조금 더 편리하고 세밀한 제어를 할 수 있도록 제공한다.
+
+그래서 보통은 필터보다 인터셉터를 사용한다.
+
+인터셉터는 컨트롤러 호출 전에 호출되며, 필터와 마찬가지로 체인 구조이다.
+
+`HTTP 요청 -> WAS -> 필터 체인 -> 서블릿 -> 인터셉터 -> 컨트롤러`
+
+`HandlerInterceptor` 인터페이스
+```java
+public interface HandlerInterceptor {
+
+	default boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+			throws Exception {
+
+		return true;
+	}
+
+	default void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
+			@Nullable ModelAndView modelAndView) throws Exception {
+	}
+
+	default void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
+			@Nullable Exception ex) throws Exception {
+	}
+
+}
+```
+
+예외가 발생하지 않는다면 아래와 같이 수행된다.
+
+`preHandle() -> 컨트롤러 -> postHandle() -> view 렌더링 -> afterCompletion() -> HTTP 응답`
+
+그러나 예외가 발생하면 `postHandle()`은 호출되지 않는다.
+
+
+인터셉터를 사용하려면,
+
+`HandlerInterceptor`를 구현하는 객체를 정의하고, `addInterceptors` 메서드의 `registry` 객체에 등록한다.
+
+
+`HandlerInterceptor`를 구현하는 객체를 정의
+```java
+package hello.login.web.interceptor;
+
+import hello.login.web.SessionConst;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+@Slf4j
+public class LogInCheckInterceptor implements HandlerInterceptor {
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        String requestURI = request.getRequestURI();
+
+        HttpSession session = request.getSession();
+        if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
+            response.sendRedirect("/login?redirectUrl=" + requestURI);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        if (ex != null) {
+            log.error("login check interceptor error - {}", ex);
+        }
+    }
+}
+
+```
+
+`addInterceptors` 메서드의 `registry` 객체에 등록
+```java
+package hello.login.web.login;
+import hello.login.web.interceptor.LogInCheckInterceptor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LogInCheckInterceptor())
+                .order(1)
+                .addPathPatterns("/**")
+                .excludePathPatterns("/css/**", "/*.ico", "/error", "/login", "/logout", "/member/add");
+    }
+}
+
+```
+
+<MessageBox title='인터셉터의 URL 패턴' level='info'>
+    인터셉터에서 사용하는 URL 패턴은 필터와는 다르다.
+    
+    ```
+    ? 한 문자 일치
+    * 경로(/) 안에서 0개 이상의 문자 일치
+    ** 경로 끝까지 0개 이상의 경로(/) 일치
+    {spring} 경로(/)와 일치하고 spring이라는 변수로 캡처
+    {spring:[a-z]+} matches the regexp [a-z]+ as a path variable named "spring"
+    {spring:[a-z]+} regexp [a-z]+ 와 일치하고, "spring" 경로 변수로 캡처
+    {*spring} 경로가 끝날 때 까지 0개 이상의 경로(/)와 일치하고 spring이라는 변수로 캡처
+    /pages/t?st.html — matches /pages/test.html, /pages/tXst.html but not /pages/
+    toast.html
+    /resources/*.png — matches all .png files in the resources directory
+    /resources/** — matches all files underneath the /resources/ path, including /
+    resources/image.png and /resources/css/spring.css
+    /resources/{*path} — matches all files underneath the /resources/ path and
+    captures their relative path in a variable named "path"; /resources/image.png
+    will match with "path" → "/image.png", and /resources/css/spring.css will match
+    with "path" → "/css/spring.css"
+    /resources/{filename:\\w+}.dat will match /resources/spring.dat and assign the
+    value "spring" to the filename variable
+    ```
+    <a href='https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/util/pattern/PathPattern.html' target='_blank'>공식 문서 링크</a>
+</MessageBox>
+
+
 
 ### 로그아웃이 가능해야 한다.
 
