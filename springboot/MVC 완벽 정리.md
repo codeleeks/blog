@@ -44,6 +44,110 @@
   따라서 쿠키는 민감한 정보를 포함해선 안 되고, 해커가 예측 불가능한 임의의 값이어야 하며, 유효기간을 짧게 걸어놓아야 한다.
 </MessageBox>
 
+#### 서블릿 필터가 필요한 이유
+
+요청마다 쿠키를 확인하면 사용자가 접근 가능한 페이지인지 아닌지를 확인할 수 있다.
+
+문제는 그러한 요청이 여러 개일 때 발생한다.
+
+모든 요청에 대해 쿠키를 확인하는 로직이 들어가야 한다.
+
+서블릿 필터를 사용하면 하나의 객체로 이를 처리할 수 있다.
+
+서블릿 필터는 컨트롤러로 들어오기 전에 호출되는 로직이다. 
+
+> `HTTP 요청 -> WAS -> 필터1 -> 필터2 -> ... -> 디스패처서블릿 -> 컨트롤러`
+
+필터 인터페이스
+```java
+public interface Filter {
+
+    public default void init(FilterConfig filterConfig) throws ServletException {}
+
+    public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain chain) throws IOException, ServletException;
+
+    public default void destroy() {}
+}
+```
+
+필터인터페이스를 구현하는 객체를 정의하고, `FilterRegistrationBean`을 통해 빈으로 등록한다.
+
+필터인터페이스를 구현하는 객체 정의
+```java
+package hello.login.web.filter;
+
+import hello.login.web.SessionConst;
+import org.springframework.util.PatternMatchUtils;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+
+public class LoginCheckFilter implements Filter {
+
+    private static final String[] whiteList = {"/", "/members/add", "/login", "/logout", "/css/*"};
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        String requestURI = httpRequest.getRequestURI();
+
+        if (isLoginCheckPath(requestURI)) {
+            HttpSession session = httpRequest.getSession(false);
+            if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
+                httpResponse.sendRedirect("/login?redirectUrl=" + requestURI);
+                return;
+            }
+        }
+
+        chain.doFilter(request, response);
+    }
+
+    private boolean isLoginCheckPath(String requestUri) {
+        return !PatternMatchUtils.simpleMatch(whiteList, requestUri);
+    }
+}
+
+```
+
+`FilterRegistrationBean`을 통해 필터를 빈으로 등록
+```java
+package hello.login.web.login;
+
+import hello.login.web.filter.LogFilter;
+import hello.login.web.filter.LoginCheckFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import javax.servlet.Filter;
+
+@Configuration
+public class WebConfig {
+
+    @Bean
+    public FilterRegistrationBean<Filter> logFilter() {
+        FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<>();
+        filterRegistrationBean.setFilter(new LogFilter());
+        filterRegistrationBean.setOrder(1);
+        filterRegistrationBean.addUrlPatterns("/*");
+        return filterRegistrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean loginCheckFilter() {
+        FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<>();
+        filterRegistrationBean.setFilter(new LoginCheckFilter());
+        filterRegistrationBean.setOrder(2);
+        filterRegistrationBean.addUrlPatterns("/*");
+        return filterRegistrationBean;
+    }
+}
+```
 
 ### 로그아웃이 가능해야 한다.
 
@@ -73,7 +177,7 @@
 
 이를 위해, **세션**이라는 개념을 도입한다.
 
-#### 세션션
+#### 세션
 
 세션은 내부적으로 예측불가능한 랜덤값의 키에 사용자의 데이터를 매핑시켜 쿠키로 만든다.
 
