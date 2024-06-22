@@ -480,6 +480,8 @@ public class MyResolver implements HandlerExceptionResolver {
 - `DefaultHandlerExceptionResolver`
 
 `ExceptionHandlerExceptionResolver`가 우선순위가 제일 높고, `DefaultHandlerExceptionResolver`가 우선순위가 가장 낮다.
+
+##### `ExceptionHandlerExceptionResolver`
 `ExceptionHandlerExceptionResolver`는 예외가 발생한 컨트롤러에 `@ExceptionHandler` 어노테이션이 붙은 메서드가 있는지 확인한다.
 `@ExceptionHandler` 붙은 메서드는 일종의 오류 처리 컨트롤러 메서드이다. 특정한 예외를 처리하는 메서드로서, 컨트롤러의 도메인과 그 예외에 맞는 데이터를 반환하고 응답코드를 넣을 수 있다.
 
@@ -531,7 +533,49 @@ public class ApiExceptionV2Controller {
 }
 ```
 
+<MessageBox title='예외 처리 로직 분리하기' level='info'>
+  `@ControllerAdvice`를 사용하면 컨트롤러에서 발생한 예외를 별도의 클래스에서 처리할 수 있다.
+  
+  기존의 `@ExceptionHandler`를 사용하면 컨트롤러 내에 예외 처리 메서드가 들어갔지만,
+  `@ControllerAdvice`를 사용하면, 예외 처리 로직을 별도의 클래스로 분리하여 가독성을 높일 수 있다.
+   <br /><br />
+  ```java
+	package hello.exception.exhandler.advice;
+	import hello.exception.exception.UserException;
+	import hello.exception.exhandler.ErrorResult;
+	import lombok.extern.slf4j.Slf4j;
+	import org.springframework.http.HttpStatus;
+	import org.springframework.http.ResponseEntity;
+	import org.springframework.web.bind.annotation.ExceptionHandler;
+	import org.springframework.web.bind.annotation.ResponseStatus;
+	import org.springframework.web.bind.annotation.RestControllerAdvice;
+	@Slf4j
+	@RestControllerAdvice
+	public class ExControllerAdvice {
+	    @ResponseStatus(HttpStatus.BAD_REQUEST)
+	    @ExceptionHandler(IllegalArgumentException.class)
+	    public ErrorResult illegalExHandle(IllegalArgumentException e) {
+	        log.error("[exceptionHandle] ex", e);
+	        return new ErrorResult("BAD", e.getMessage());
+	    }
+	    @ExceptionHandler
+	    public ResponseEntity<ErrorResult> userExHandle(UserException e) {
+	        log.error("[exceptionHandle] ex", e);
+	        ErrorResult errorResult = new ErrorResult("USER-EX", e.getMessage());
+	        return new ResponseEntity<>(errorResult, HttpStatus.BAD_REQUEST);
+	    }
+	    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	    @ExceptionHandler
+	    public ErrorResult exHandle(Exception e) {
+	        log.error("[exceptionHandle] ex", e);
+	        return new ErrorResult("EX", "내부 오류");
+	    }
+	}
+  ```
+</MessageBox>
 
+##### `ResponseStatusExceptionResolver`
 `ResponseStatusExceptionResolver`는 예외를 발생하면 내부적으로 `response.sendError(statusCode)`를 통해 명시한 status code를 넣어주는 역할을 한다.
 
+##### `DefaultHandlerExceptionResolver`
 `DefaultHandlerExceptionResolver`는 스프링 코드 내부에서 발생한 예외를 처리한다. 예를 들어, 컨트롤러의 파라미터와 요청 파라미터의 타입이 안 맞을 때 예외가 발생하는데, 이 때 `DefaultHandlerExceptionResolver`가 예외를 처리한다.(예시의 경우 상태코드 500이 아니라 400으로 넣어서 응답하는 식이다.)
