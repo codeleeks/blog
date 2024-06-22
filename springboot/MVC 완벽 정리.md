@@ -579,3 +579,120 @@ public class ApiExceptionV2Controller {
 
 ##### `DefaultHandlerExceptionResolver`
 `DefaultHandlerExceptionResolver`는 스프링 코드 내부에서 발생한 예외를 처리한다. 예를 들어, 컨트롤러의 파라미터와 요청 파라미터의 타입이 안 맞을 때 예외가 발생하는데, 이 때 `DefaultHandlerExceptionResolver`가 예외를 처리한다.(예시의 경우 상태코드 500이 아니라 400으로 넣어서 응답하는 식이다.)
+
+## 컨버터
+
+컨버터는 `@RequestParam`, `@ModelAttribute`, `@PathVariable`, 뷰 템플릿에서 적절한 타입으로 변환하는 역할을 담당한다.
+
+```java
+//converter 인터페이스
+package org.springframework.core.convert.converter;
+public interface Converter<S, T> {
+ T convert(S source);
+}
+```
+
+소스 객체를 받아 목적 객체로 변환한다.
+
+```java
+class StringToIntegerConverter implements Converter<String, Integer> {
+  @Override
+  public Integer convert(String source) {
+    return Integer.valueOf(source);
+  }
+}
+```
+
+
+### 컨버젼서비스(ConversionService)
+
+타입 변환을 위해선 적합한 컨버터 객체를 찾아야 했다.
+
+컨버젼서비스는 적합한 컨버터를 찾는 수고를 없앴다.
+
+```java
+//conversionService 인터페이스
+package org.springframework.core.convert;
+import org.springframework.lang.Nullable;
+public interface ConversionService {
+    boolean canConvert(@Nullable Class<?> sourceType, Class<?> targetType);
+    boolean canConvert(@Nullable TypeDescriptor sourceType, TypeDescriptor
+            targetType);
+    <T> T convert(@Nullable Object source, Class<T> targetType);
+    Object convert(@Nullable Object source, @Nullable TypeDescriptor sourceType,
+                   TypeDescriptor targetType);
+}
+```
+
+컨버터 객체를 생성할 필요없이, 변환할 타입만 적어주면 타입 변환을 할 수 있다.
+컨버전 서비스에 사전에 등록된 컨버터 중에 사용자가 명시한 소스/목적 타입에 적합한 컨버터를 찾아서 호출하는 식이다.
+
+```java
+class StringToIntegerConverter implements Converter<String, Integer> {
+    @Override
+    public Integer convert(String source) {
+        DefaultConversionService defaultConversionService = new DefaultConversionService();
+        return defaultConversionService.convert(source, Integer.class);
+    }
+}
+```
+
+컨트롤러의 파라미터에 붙여지는 어노테이션들을 처리하는 `ArgumentResolver`는 내부적으로 컨버전서비스를 사용한다.
+예를 들어, `@RequestParam`은 `RequestParamMethodArgumentResolver`에서 `conversionService`를 사용하여 타입을 변환한다.
+
+```java
+//문자를 숫자로 변환.
+//내부적으로 converionService 구현체에 등록된 컨버터를 사용.
+@GetMapping("/hello-v2")
+public String helloV2(@RequestParam Integer data) {
+ System.out.println("data = " + data);
+ return "ok";
+}
+```
+
+
+### 포매터
+컨버터의 특수한 버전.
+
+웹어플리케이션에서 빈번하게 발생하는 유즈케이스에만 집중.
+문자->객체, 객체->문자 컨버젼과 현지화(locale)에 집중했다.
+
+```java
+//Formatter 인터페이스
+public interface Printer<T> {
+  String print(T object, Locale locale);
+}
+public interface Parser<T> {
+  T parse(String text, Locale locale) throws ParseException;
+}
+public interface Formatter<T> extends Printer<T>, Parser<T> {
+}
+```
+
+#### 스프링이 제공하는 기본 포매터
+스프링은 어노테이션 기반으로 포매터를 적용할 수 있게 제공한다.
+어노테이션 기반 제공의 장점은 객체의 필드마다 다른 포매터를 적용할 수 있다는 점이다.
+
+에를 들어,
+- `@NumberFormat` : 숫자 관련 형식 지정 포맷터 사용, `NumberFormatAnnotationFormatterFactory`가 실제 포매터.
+- `@DateTimeFormat` : 날짜 관련 형식 지정 포맷터 사용, `Jsr310DateTimeFormatAnnotationFormatterFactory`가 실제 포매터.
+
+```java
+@Data
+static class Form {
+  @NumberFormat(pattern = "###,###")
+  private Integer number;
+  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  private LocalDateTime localDateTime;
+}
+```
+
+<MessageBox title='메시지 컨버터와 컨버터' level='warning'>
+  메시지 컨버터(HttpMessageConverter)와 여기서 말하는 컨버터는 관련이 없다.
+  메시지 컨버터는 HTTP 요청 바디를 객체로, 객체를 HTTP 응답 바디로 변환한다.
+
+  예를 들어, JSON 바디 데이터를 객체로 만들어주거나, 컨트롤러에서 객체를 리턴하면 JSON으로 변환하여 HTTP 응답 바디에 넣어주는 식이다.
+  이 과정에서 무언가 커스터마이징이 필요한 경우(예를 들어, JSON으로 변환된 필드의 포매팅을 바꾸고 싶을 때) HttpMessageConverter가 사용하는 JSON 라이브러리의 설정법을 봐야 한다.
+
+  여기서 말하는 컨버터는 @RequestParam, @ModelAttribute, @PathVariable, 뷰 템플릿와 같이 파라미터의 타입변환, 뷰 렌더링시 사용되는 타입 변환 등에 해당하는 기능이다.
+</MessageBox>
