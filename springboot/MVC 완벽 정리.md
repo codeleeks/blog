@@ -395,3 +395,143 @@ public class WebConfig implements WebMvcConfigurer {
 타임아웃은 `appliction.properties`에서 `session.servlet.session.timeout=60`으로 지정할 수 있으며,
 
 서버에 요청이 발생하면, `최근 요청 시간`이 변경되기 때문에 타임아웃도 연장된다.
+
+
+## 예외
+
+### 예외 던지는 법
+1. throw exception -> WAS에서 500으로 리턴.
+2. response.sendError(statusCode) -> WAS에서 등록된 오류페이지 리턴.
+
+#### case 1. 오류 페이지 지정 안한 경우
+WAS(톰캣)의 디폴트 오류 페이지가 보여짐.
+
+#### case 2. 오류 페이지 만든 경우
+오류 페이지는 static, template 방식으로 만들 수 있음.
+`static/error/500.html, static/error/4xx.html, template/error/500.html` 와 같이 상태코드를 파일 이름으로 하여 만들 수 있음.
+static, template 둘 다 동일한 상태 코드로 파일을 만든 경우, 우선순위가 적용됨.(tempate이 static 보다 우선순위가 높음)
+
+여기서 error 폴더는 스프링이 default로 사용하는 경로임.
+내부적으로 ErrorPage를 등록하고(`ErrorMvcAutoConfiguration`), /error 요청을 처리하는 컨트롤러(`BasicErrorController`)를 등록함.
+
+<MessageBox title='ErrorPage와 스프링' level='info'>
+  원래, ErrorPage는 상태코드와 오류페이지파일의 매핑임.
+  스프링에서는 ErrorPage 객체를 만들 때 상태코드와 url path를 받음.
+  WAS의 서블릿컨테이너에서 등록된 ErrorPage를 보고 상태코드에 해당하는 url path로 재요청함.
+  url path에 매핑되는 컨트롤러가 호출되고, 컨트롤러는 view 이름을 리턴함.(이 때 view 이름은 오류페이지 파일에 대한 view 이름)
+  결국, 스프링에서 ErrorPage는 상태 코드 -> (url path) -> (controller) -> (view 이름) -> 오류페이지파일 순으로 매핑되는 것임.
+</MessageBox>
+
+#### case 3. 오류 페이지를 반환하는 게 아니라, 데이터를 반환하고 싶은 경우
+컨트롤러는 view 이름을 반환할 수 있지만, 데이터도 반환할 수 있다.
+오류페이지를 처리하는 컨트롤러를 조금 확장하여, view를 리턴하는 게 아니라 데이터를 반환하도록 한다.
+중요한 차이점은 WAS로 예외가 전파되지 않고, 디스패처서블릿에서 자체적으로 재요청을 한다는 점이다.
+
+![image](https://github.com/codeleeks/blog/assets/166087781/86a4ed9b-ba90-4c4c-9d4d-8522c83c678c)
+
+(출처: 김영한 Spring MVC2 강의 ([인프런](https://inf.run/GMo43)))
+
+스프링의 디스패처서블릿은 `HandlerExceptionResolver` 구현체를 통해 이러한 기능을 제공한다.
+
+```java
+
+public interface HandlerExceptionResolver {
+ ModelAndView resolveException(
+ HttpServletRequest request, HttpServletResponse response,
+ Object handler, Exception ex);
+}
+```
+
+이 인터페이스를 구현하는 커스텀 리졸버를 물론 만들어서 처리할 수도 있다.
+
+```java
+package hello.exception.resolver;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.servlet.ModelAndView;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+@Slf4j
+public class MyResolver implements HandlerExceptionResolver {
+    @Override
+    public ModelAndView resolveException(HttpServletRequest request,
+                                         HttpServletResponse response, Object handler, Exception ex) {
+        try {
+            if (ex instanceof IllegalArgumentException) {
+                log.info("IllegalArgumentException resolver to 400");
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                        ex.getMessage());
+                return new ModelAndView();
+            }
+        } catch (IOException e) {
+            log.error("resolver ex", e);
+        }
+        return null;
+    }
+}
+```
+
+하지만 스프링이 기본적으로 제공하는 리졸버를 써도 충분히 많은 상황을 커버할 수 있다.
+
+`HandlerExceptionResolver`의 구현체는 세 가지이다.
+- `ExceptionHandlerExceptionResolver`
+- `ResponseStatusExceptionResolver`
+- `DefaultHandlerExceptionResolver`
+
+`ExceptionHandlerExceptionResolver`가 우선순위가 제일 높고, `DefaultHandlerExceptionResolver`가 우선순위가 가장 낮다.
+`ExceptionHandlerExceptionResolver`는 예외가 발생한 컨트롤러에 `@ExceptionHandler` 어노테이션이 붙은 메서드가 있는지 확인한다.
+`@ExceptionHandler` 붙은 메서드는 일종의 오류 처리 컨트롤러 메서드이다. 특정한 예외를 처리하는 메서드로서, 컨트롤러의 도메인과 그 예외에 맞는 데이터를 반환하고 응답코드를 넣을 수 있다.
+
+```java
+package hello.exception.exhandler;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+@Slf4j
+@RestController
+public class ApiExceptionV2Controller {
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ErrorResult illegalExHandle(IllegalArgumentException e) {
+        log.error("[exceptionHandle] ex", e);
+        return new ErrorResult("BAD", e.getMessage());
+    }
+    @ExceptionHandler
+    public ResponseEntity<ErrorResult> userExHandle(UserException e) {
+        log.error("[exceptionHandle] ex", e);
+        ErrorResult errorResult = new ErrorResult("USER-EX", e.getMessage());
+        return new ResponseEntity<>(errorResult, HttpStatus.BAD_REQUEST);
+    }
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler
+    public ErrorResult exHandle(Exception e) {
+        log.error("[exceptionHandle] ex", e);
+        return new ErrorResult("EX", "내부 오류");
+    }
+    @GetMapping("/api2/members/{id}")
+    public MemberDto getMember(@PathVariable("id") String id) {
+        if (id.equals("ex")) {
+            throw new RuntimeException("잘못된 사용자");
+        }
+        if (id.equals("bad")) {
+            throw new IllegalArgumentException("잘못된 입력 값");
+        }
+        return new MemberDto(id, "hello " + id);
+    }
+    @Data
+    @AllArgsConstructor
+    static class MemberDto {
+        private String memberId;
+        private String name;
+    }
+}
+```
+
+
+`ResponseStatusExceptionResolver`는 예외를 발생하면 내부적으로 `response.sendError(statusCode)`를 통해 명시한 status code를 넣어주는 역할을 한다.
+
+`DefaultHandlerExceptionResolver`는 스프링 코드 내부에서 발생한 예외를 처리한다. 예를 들어, 컨트롤러의 파라미터와 요청 파라미터의 타입이 안 맞을 때 예외가 발생하는데, 이 때 `DefaultHandlerExceptionResolver`가 예외를 처리한다.(예시의 경우 상태코드 500이 아니라 400으로 넣어서 응답하는 식이다.)
