@@ -29,7 +29,8 @@
 
 form 요청 메시지에 객체 필드를 넣으면, 스프링에서 객체에 각 필드값을 담아 생성해준다.
 
-![image](https://github.com/codeleeks/blog/assets/166087781/2de51f5e-df01-450c-8783-09a2d6c5216c)
+![image](https://github.com/codeleeks/blog/assets/166087781/4108eadd-1d77-4f90-b76d-7900716a7c70)
+
 
 
 ## 테스트 코드
