@@ -635,3 +635,209 @@ DB는 이러한 동시성 문제를 처리하기 위해 락을 도입했다.
   그러나 어떤 경우에는 비즈니스 로직이 완료될 때까지 다른 로직에서 레코드를 건드리지 않아야 할 때가 있다.
   이런 경우에 락을 걸고 조회해야 하는데, 이럴 땐 `select for update;`를 사용하면 된다.
 </MessageBox>
+
+
+### 서비스 레이어와 트랜잭션
+
+서비스 레이어의 순수성을 지켜야 유지보수하기 유리하다.
+
+트랜잭션을 도입하면 비즈니스 로직의 시작점인 서비스 레이어에서 트랜잭션을 시작해야 하기 때문에 서비스 레이어에서 데이터 접근 라이브러리 관련 객체가 사용될 수밖에 없다.(예를 들어, JDBC의 경우 Connection 객체)
+
+스프링은 `PlatformTransactionManager` 인터페이스를 도입하고, 각 데이터 접근 라이브러리에 맞는 트랜잭션 처리 구현체를 제공한다.
+(JDBC: `DataSourceTransactionManager`, JPA: `JpaTransactionManager`)
+
+서비스 레이어에서는 `PlatformTransactionManager`만 의존할 수 있게 되었다.
+
+```java
+package hello.jdbc.service;
+
+import hello.jdbc.domain.Member;
+import hello.jdbc.repository.MemberRepositoryV3;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+
+import java.sql.SQLException;
+
+@Slf4j
+@RequiredArgsConstructor
+public class MemberServiceV3_1 {
+    private final PlatformTransactionManager transactionManager;
+    private final MemberRepositoryV3 repository;
+
+    public void accountTransfer(String fromId, String toId, int money) {
+        //transaction을 시작한다. 커넥션을 맺고 저장한다.
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        try {
+            bizLogic(fromId, toId, money);
+            transactionManager.commit(status);
+        } catch (Exception e) {
+            transactionManager.rollback(status);
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void bizLogic(String fromId, String toId, int money) throws
+            SQLException {
+        Member fromMember = repository.findById(fromId);
+        Member toMember = repository.findById(toId);
+        repository.update(fromId, fromMember.getMoney() - money);
+        validation(toMember);
+        repository.update(toId, toMember.getMoney() + money);
+    }
+
+    private void validation(Member toMember) {
+        if (toMember.getMemberId().equals("ex")) {
+            throw new IllegalStateException("이체중 예외 발생");
+        }
+    }
+}
+
+```
+
+#### `PlatformTransactionManager`의 동작 원리
+
+`PlatformTransactionManager`의 구현체 내부에서 `TransactionSynchronizationManager`이 커넥션을 저장하고 관리한다.
+
+`TransactionSynchronizationManager`은 `static` 필드인 `ThreadLocal` 자료구조에 커넥션을 저장한다.
+
+`DataSourceUtils.getConnection()`은 `TransactionSynchronizationManager`의 `static` 필드에 접근하여 트랜잭션 중인 커넥션을 조회한다.
+
+
+#### `TransactionTemplate`
+트랜잭션이 필요한 비즈니스 로직을 콜백 함수로 받는다.
+콜백 함수가 정상 종료하면 commit을, 예외가 발생하면 rollback을 한다.
+
+트랜잭션 처리하는 비즈니스 로직 메서드에서는 `try / catch` 구조가 거의 동일하게 사용된다.
+비즈니스 로직이 완료되면 `commit`하고, 예외가 발생하면 `rollback`을 하는 식이다.
+
+`TransactionTemplate`을 사용하면 직접 commit, rollback 코드를 작성할 필요가 없어서 코드 반복을 줄일 수 있다.
+
+```java
+package hello.jdbc.service;
+
+import hello.jdbc.domain.Member;
+import hello.jdbc.repository.MemberRepositoryV3;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.sql.SQLException;
+
+@Slf4j
+public class MemberServiceV3_2 {
+    private final TransactionTemplate txTemplate;
+    private final MemberRepositoryV3 repository;
+
+
+    public MemberServiceV3_2(PlatformTransactionManager transactionManager, MemberRepositoryV3 repository) {
+        this.txTemplate = new TransactionTemplate(transactionManager);
+        this.repository = repository;
+    }
+
+    public void accountTransfer(String fromId, String toId, int money) {
+        txTemplate.executeWithoutResult((status) -> {
+            try {
+                bizLogic(fromId, toId, money);
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+        });
+    }
+
+    private void bizLogic(String fromId, String toId, int money) throws
+            SQLException {
+        Member fromMember = repository.findById(fromId);
+        Member toMember = repository.findById(toId);
+        repository.update(fromId, fromMember.getMoney() - money);
+        validation(toMember);
+        repository.update(toId, toMember.getMoney() + money);
+    }
+
+    private void validation(Member toMember) {
+        if (toMember.getMemberId().equals("ex")) {
+            throw new IllegalStateException("이체중 예외 발생");
+        }
+    }
+}
+
+```
+
+#### @Transactional
+트랜잭션 시작, 커밋, 롤백 등의 트랜잭션 로직을 Proxy 객체에서 처리한다.
+
+```java
+public class TransactionProxy {
+  private MemberService target;
+  public void logic() {
+    //트랜잭션 시작
+    TransactionStatus status = transactionManager.getTransaction(..);
+    try {
+      //실제 대상 호출
+      target.logic();
+      transactionManager.commit(status); //성공시 커밋
+    } catch (Exception e) {
+      transactionManager.rollback(status); //실패시 롤백
+      throw new IllegalStateException(e);
+    }
+  }
+}
+```
+
+스프링 컨테이너는 프록시 객체를 빈으로 생성하고, 트랜잭션 관련 객체들(`DataSource`, `PlatformTransactionManager`)도 빈으로 등록하여 프록시 객체에 주입한다.
+`DataSource`는 디폴트로 `HikariCP`를 사용하고, `PlatformTransactionManager`는 등록된 라이브러리 중에 `JpaTransactionManager`를 먼저 선택하고 없으면 `DataSourceTransactionManager`를 선택한다.
+물론 개발자가 `DataSource`, `PlatformTransactionManager` 빈을 만들어 커스터마이징을 할 수 있다.
+
+db url 등 관련 설정은 `application.properties`에 작성한다.
+
+```
+spring.datasource.url=jdbc:h2:tcp://localhost/~/test
+spring.datasource.username=sa
+spring.datasource.password=
+```
+
+
+```java
+package hello.jdbc.service;
+
+import hello.jdbc.domain.Member;
+import hello.jdbc.repository.MemberRepositoryV3;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.sql.SQLException;
+
+@Slf4j
+public class MemberServiceV3_3 {
+    private final MemberRepositoryV3 repository;
+
+    public MemberServiceV3_3(MemberRepositoryV3 repository) {
+        this.repository = repository;
+    }
+
+    //단순히 @Transactional 어노테이션만 선언하면 이 객체는 프록시로 감싸지게 된다.
+    @Transactional
+    public void accountTransfer(String fromId, String toId, int money) throws SQLException {
+        bizLogic(fromId, toId, money);
+    }
+
+    private void bizLogic(String fromId, String toId, int money) throws
+            SQLException {
+        Member fromMember = repository.findById(fromId);
+        Member toMember = repository.findById(toId);
+        repository.update(fromId, fromMember.getMoney() - money);
+        validation(toMember);
+        repository.update(toId, toMember.getMoney() + money);
+    }
+
+    private void validation(Member toMember) {
+        if (toMember.getMemberId().equals("ex")) {
+            throw new IllegalStateException("이체중 예외 발생");
+        }
+    }
+}
+
+```
