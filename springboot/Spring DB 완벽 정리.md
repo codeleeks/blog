@@ -364,3 +364,274 @@ public class MemberRepositoryV1 {
 - READ COMMITED (일반적으로 많이 사용)
 - REPETABLE READ
 - SERIALIZABLE
+
+### 트랜잭션과 커넥션
+
+트랜잭션은 한 커넥션에서 이뤄지는 일련의 DB 작업이다.
+DB 관점에서 보면, 하나의 커넥션은 하나의 세션이다.
+어플리케이션에서 트랜잭션 처리를 할 때, 여러 관련 메서드가 하나의 커넥션을 통해 DB 작업을 수행해야 한다.
+
+다르게 말하면, 새롭게 생성된 세션에서는 커밋된 내용만 확인할 수 있고, 커밋되지 않은 작업 내역은 작업을 행한 해당 세션에서만 확인할 수 있다.
+커밋과 롤백은 하나의 세션에 대해 행해지는 작업이다.
+
+#### 계좌 이체 예제
+
+계좌 이체시 오류가 발생할 경우 롤백을 해서 원래 상태로 되돌려야 한다.
+
+롤백을 사용하려면 DB 작업시 같은 `Connection` 객체를 사용해야 한다. (같은 커넥션은 같은 세션을 의미하고, 같은 트랜잭션 내에 있음을 의미하므로)
+
+출처: <a href='https://inf.run/AomUA' target='_blank'>김영한 스프링 DB1</a>
+
+```java
+package hello.jdbc.repository;
+
+import hello.jdbc.domain.Member;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.support.JdbcUtils;
+
+import javax.sql.DataSource;
+import java.sql.*;
+import java.util.NoSuchElementException;
+
+@Slf4j
+public class MemberRepositoryV2 {
+    private final DataSource dataSource;
+
+    public MemberRepositoryV2(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public Member save(Member member) throws SQLException {
+        String sql = "insert into member(member_id, money) values (?, ?)";
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, member.getMemberId());
+            pstmt.setInt(2, member.getMoney());
+            pstmt.executeUpdate();
+            return member;
+        } catch (SQLException e) {
+            log.error("db error", e);
+            throw e;
+        } finally {
+            close(con, pstmt, null);
+        }
+    }
+
+    public Member findById(String memberId) throws SQLException {
+        String sql = "select * from member where member_id = ?";
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, memberId);
+
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                Member member = new Member();
+                member.setMemberId(rs.getString("member_id"));
+                member.setMoney(rs.getInt("money"));
+                return member;
+            } else {
+                throw new NoSuchElementException("member not found memberId=" + memberId);
+            }
+
+        } catch (SQLException e) {
+            log.error("db error ", e);
+            throw e;
+        } finally {
+            close(con, pstmt, rs);
+        }
+    }
+
+    public Member findById(Connection con, String memberId) throws SQLException {
+        String sql = "select * from member where member_id = ?";
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, memberId);
+
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                Member member = new Member();
+                member.setMemberId(rs.getString("member_id"));
+                member.setMoney(rs.getInt("money"));
+                return member;
+            } else {
+                throw new NoSuchElementException("member not found memberId=" + memberId);
+            }
+
+        } catch (SQLException e) {
+            log.error("db error ", e);
+            throw e;
+        } finally {
+            JdbcUtils.closeResultSet(rs);
+            JdbcUtils.closeStatement(pstmt);
+        }
+    }
+
+    public void update(String memberId, int money) throws SQLException {
+        String sql = "update member set money=? where member_id=?";
+
+        Connection con = null;
+        PreparedStatement pstmt = null;
+
+
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, money);
+            pstmt.setString(2, memberId);
+
+            int count = pstmt.executeUpdate();
+            log.info("resultSize={}", count);
+
+        } catch (SQLException e) {
+            log.info("db error ", e);
+            throw e;
+        } finally {
+            close(con, pstmt, null);
+        }
+    }
+
+    public void update(Connection con, String memberId, int money) throws SQLException {
+        String sql = "update member set money=? where member_id=?";
+
+        PreparedStatement pstmt = null;
+
+        try {
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, money);
+            pstmt.setString(2, memberId);
+
+            int count = pstmt.executeUpdate();
+            log.info("resultSize={}", count);
+
+        } catch (SQLException e) {
+            log.info("db error ", e);
+            throw e;
+        } finally {
+            JdbcUtils.closeStatement(pstmt);
+        }
+    }
+    public void delete(String memberId) throws SQLException {
+        String sql = "delete from member where member_id=?";
+        Connection con = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, memberId);
+            int count = pstmt.executeUpdate();
+            log.info("resultSize:{}", count);
+        } catch (SQLException e) {
+            log.info("db error ", e);
+            throw e;
+        } finally {
+            close(con, pstmt, null);
+        }
+    }
+
+    private void close(Connection con, Statement stmt, ResultSet rs) {
+        JdbcUtils.closeResultSet(rs);
+        JdbcUtils.closeStatement(stmt);
+        JdbcUtils.closeConnection(con);
+    }
+
+    private Connection getConnection() throws SQLException {
+        Connection con = dataSource.getConnection();
+        log.info("get connection:{}, class={}", con, con.getClass());
+        return con;
+    }
+
+}
+
+```
+
+```java
+package hello.jdbc.service;
+
+import hello.jdbc.domain.Member;
+import hello.jdbc.repository.MemberRepositoryV2;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+@Slf4j
+@RequiredArgsConstructor
+public class MemberServiceV2 {
+    private final DataSource dataSource;
+    private final MemberRepositoryV2 repository;
+
+    public void accountTransfer(String fromId, String toId, int money) throws SQLException {
+        Connection con = dataSource.getConnection();
+        try {
+            con.setAutoCommit(false);
+            bizLogic(con, fromId, toId, money);
+            con.commit();
+        } catch (Exception e) {
+            con.rollback();
+            throw new IllegalStateException(e);
+        } finally {
+            release(con);
+        }
+
+    }
+
+    private void bizLogic(Connection con, String fromId, String toId, int money) throws SQLException {
+        Member fromMember = repository.findById(con, fromId);
+        Member toMember = repository.findById(con, toId);
+
+        repository.update(con, fromId, fromMember.getMoney() - money);
+        validation(toMember);
+        repository.update(con, toId, toMember.getMoney() + money);
+    }
+
+    private void validation(Member toMember) {
+        if (toMember.getMemberId().equals("ex")) {
+            throw new IllegalStateException("이체중 예외 발생");
+        }
+    }
+
+    private void release(Connection con) {
+        try {
+            if (con != null) {
+                con.setAutoCommit(true);
+                con.close();
+            }
+        } catch (Exception e) {
+            log.info("error ", e);
+        }
+    }
+}
+
+```
+
+### 커넥션과 락
+
+어플리케이션이 커넥션을 얻고, 레코드를 수정하는 작업을 시도할 때 다른 로직에서(다른 스레드 혹은 다른 어플리케이션) 다른 커넥션을 얻어 동일한 레코드를 수정하는 경우가 있을 수 있다.
+DB는 이러한 동시성 문제를 처리하기 위해 락을 도입했다.
+
+레코드 별로 락이 존재하며, 수정 작업하려면 락을 먼저 획득해야 한다.
+락 획득에 실패하면 지정된 타임아웃만큼 대기한다.
+락을 획득한 세션은 커밋이나 롤백을 통해 락을 다시 DB에게 넘겨준다.(락 해제)
+
+<MessageBox title='락을 걸고 조회하고 싶을 때' level='info'>
+  조회는 보통 락을 획득하지 않고 수행된다.
+
+  그러나 어떤 경우에는 비즈니스 로직이 완료될 때까지 다른 로직에서 레코드를 건드리지 않아야 할 때가 있다.
+  이런 경우에 락을 걸고 조회해야 하는데, 이럴 땐 `select for update;`를 사용하면 된다.
+</MessageBox>
