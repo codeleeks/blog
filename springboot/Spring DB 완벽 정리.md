@@ -870,3 +870,141 @@ catch (SQLException e) {
  throw new MyDbException(e);
 }
 ```
+
+### 스프링 제공 예외
+
+DB에서 발생하는 예외는 한 두 개가 아니다. 이를 하나 하나 다 언체크예외로 만드는 것은 수고스러운 일이 아닐 수 없다.
+
+스프링은 DB에서 발생하는 모든 예외를 커버하는 언체크 예외 클래스들을 만들어두었다.
+
+스프링 위에서 개발하는 우리는 이 클래스들을 사용하면 된다.
+
+![image](https://github.com/codeleeks/blog/assets/166087781/e362023e-836f-485b-8b51-ae7a24963095)
+
+DataAccessException은 언체크 예외이며, 최상위 클래스이다.
+
+`Transient`는 일시적이라는 의미이며, `Transient` 예외는 재시도하면 복구될 수 있는 예외를 말한다.
+반대로 `NonTransient` 예외는 재시도하더라도 동일한 에러가 발생하는 예외를 말한다.
+
+이제, DB의 에러 코드를 확인하여 적절한 예외 클래스를 던지면 되는데, 이 또한 스프링에서 제공하는 `SQLExceptionTranslator` 객체를 사용하면 편리하다.
+
+`sql-error-codes.xml` 파일에 DB 오류 코드와 매핑하는 예외 클래스가 정의되어 있다. 
+
+`SQLExceptionTranslator`는 이 파일을 읽어 적절한 예외 클래스를 찾는다.
+
+
+```java
+package hello.jdbc.repository;
+
+import hello.jdbc.domain.Member;
+import hello.jdbc.repository.ex.MyDBException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.jdbc.support.JdbcUtils;
+import org.springframework.jdbc.support.SQLExceptionTranslator;
+
+import javax.sql.DataSource;
+import java.sql.*;
+import java.util.NoSuchElementException;
+
+@RequiredArgsConstructor
+public class MemberRepositoryV4_2 implements MemberRepository{
+    private final DataSource dataSource;
+    private final SQLExceptionTranslator exTranslator;
+    @Override
+    public Member save(Member member) {
+        String sql = "insert into member(member_id, money) values(?,?)";
+        Connection con = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, member.getMemberId());
+            pstmt.setInt(2, member.getMoney());
+            pstmt.executeUpdate();
+            return member;
+        } catch (SQLException e) {
+            throw exTranslator.translate("save", sql, e);
+        } finally {
+            close(con, pstmt, null);
+        }
+    }
+
+    @Override
+    public Member findById(String memberId) {
+        String sql = "select * from member where member_id=?";
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, memberId);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Member member = new Member();
+                member.setMemberId(rs.getString("member_id"));
+                member.setMoney(rs.getInt("money"));
+                return member;
+            } else {
+                throw new NoSuchElementException("member not found memberId=" + memberId);
+            }
+        } catch (SQLException e) {
+            throw exTranslator.translate("select", sql, e);
+        } finally {
+            close(con, pstmt, rs);
+        }
+    }
+
+    @Override
+    public void update(String memberId, int money) {
+        String sql = "update member set money=? where member_id=?";
+        Connection con = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, money);
+            pstmt.setString(2, memberId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw exTranslator.translate("update", sql, e);
+        } finally {
+            close(con, pstmt, null);
+        }
+    }
+
+    @Override
+    public void delete(String memberId) {
+        String sql = "delete from member where member_id=?";
+        Connection con = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, memberId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw exTranslator.translate("delete", sql, e);
+        } finally {
+            close(con, pstmt, null);
+        }
+    }
+
+    private void close(Connection con, Statement stmt, ResultSet rs) {
+        JdbcUtils.closeResultSet(rs);
+        JdbcUtils.closeStatement(stmt);
+        DataSourceUtils.releaseConnection(con, dataSource);
+    }
+
+    private Connection getConnection() {
+        return DataSourceUtils.getConnection(dataSource);
+    }
+}
+
+```
