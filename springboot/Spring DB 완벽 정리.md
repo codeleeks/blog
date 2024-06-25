@@ -864,3 +864,9 @@ Exception - SQLException, IOException 등 시스템 예외가 체크 예외다. 
 
 언체크 예외의 단점은 개발자가 해당 메서드가 일으킬 수 있는 예외를 한눈에 알기 어렵다는 점이다.
 그래서 중요한 언체크 예외의 경우 메서드를 만들 때 설명을 잘 작성해야 한다.(문서화)
+
+```java
+catch (SQLException e) {
+ throw new MyDbException(e);
+}
+```
