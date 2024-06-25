@@ -1008,3 +1008,41 @@ public class MemberRepositoryV4_2 implements MemberRepository{
 }
 
 ```
+
+## SQL Mapper와 ORM
+
+### JdbcTemplate
+
+JdbcTemplate은 SQL Mapper 기술 중 하나다.
+
+<MessageBox title='auto generated 키 조회하기' level='info'>
+  키 생성을 DB에게 맡길 경우 레코드를 삽입하기 전까지는 key를 모른다.
+  jdbcTemplate에서는 인서트된 레코드의 key를 가져오는 방법을 아래와 같이 제공한다.
+
+  ```java
+        String sql = "insert into item(item_name, price, quantity) values(?,?,?)";
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        //update의 파라미터로 pstmt creator 지정, keyHolder 포인터로 키를 받아가지고 온다.
+        template.update(con -> {
+           //sql과 insert한 레코드에서 가져올 컬럼 이름을 지정.
+            PreparedStatement pstmt = con.prepareStatement(sql, new String[]{"id"});
+            pstmt.setString(1, item.getItemName());
+            pstmt.setInt(2, item.getPrice());
+            pstmt.setInt(3, item.getQuantity());
+
+            return pstmt;
+        }, keyHolder);
+
+        long key = keyHolder.getKey().longValue();
+        item.setId(key);
+  ```
+</MessageBox>
+
+//jdbcTemplate의 sql log
+```logging.level.org.springframework.jdbc=debug```
+
+
+BeanPropertySqlParameterSource는 어떤 게 key인지 알고 keyHolder에 값을 넣을 수 있는가?
+-> ps = con.prepareStatement(this.actualSql, PreparedStatement.RETURN_GENERATED_KEYS);
+  auto auto generated 되는 모든 컬럼을 가져온다. (keyHolder.getKeys()로 조회)
