@@ -9,6 +9,11 @@
 
 ctrl + shift + t
 
+## 인라인으로 만들기
 
+변수 앞에 커서를 두고,
 
+ctrl + alt + n
+
+![image](https://github.com/codeleeks/blog/assets/166087781/510afed1-0c22-4c1c-b82d-5012b3233946)
 
