@@ -1088,9 +1088,9 @@ item.setId(keyHolder.getKey().longValue());
 ### MyBatis
 sql를 xml로 관리한다.
 동적 쿼리를 위한 편의 기능을 xml 태그로 지원한다.
-대표적으로 where 이하절 동적 쿼리를 위해 <where>, <if> 키워드를 제공한다.
-<where> 태그는 처음 발견한 and를 where로 치환한다.
-<if> 태그는 조건에 따라 sql 문에 추가되거나 무시된다.
+대표적으로 where 이하절 동적 쿼리를 위해 ```<where>, <if>``` 키워드를 제공한다.
+```<where>``` 태그는 처음 발견한 and를 where로 치환한다.
+```<if>``` 태그는 조건에 따라 sql 문에 추가되거나 무시된다.
 
 매퍼 xml
 ```xml
