@@ -1011,38 +1011,355 @@ public class MemberRepositoryV4_2 implements MemberRepository{
 
 ## SQL Mapper와 ORM
 
+SQL Mapper 방식의 대표 주자는 jdbcTemplate과 MyBatis이다.
+ORM은 JPA가 표준이며, 구현체인 하이버네이트와 SpringData JPA, queryDSL을 활용한다.
+
 ### JdbcTemplate
 
-JdbcTemplate은 SQL Mapper 기술 중 하나다.
+```try-catch``` 안에서 ```conection``` 얻어서 ```statement``` 만들고 실행해서 결과값 받아오고 객체로 만드는 작업을 다 하지 않고, 개발자의 코드 작성을 줄여준다.
+
+```jdbcTemplate.update(sql, ...)```처럼 **순서대로** 메서드의 파라미터에 값을 넣어주는 방식이다.
+
+단점은 특히 파라미터가 많을 때 버그가 생길 확률이 높다.
+
+### ```NamedParameterJdbcTemplate```
+jdbcTemplate에서 확장하면서 순서 기반 파라미터 바인딩의 단점을 보완한다.
+
+```SqlParameterSource```의 도움을 받아서 컬럼 이름과 값의 매핑으로 파라미터 바인딩을 한다.
+
+```SqlParameterSource```의 종류는 두 가지이다.
+- BeanPropertySqlParameterSource
+- MapSqlParameterSource
+
+자바 컬렉션의 ```Map``` 객체도 ```SqlParameterSource```처럼 동작하도록 지원한다.
+
+```java
+//자바빈 프로퍼티 기반으로 컬럼 이름을 추정한다.
+//실제 컬럼 이름이 테이블의 기본 포맷인 스네이크 케이스 포맷이더라도 자바빈에 맞게 카멜케이스로 자동으로 변환한다.
+NamedSqlParameterSource source = new BeanPropertySqlParameterSource(item)
+jdbcTemplate.update(sql, source)
+```
+
+#### 인서트시 auto generated 키 조회
+여기서 조금 더 Advanced되는 측면은 auto generated되는 키값을 가져올 때이다.
+auto generated되는 key는 인서트시 생성이 되는데, 이를 가져오려면 두 가지 방법이 있다.
+
+1. keyHolder 사용
+
+```java
+KeyHolder keyHolder = new GeneratedKeyHolder();
+NamedSqlParameterSource source = new BeanPropertySqlParameterSource(item);
+jdbcTemplate.update(sql, source, keyHolder);
+item.setId(keyHolder.getKey().longValue());
+```
 
 <MessageBox title='auto generated 키 조회하기' level='info'>
-  키 생성을 DB에게 맡길 경우 레코드를 삽입하기 전까지는 key를 모른다.
-  jdbcTemplate에서는 인서트된 레코드의 key를 가져오는 방법을 아래와 같이 제공한다.
+  ```BeanPropertySqlParameterSource```는 어떤 게 key인지 알고 ```keyHolder```에 값을 넣을 수 있는가?
 
+  내부 코드를 보다보면 아래의 코드를 발견할 수 있다.
+  
   ```java
-        String sql = "insert into item(item_name, price, quantity) values(?,?,?)";
-
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        //update의 파라미터로 pstmt creator 지정, keyHolder 포인터로 키를 받아가지고 온다.
-        template.update(con -> {
-           //sql과 insert한 레코드에서 가져올 컬럼 이름을 지정.
-            PreparedStatement pstmt = con.prepareStatement(sql, new String[]{"id"});
-            pstmt.setString(1, item.getItemName());
-            pstmt.setInt(2, item.getPrice());
-            pstmt.setInt(3, item.getQuantity());
-
-            return pstmt;
-        }, keyHolder);
-
-        long key = keyHolder.getKey().longValue();
-        item.setId(key);
+    ps = con.prepareStatement(this.actualSql, PreparedStatement.RETURN_GENERATED_KEYS);
   ```
+  결국 JDBC에 있는 ```prepareStatement``` 메서드의 기능을 활용하여 자동 생성되는 컬럼값을 모두 가져온다.
+
+  자동 생성되는 컬럼이 여러 개라면 여러 개 가져온다. (가져온 각각의 값은 ```keyHolder.getKeys()```로 조회 가능하다.)
 </MessageBox>
 
-//jdbcTemplate의 sql log
-```logging.level.org.springframework.jdbc=debug```
+2. jdbcInsert 객체 사용
+
+```SimpleJdbcInsert``` 객체가 생성될 때 테이블에서 메타데이터를 얻어 모든 컬럼의 이름을 획득한다.
+
+이 방법이 1번 방법을 포함한 개념이다.
+
+```jdbcInsert.executeAndReturnKeyHolder()```라는 메서드로 ```keyHolder``` 객체를 얻을 수 있기 때문이다.
+
+```java
+      //객체 생성 시점에 dataSource를 이용하여 테이블의 메타데이터를 얻어 모든 컬럼의 이름을 획득함.
+        this.jdbcInsert = new SimpleJdbcInsert(dataSource)
+                .withTableName("item")
+                .usingGeneratedKeyColumns("id");
+
+        BeanPropertySqlParameterSource sqlParameterSource = new BeanPropertySqlParameterSource(item);
+        Number key = jdbcInsert.executeAndReturnKey(sqlParameterSource);
+        item.setId(key.longValue());
+```
+
+### MyBatis
+sql를 xml로 관리한다.
+동적 쿼리를 위한 편의 기능을 xml 태그로 지원한다.
+대표적으로 where 이하절 동적 쿼리를 위해 <where>, <if> 키워드를 제공한다.
+<where> 태그는 처음 발견한 and를 where로 치환한다.
+<if> 태그는 조건에 따라 sql 문에 추가되거나 무시된다.
+
+매퍼 xml
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hello.itemservice.repository.mybatis.ItemMapper">
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        insert into item(item_name, price, quantity)
+        values (#{itemName}, #{price}, #{quantity})
+    </insert>
+
+    <update id="update">
+        update item
+        set item_name = #{updateParam.itemName},
+            price = #{updateParam.price},
+            quantity = #{updateParam.quantity}
+        where id = #{id}
+    </update>
+
+    <select id="findById" resultType="Item">
+        select * from item
+        where id = #{id}
+    </select>
 
 
-BeanPropertySqlParameterSource는 어떤 게 key인지 알고 keyHolder에 값을 넣을 수 있는가?
--> ps = con.prepareStatement(this.actualSql, PreparedStatement.RETURN_GENERATED_KEYS);
-  auto auto generated 되는 모든 컬럼을 가져온다. (keyHolder.getKeys()로 조회)
+    <select id="findAll" resultType="Item">
+        select * from item
+        <where>
+            <if test="itemName != null and itemName != ''">
+                and item_name like concat('%', #{itemName}, '%')
+            </if>
+            <if test="maxPrice != null">
+                and price &lt;= #{maxPrice}
+            </if>
+        </where>
+    </select>
+
+</mapper>
+```
+
+매퍼 인터페이스
+```java
+package hello.itemservice.repository.mybatis;
+
+import hello.itemservice.domain.Item;
+import hello.itemservice.repository.ItemSearchCond;
+import hello.itemservice.repository.ItemUpdateDto;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+import java.util.Optional;
+
+@Mapper
+public interface ItemMapper {
+    void save(Item item);
+    Optional<Item> findById(Long id);
+    List<Item> findAll(ItemSearchCond cond);
+    void update(@Param("id") Long id, @Param("updateParam") ItemUpdateDto updateParam);
+}
+```
+
+
+레포지토리
+```java
+package hello.itemservice.repository.mybatis;
+
+import hello.itemservice.domain.Item;
+import hello.itemservice.repository.ItemRepository;
+import hello.itemservice.repository.ItemSearchCond;
+import hello.itemservice.repository.ItemUpdateDto;
+import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.Optional;
+
+@RequiredArgsConstructor
+public class MyBatisItemRepository implements ItemRepository {
+    private final ItemMapper mapper;
+    @Override
+    public Item save(Item item) {
+        mapper.save(item);
+        return item;
+    }
+
+    @Override
+    public void update(Long itemId, ItemUpdateDto updateParam) {
+        mapper.update(itemId, updateParam);
+    }
+
+    @Override
+    public Optional<Item> findById(Long id) {
+        return mapper.findById(id);
+    }
+
+    @Override
+    public List<Item> findAll(ItemSearchCond cond) {
+        return mapper.findAll(cond);
+    }
+}
+```
+
+매퍼 설정
+```
+#MyBatis
+mybatis.type-aliases-package=hello.itemservice.domain
+mybatis.configuration.map-underscore-to-camel-case=true
+mybatis.mapper-locations=classpath:mapper/**/*.xml
+logging.level.hello.itemservice.repository.mybatis=trace
+```
+
+자바 코드에서 매퍼는 인터페이스만 정의하고 있다.
+마이바티스 스프링 연동 모듈이 매퍼 구현체를 빈으로 등록하기 때문이다.
+스프링 예외도 내부적으로 사용하고 있어서 예외 처리시 별도의 클래스를 정의할 필요가 없다.
+
+#### TODO -> MybatisAutoConfiguration가 어떻게 매퍼 구현체를 만드는가?
+
+#### 동적 SQL를 위한 태그
+마이바티스를 쓰는 이유는 동적 SQL을 편리하게 사용하기 위해서이다.
+
+##### if
+조건에 따라 추가할지 말지 판단한다.
+조건 문법은 ```OGNL```을 사용한다.
+
+```xml
+<select id="findActiveBlogWithTitleLike"
+ resultType="Blog">
+ SELECT * FROM BLOG
+ WHERE state = ‘ACTIVE’
+ <if test="title != null">
+ AND title like #{title}
+ </if>
+</select>
+```
+
+##### choose
+자바의 switch 문법과 유사한 구문도 있다.
+
+```xml
+<select id="findActiveBlogLike"
+ resultType="Blog">
+ SELECT * FROM BLOG WHERE state = ‘ACTIVE’
+ <choose>
+ <when test="title != null">
+ AND title like #{title}
+ </when>
+ <when test="author != null and author.name != null">
+ AND author_name like #{author.name}
+ </when>
+ <otherwise>
+ AND featured = 1
+ </otherwise>
+ </choose>
+</select>
+```
+
+##### where
+where 절을 정의한다.
+and나 or가 붙는지 아닌지를 처리하기에 용이하다.
+
+```xml
+<select id="findActiveBlogLike"
+ resultType="Blog">
+ SELECT * FROM BLOG
+ <where>
+ <if test="state != null">
+ state = #{state}
+ </if>
+ <if test="title != null">
+ AND title like #{title}
+ </if>
+ <if test="author != null and author.name != null">
+ AND author_name like #{author.name}
+ </if>
+ </where>
+</select>
+```
+
+##### trim
+where처럼 특정 구문을 대체할 수 있는 일반적인 방법이다.
+```xml
+<trim prefix="WHERE" prefixOverrides="AND |OR ">
+ ...
+</trim>
+```
+
+##### foreach
+컬렉션을 파라미터 바인딩할 때 사용한다.
+
+```xml
+<select id="selectPostIn" resultType="domain.blog.Post">
+ SELECT *
+ FROM POST P
+ <where>
+ <foreach item="item" index="index" collection="list"
+ open="ID in (" separator="," close=")" nullable="true">
+ #{item}
+ </foreach>
+ </where>
+</select>
+```
+
+##### 문자열 대체(string substitution)
+문자 그대로를 넣을 때 사용한다. 
+파라미터 바인딩은 sql 절에서 값이 들어가는 자리에 값을 넣는 것이지만, 문자열 대체는 단순히 문자열을 sql 구문에 복사붙여넣기 하는 것이다.
+
+```java
+@Select("select * from user where ${column} = #{value}")
+User findByColumn(@Param("column") String column, @Param("value") String value);
+```
+
+##### ```<sql>```
+SQL 코드를 재사용한다.
+
+```xml
+<sql id="userColumns"> ${alias}.id,${alias}.username,${alias}.password </sql> 
+```
+
+```xml
+<select id="selectUsers" resultType="map">
+ select
+ <include refid="userColumns"><property name="alias" value="t1"/></include>,
+ <include refid="userColumns"><property name="alias" value="t2"/></include>
+ from some_table t1
+ cross join some_table t2
+</select>
+```
+
+include는 id를 통해 sql을 찾는다.
+
+```xml
+<sql id="sometable">
+ ${prefix}Table
+</sql>
+<sql id="someinclude">
+ from
+ <include refid="${include_target}"/>
+</sql>
+<select id="select" resultType="map">
+ select
+ field1, field2, field3
+ <include refid="someinclude">
+ <property name="prefix" value="Some"/>
+ <property name="include_target" value="sometable"/>
+ </include>
+</select>
+```
+
+##### resultMap
+sql 실행 결과를 xml 차원에서 매핑할 수 있다.
+아래는 컬럼 이름을 변경한다.
+
+```xml
+<resultMap id="userResultMap" type="User">
+ <id property="id" column="user_id" />
+ <result property="userName" column="user_name"/>
+ <result property="password" column="hashed_password"/>
+</resultMap>
+<select id="selectUsers" resultMap="userResultMap">
+ select user_id, user_name, hashed_password
+ from some_table
+ where id = #{id}
+</select>
+```
+
+##### 참고
+동적 쿼리 관련 자세한 부분은 매뉴얼을 참고한다.
+
+<a href='https://mybatis.org/mybatis-3/ko/index.html' target='_blank'>MyBatis 공식 메뉴얼</a>
+<br />
+<a href='https://mybatis.org/spring/ko/index.html' target='_blank'>MyBatis 스프링 공식 메뉴얼</a>
