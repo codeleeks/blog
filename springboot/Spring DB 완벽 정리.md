@@ -365,6 +365,8 @@ public class MemberRepositoryV1 {
 - REPETABLE READ
 - SERIALIZABLE
 
+[관련 포스팅](https://github.com/codeleeks/blog/blob/codeleeks-posts/database/%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98%20%EA%B2%A9%EB%A6%AC%20%EC%88%98%EC%A4%80.md)
+
 ### 트랜잭션과 커넥션
 
 트랜잭션은 한 커넥션에서 이뤄지는 일련의 DB 작업이다.
