@@ -1363,3 +1363,124 @@ sql 실행 결과를 xml 차원에서 매핑할 수 있다.
 <a href='https://mybatis.org/mybatis-3/ko/index.html' target='_blank'>MyBatis 공식 메뉴얼</a>
 <br />
 <a href='https://mybatis.org/spring/ko/index.html' target='_blank'>MyBatis 스프링 공식 메뉴얼</a>
+
+
+### JPA
+
+자바 객체를 테이블과 매핑시킨다.
+기본적인 CRUD를 하는데 SQL이 전혀 사용되지 않는다.
+엔티티를 정의함으로써 DDL도 포함할 수 있다.
+
+그러나 JPA만 가지고선 여전히 동적 쿼리를 만들어내는 데 어려움이 있다.
+JSQL을 만들어 내야 하는데, SQL을 만드는 것과 거의 비슷한 상황이다.
+
+```java
+package hello.itemservice.domain;
+
+import lombok.Data;
+
+import javax.persistence.*;
+
+@Entity
+@Data
+public class Item {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String itemName;
+    private Integer price;
+    private Integer quantity;
+
+    public Item() {
+    }
+
+    public Item(String itemName, Integer price, Integer quantity) {
+        this.itemName = itemName;
+        this.price = price;
+        this.quantity = quantity;
+    }
+}
+
+```
+
+```java
+package hello.itemservice.repository.jpa;
+
+import hello.itemservice.domain.Item;
+import hello.itemservice.repository.ItemRepository;
+import hello.itemservice.repository.ItemSearchCond;
+import hello.itemservice.repository.ItemUpdateDto;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import java.util.List;
+import java.util.Optional;
+
+@Transactional
+public class JpaItemRepositoryV1 implements ItemRepository {
+    private final EntityManager em;
+
+    public JpaItemRepositoryV1(EntityManager em) {
+        this.em = em;
+    }
+
+    @Override
+    public Item save(Item item) {
+        em.persist(item);
+        return item;
+    }
+
+    @Override
+    public void update(Long itemId, ItemUpdateDto updateParam) {
+        Item item = em.find(Item.class, itemId);
+        item.setItemName(updateParam.getItemName());
+        item.setPrice(updateParam.getPrice());
+        item.setQuantity(updateParam.getQuantity());
+    }
+
+    @Override
+    public Optional<Item> findById(Long id) {
+        return Optional.ofNullable(em.find(Item.class, id));
+    }
+
+    @Override
+    public List<Item> findAll(ItemSearchCond cond) {
+        String jpql = "select i from Item i";
+        Integer maxPrice = cond.getMaxPrice();
+        String itemName = cond.getItemName();
+        if (StringUtils.hasText(itemName) || maxPrice != null) {
+            jpql += " where";
+        }
+        boolean andFlag = false;
+        if (StringUtils.hasText(itemName)) {
+            jpql += " i.itemName like concat('%',:itemName,'%')";
+            andFlag = true;
+        }
+        if (maxPrice != null) {
+            if (andFlag) {
+                jpql += " and";
+            }
+            jpql += " i.price <= :maxPrice";
+        }
+
+        TypedQuery<Item> query = em.createQuery(jpql, Item.class);
+        if (StringUtils.hasText(itemName)) {
+            query.setParameter("itemName", itemName);
+        }
+        if (maxPrice != null) {
+            query.setParameter("maxPrice", maxPrice);
+        }
+        return query.getResultList();
+    }
+}
+
+```
+
+
+#### 예외
+
+JPA가 내뱉은 예외는 스프링 제공 예외가 아니다. (사실 당연한 것)
+@Repository 빈은 JPA 예외를 스프링 제공 예외로 변환하는 프록시로 감싸진다. (AOP)
+PersistenceExceptionTranslationPostProcessor에서 @Repository를 AOP 프록시로 감싼다.
