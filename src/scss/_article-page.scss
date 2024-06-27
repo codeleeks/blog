@@ -135,13 +135,12 @@
       }
 
       p {
+        margin: 1.5em 0;
         white-space: pre-wrap;
       }
-
-      @media (hover: hover) {
-        a:hover {
-          text-decoration: underline;
-        }
+      
+      a {
+        text-decoration: underline;
       }
 
       table {

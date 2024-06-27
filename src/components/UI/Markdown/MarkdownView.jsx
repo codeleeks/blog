@@ -2,16 +2,30 @@ import { useEffect, useLayoutEffect, useState } from 'react'
 import * as runtime from 'react/jsx-runtime'
 import { evaluate } from '@mdx-js/mdx'
 import rehypeHighlight from 'rehype-highlight'
+import SyntaxHighlighter from 'react-syntax-highlighter'
 import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import MessageBox from './MessageBox'
 import { Fragment } from 'react'
 import ErrorBlock from '../ErrorBlock'
 
+function code({ className, ...properties }) {
+  const match = /language-(\w+)/.exec(className || '')
+  return match ? (
+    <SyntaxHighlighter language={match[1]} {...properties} />
+  ) : (
+    <code className={className} {...properties} />
+  )
+}
+
 export const components = {
   MessageBox(props) {
     const { children, ...rest } = props
     return <MessageBox {...rest}>{children}</MessageBox>
+  },
+  code({ className, ...properties }) {
+    const match = /language-(\w+)/.exec(className || '')
+    return <code className={match ? className : `hljs language-plaintext`} {...properties} />
   },
 }
 
@@ -32,12 +46,7 @@ export default (props) => {
   useEffect(() => {
     ;(async () => {
       try {
-        const module = await evaluate(text, {
-          ...runtime,
-          baseUrl: import.meta.url,
-          remarkPlugins: [remarkGfm],
-          rehypePlugins: [rehypeHighlight, rehypeSlug],
-        })
+        const module = await evaluateMarkdown(text)
         setMdxModule(module)
         setError({ msg: undefined })
       } catch (e) {

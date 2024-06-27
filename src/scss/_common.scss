@@ -276,6 +276,10 @@ li {
   pre {
     white-space: pre-wrap;
   }
+  code {
+    background-color: #f2e9c5;
+    color: #111;
+  }
 
   &::before {
     $width: 24px;
