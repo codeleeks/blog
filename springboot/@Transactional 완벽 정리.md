@@ -41,6 +41,7 @@ public void save(Log logMessage)
 ```
 
 ![image](https://github.com/codeleeks/blog/assets/166087781/71fe8d46-6c99-41e1-b8ad-6cbabdeac6aa)
+참조: 김영한의 스프링 DB2
 
 개념상 물리 트랜잭션, 논리 트랜잭션으로 구분한다.
 
@@ -50,7 +51,7 @@ public void save(Log logMessage)
 이 전체적인 호출 스택을 물리 트랜잭션이라고 하고, 각 호출되는 메서드를 논리 트랜잭션이라고 보면 된다.
 
 ![image](https://github.com/codeleeks/blog/assets/166087781/c88a18f0-6ffc-4b84-8462-ad4e3072f5fb)
-
+참조: 김영한의 스프링 DB2
 
 공유한 트랜잭션에서는 각 논리 트랜잭션은 마치 트랜잭션 안의 DB 작업처럼 **all or nothing** 정책을 가져간다.
 논리트랜잭션 중 하나라도 예외가 발생하면 물리 트랜잭션이 롤백되고, 모든 논리 트랜잭션이 성공해야 물리 트랜잭션은 커밋을 한다.
@@ -62,6 +63,7 @@ public void save(Log logMessage)
 피호출자에서 트랜잭션을 따로 가져가고 싶다면 `propagation = REQUIRES_NEW`로 설정한다.
 
 ![image](https://github.com/codeleeks/blog/assets/166087781/80dca50b-5f55-4602-bc63-40f2eac27fe7)
+참조: 김영한의 스프링 DB2
 
 ```java
 @Transactional(propagation = Propagation.REQUIRES_NEW)
