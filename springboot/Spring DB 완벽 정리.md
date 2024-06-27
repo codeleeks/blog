@@ -1016,7 +1016,7 @@ public class MemberRepositoryV4_2 implements MemberRepository{
 SQL Mapper 방식의 대표 주자는 jdbcTemplate과 MyBatis이다.
 ORM은 JPA가 표준이며, 구현체인 하이버네이트와 SpringData JPA, queryDSL을 활용한다.
 
-### JdbcTemplate
+## JdbcTemplate
 
 ```try-catch``` 안에서 ```conection``` 얻어서 ```statement``` 만들고 실행해서 결과값 받아오고 객체로 만드는 작업을 다 하지 않고, 개발자의 코드 작성을 줄여준다.
 
@@ -1042,7 +1042,7 @@ NamedSqlParameterSource source = new BeanPropertySqlParameterSource(item)
 jdbcTemplate.update(sql, source)
 ```
 
-#### 인서트시 auto generated 키 조회
+### 인서트시 auto generated 키 조회
 여기서 조금 더 Advanced되는 측면은 auto generated되는 키값을 가져올 때이다.
 auto generated되는 key는 인서트시 생성이 되는데, 이를 가져오려면 두 가지 방법이 있다.
 
@@ -1087,14 +1087,17 @@ item.setId(keyHolder.getKey().longValue());
         item.setId(key.longValue());
 ```
 
-### MyBatis
+## MyBatis
 sql를 xml로 관리한다.
 동적 쿼리를 위한 편의 기능을 xml 태그로 지원한다.
 대표적으로 where 이하절 동적 쿼리를 위해 ```<where>, <if>``` 키워드를 제공한다.
 ```<where>``` 태그는 처음 발견한 and를 where로 치환한다.
 ```<if>``` 태그는 조건에 따라 sql 문에 추가되거나 무시된다.
 
-매퍼 xml
+xml로 작성한 내용이 자바 인터페이스(매퍼)에 매핑되며, 레포지토리는 매퍼 인터페이스를 사용한다.
+
+매퍼 인터페이스의 메서드가 호출되면 매핑된 xml에 작성된 sql이 실행된다.
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
@@ -1133,8 +1136,6 @@ sql를 xml로 관리한다.
 
 </mapper>
 ```
-
-매퍼 인터페이스
 ```java
 package hello.itemservice.repository.mybatis;
 
@@ -1156,8 +1157,6 @@ public interface ItemMapper {
 }
 ```
 
-
-레포지토리
 ```java
 package hello.itemservice.repository.mybatis;
 
@@ -1196,25 +1195,16 @@ public class MyBatisItemRepository implements ItemRepository {
 }
 ```
 
-매퍼 설정
-```
-#MyBatis
-mybatis.type-aliases-package=hello.itemservice.domain
-mybatis.configuration.map-underscore-to-camel-case=true
-mybatis.mapper-locations=classpath:mapper/**/*.xml
-logging.level.hello.itemservice.repository.mybatis=trace
-```
-
 자바 코드에서 매퍼는 인터페이스만 정의하고 있다.
 마이바티스 스프링 연동 모듈이 매퍼 구현체를 빈으로 등록하기 때문이다.
 스프링 예외도 내부적으로 사용하고 있어서 예외 처리시 별도의 클래스를 정의할 필요가 없다.
 
-#### TODO -> MybatisAutoConfiguration가 어떻게 매퍼 구현체를 만드는가?
+### TODO -> MybatisAutoConfiguration가 어떻게 매퍼 구현체를 만드는가?
 
-#### 동적 SQL를 위한 태그
+### 동적 SQL를 위한 태그
 마이바티스를 쓰는 이유는 동적 SQL을 편리하게 사용하기 위해서이다.
 
-##### if
+#### if
 조건에 따라 추가할지 말지 판단한다.
 조건 문법은 ```OGNL```을 사용한다.
 
@@ -1229,7 +1219,7 @@ logging.level.hello.itemservice.repository.mybatis=trace
 </select>
 ```
 
-##### choose
+#### choose
 자바의 switch 문법과 유사한 구문도 있다.
 
 ```xml
@@ -1250,7 +1240,7 @@ logging.level.hello.itemservice.repository.mybatis=trace
 </select>
 ```
 
-##### where
+#### where
 where 절을 정의한다.
 and나 or가 붙는지 아닌지를 처리하기에 용이하다.
 
@@ -1272,7 +1262,7 @@ and나 or가 붙는지 아닌지를 처리하기에 용이하다.
 </select>
 ```
 
-##### trim
+#### trim
 where처럼 특정 구문을 대체할 수 있는 일반적인 방법이다.
 ```xml
 <trim prefix="WHERE" prefixOverrides="AND |OR ">
@@ -1280,7 +1270,7 @@ where처럼 특정 구문을 대체할 수 있는 일반적인 방법이다.
 </trim>
 ```
 
-##### foreach
+#### foreach
 컬렉션을 파라미터 바인딩할 때 사용한다.
 
 ```xml
@@ -1296,7 +1286,7 @@ where처럼 특정 구문을 대체할 수 있는 일반적인 방법이다.
 </select>
 ```
 
-##### 문자열 대체(string substitution)
+### 문자열 대체(string substitution)
 문자 그대로를 넣을 때 사용한다. 
 파라미터 바인딩은 sql 절에서 값이 들어가는 자리에 값을 넣는 것이지만, 문자열 대체는 단순히 문자열을 sql 구문에 복사붙여넣기 하는 것이다.
 
@@ -1305,7 +1295,7 @@ where처럼 특정 구문을 대체할 수 있는 일반적인 방법이다.
 User findByColumn(@Param("column") String column, @Param("value") String value);
 ```
 
-##### ```<sql>```
+#### ```<sql>```
 SQL 코드를 재사용한다.
 
 ```xml
@@ -1342,7 +1332,7 @@ include는 id를 통해 sql을 찾는다.
 </select>
 ```
 
-##### resultMap
+#### resultMap
 sql 실행 결과를 xml 차원에서 매핑할 수 있다.
 아래는 컬럼 이름을 변경한다.
 
@@ -1359,7 +1349,7 @@ sql 실행 결과를 xml 차원에서 매핑할 수 있다.
 </select>
 ```
 
-##### 참고
+### 참고
 동적 쿼리 관련 자세한 부분은 매뉴얼을 참고한다.
 
 <a href='https://mybatis.org/mybatis-3/ko/index.html' target='_blank'>MyBatis 공식 메뉴얼</a>
@@ -1367,7 +1357,7 @@ sql 실행 결과를 xml 차원에서 매핑할 수 있다.
 <a href='https://mybatis.org/spring/ko/index.html' target='_blank'>MyBatis 스프링 공식 메뉴얼</a>
 
 
-### JPA
+## JPA
 
 자바 객체를 테이블과 매핑시킨다.
 기본적인 CRUD를 하는데 SQL이 전혀 사용되지 않는다.
@@ -1481,8 +1471,151 @@ public class JpaItemRepositoryV1 implements ItemRepository {
 ```
 
 
-#### 예외
+### 예외
 
 JPA가 내뱉은 예외는 스프링 제공 예외가 아니다. (사실 당연한 것)
 @Repository 빈은 JPA 예외를 스프링 제공 예외로 변환하는 프록시로 감싸진다. (AOP)
 PersistenceExceptionTranslationPostProcessor에서 @Repository를 AOP 프록시로 감싼다.
+
+
+## Spring Data JPA
+
+||jpa|spring data jpa|
+|---|---|---|
+|기능|ORM 표준|JPA를 스프링에서 쉽게 사용할 수 있도록 돕는다|
+|repository|우리가 클래스를 정의한다. ```EntityManager```를 사용한다.|인터페이스만 만들면 스프링이 빈으로 등록해준다. <br /> ```jpaRepository```는 메서드 이름을 보고 쿼리를 만들어내는 기능을 제공한다.|
+
+Spring Data JPA는 ```@Query``` 어노테이션으로 ```jpql```이나 ```sql```을 직접 작성하는 기능도 제공한다.
+
+메서드 이름 기반 쿼리 방식은 조건이 많아지면 메서드 이름도 길어지기 때문에 가독성이 안좋아진다.
+이 때는 @Query로 직접 쿼리를 작성하는 것이 방법이다.
+
+```java
+package hello.itemservice.repository.jpa;
+
+import hello.itemservice.domain.Item;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
+
+public interface SpringDataJpaItemRepository extends JpaRepository<Item, Long> {
+    List<Item> findByItemNameContains(String itemName);
+    List<Item> findByPriceLessThanEqual(Integer price);
+    @Query("select i from Item i where i.itemName like %:itemName% and i.price <= :price")
+    List<Item> findByCond(@Param("itemName") String itemName, @Param("price") Integer price);
+}
+```
+
+```java
+package hello.itemservice.repository.jpa;
+
+import hello.itemservice.domain.Item;
+import hello.itemservice.repository.ItemRepository;
+import hello.itemservice.repository.ItemSearchCond;
+import hello.itemservice.repository.ItemUpdateDto;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import javax.persistence.TypedQuery;
+import java.util.List;
+import java.util.Optional;
+
+@Transactional
+public class JpaItemRepositoryV2 implements ItemRepository {
+    private final SpringDataJpaItemRepository repository;
+
+    public JpaItemRepositoryV2(SpringDataJpaItemRepository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public Item save(Item item) {
+        return repository.save(item);
+    }
+
+    @Override
+    public void update(Long itemId, ItemUpdateDto updateParam) {
+        Item item = repository.findById(itemId).get();
+        item.setItemName(updateParam.getItemName());
+        item.setPrice(updateParam.getPrice());
+        item.setQuantity(updateParam.getQuantity());
+    }
+
+    @Override
+    public Optional<Item> findById(Long id) {
+        return repository.findById(id);
+    }
+
+    @Override
+    public List<Item> findAll(ItemSearchCond cond) {
+        Integer maxPrice = cond.getMaxPrice();
+        String itemName = cond.getItemName();
+
+        if (maxPrice != null && StringUtils.hasText(itemName)) {
+            return repository.findByCond(itemName, maxPrice);
+        } else if (maxPrice != null) {
+            return repository.findByPriceLessThanEqual(maxPrice);
+        } else if (StringUtils.hasText(itemName)) {
+            return repository.findByItemNameContains(itemName);
+        }
+
+        return repository.findAll();
+    }
+}
+```
+
+## QueryDSL
+```jpql``` 빌더이다.
+동적 쿼리(조건 조회)만들 때 유용하다.
+
+```java
+package hello.itemservice.repository.v2;
+
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import hello.itemservice.domain.Item;
+import hello.itemservice.domain.QItem;
+import hello.itemservice.repository.ItemSearchCond;
+import org.springframework.util.StringUtils;
+
+import javax.persistence.EntityManager;
+import java.util.List;
+
+public class ItemQueryRepositoryV2 {
+    private final JPAQueryFactory queryFactory;
+
+    public ItemQueryRepositoryV2(EntityManager em) {
+        this.queryFactory = new JPAQueryFactory(em);
+    }
+
+    public List<Item> findAll(ItemSearchCond cond) {
+        String itemName = cond.getItemName();
+        Integer maxPrice = cond.getMaxPrice();
+
+        return queryFactory.select(QItem.item)
+                .from(QItem.item)
+                .where(likeItemName(itemName), loePrice(maxPrice))
+                .fetch();
+    }
+
+    private BooleanExpression likeItemName(String itemName) {
+        if (StringUtils.hasText(itemName)) {
+            return QItem.item.itemName.like("%" + itemName + "%");
+        }
+        return null;
+    }
+
+    private BooleanExpression loePrice(Integer maxPrice) {
+        if (maxPrice != null) {
+            return QItem.item.price.loe(maxPrice);
+        }
+        return null;
+    }
+}
+```
+
+## 추천하는 조합
+기본적으로 JPA, Spring Data JPA, queryDsl이고, 복잡한 쿼리일 경우 jdbcTemplate이나 myBatis를 쓴다.
