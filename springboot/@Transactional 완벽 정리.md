@@ -73,3 +73,5 @@ public void save(Log logMessage)
 ### 옵션
 - `REQUIRED`: 기본값. 트랜잭션을 공유한다.
 - `REQUIRES_NEW`: 새 트랜잭션을 생성한다.
+
+### TODO 여러 스레드에서의 트랜잭션 처리는??
