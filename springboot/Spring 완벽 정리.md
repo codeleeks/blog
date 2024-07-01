@@ -267,6 +267,10 @@ public class OrderControllerV5 {
 }
 ```
 
+### 문제점
+
+템플릿 메서드 패턴이나 전략 패턴(템플릿 콜백 패턴 포함) 모두 원본 코드를 수정해야 한다.
+
 ## 프록시 패턴
 
 호출자와 피호출자 사이에 프록시를 두는 디자인이다.
@@ -315,6 +319,9 @@ public class OrderControllerV5 {
 |사용|`implements`|`extends`||
 |장점|인터페이스를 구현하는 모든 클래스에 적용할 수 있다.|변경될 일 없는 구체 클래스의 경우 클래스 기반 프록시가 효율적이다.||
 |단점|동일한 로직을 갖지만 대상 클래스만 다른 프록시 클래스가 여러 개 만들어진다. <br /> 변경될 일이 없는 클래스도 인터페이스를 만들어야 한다.| 동일한 로직을 갖지만 대상 클래스만 다른 프록시 클래스가 여러 개 만들어진다. <br /> 불필요한 코드(super() 호출)가 발생한다. <br /> 프록시는 해당 클래스에만 적용가능하다.||
+
+정적 프록시란 프록시 객체를 일반적인 객체 생성 프로세스(new Object())를 따라 생성하는 방식을 말한다.
+위에서 언급한 인터페이스 기반 방식, 클래스 기반 방식으로 나뉜다.
 
 #### 인터페이스 기반 프록시 예제
 
@@ -377,3 +384,226 @@ public class OrderRepositoryConcreteProxy extends OrderRepositoryV2 {
 }
 
 ```
+
+#### 정적 프록시의 문제점 
+
+유사한 로직을 갖는 프록시 클래스가 프록시를 적용할 클래스 수만큼 많아진다.
+
+### 동적 프록시
+
+jdk 동적 프록시와 cglib 프록시 방식으로 나뉜다.
+
+||jdk 동적 프록시|cglib 프록시|
+|---|---|---|
+|사용|인터페이스를 구현한 클래스에 적용|일반 클래스에 적용|
+|장점||모든 클래스를 동적 생성시킬 수 있다|
+|단점|인터페이스를 구현한 클래스만 동적 생성 가능 ||
+
+#### jdk 동적 프록시
+
+`invocationHandler`를 구현해야 한다.
+
+```java
+package java.lang.reflect;
+
+public interface InvocationHandler {
+    public Object invoke(Object proxy, Method method, Object[] args)
+        throws Throwable;
+}
+```
+
+java에서 지원하는 Proxy 클래스를 통해 프록시 객체를 생성한다.
+
+```java
+package hello.proxy.jdkdynamic.code;
+
+import lombok.extern.slf4j.Slf4j;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+@Slf4j
+public class TimeInvocationHandler implements InvocationHandler {
+    private final Object target;
+
+    public TimeInvocationHandler(Object target) {
+        this.target = target;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        log.info("TimeProxy started");
+        long startTIme = System.currentTimeMillis();
+        Object result = method.invoke(target, args);
+        long endTime = System.currentTimeMillis();
+        long resultTime = endTime - startTIme;
+        log.info("TimeProxy terminated resultTime={}", resultTime);
+        return result;
+    }
+}
+
+```
+
+```java
+      AInterface target = new AImpl();
+        TimeInvocationHandler handler = new TimeInvocationHandler(target);
+        AInterface proxy = (AInterface)Proxy.newProxyInstance(AInterface.class.getClassLoader(), new Class[]{AInterface.class}, handler);
+        proxy.call();
+```
+
+#### cglib 프록시
+
+cglib은 외부 프록시 객체 생성 라이브러리이다. 
+
+바이트 코드를 바탕으로 클래스를 인식하고 객체를 생성해낸다.
+
+스프링에서 내부적으로 이 라이브러리를 사용하고 있기 때문에, 별도의 라이브러리 설치는 필요 없다.
+
+`MethodInterceptor` 인터페이스를 구현해야 한다.
+
+```java
+package org.springframework.cglib.proxy;
+
+import java.lang.reflect.Method;
+
+public interface MethodInterceptor extends Callback {
+    Object intercept(Object var1, Method var2, Object[] var3, MethodProxy var4) throws Throwable;
+}
+
+```
+
+cglib의 `enhancer` 객체를 생성해서, 타겟 클래스 지정, 인터셉터 로직 지정하면 프록시 객체를 만들 수 있다.
+
+```java
+package hello.proxy.cglib.code;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.proxy.MethodInterceptor;
+import org.springframework.cglib.proxy.MethodProxy;
+
+import java.lang.reflect.Method;
+
+@Slf4j
+public class TimeMethodInterceptor implements MethodInterceptor {
+    private final Object target;
+
+    public TimeMethodInterceptor(Object target) {
+        this.target = target;
+    }
+
+    @Override
+    public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+        log.info("TimeProxy called");
+        long startTime = System.currentTimeMillis();
+        Object result = methodProxy.invoke(target, objects);
+        long endTime = System.currentTimeMillis();
+        long resultTime = endTime - startTime;
+        log.info("TimeProxy terminated resultTime={}", resultTime);
+        return result;
+    }
+}
+
+```
+
+```java
+    void cglib() {
+        ConcreteService target = new ConcreteService();
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(ConcreteService.class);
+        enhancer.setCallback(new TimeMethodInterceptor(target));
+        ConcreteService proxy = (ConcreteService) enhancer.create();
+        log.info("targetClass={}", target.getClass());
+        log.info("proxyClass={}", proxy.getClass());
+
+        proxy.call();
+    }
+```
+
+### 스프링의 `ProxyFactory`
+
+스프링이 제공하는 ProxyFactory와 MethodInterceptor를 사용하면 편리하게 프록시 객체를 만들 수 있다.
+
+스프링은 두 가지 동적 프록시 방식을 추상화하고, 설정과 상황에 따라 다른 방식을 취하여 프록시 객체를 생성한다. (`ProxyFactory` 객체 사용)
+
+내부적으로 타겟이 interface를 구현하고 있는지, 아니면 일반 클래스인지에 따라 jdk 동적 프록시, cglib을 선택하여 프록시 객체를 만든다. (`proxyFactory.setProxyTargetClass(true)`로 설정하면 인터페이스를 구현하는 클래스도 cglib 방식으로 프록시 객체를 만든다.)
+
+프록시의 기능은 `MethodInterceptor`를 상속받고, `invoke()` 메서드에 작성하면 된다.
+
+```java
+package org.aopalliance.intercept;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+@FunctionalInterface
+public interface MethodInterceptor extends Interceptor {
+	@Nullable
+	Object invoke(@Nonnull MethodInvocation invocation) throws Throwable;
+}
+```
+
+`MethodInterceptor`를 상속받아 프록시 로직을 만들고, `proxyFactory` 객체에 프록시 로직을 넣어 프록시 객체를 생성한다.
+
+- `Advice`: 프록시 로직이다.(부가 기능 그 자체) 스프링 ProxyFactory의 용어로서 jdk 동적 프록시의 invocationHandler, cglib의 methodInterceptor를 추상화한다.
+- `Pointcut`: 필터링이다. 프록시 부가 기능을 어떤 클래스에 적용할지를 지정한다. 
+`Advisor`: Advice와 Pointcut을 가지고 있는 것이다. 조언(Advice)를 어디에(Pointcut) 할지 알고 있다. 프록시 팩토리에서 Advisor 지정은 필수다.
+
+프록시 팩토리는 생성시 타겟 객체를 받는다.
+프록시 팩토리는 하나의 타겟에 여러 Advisor를 넣을 수 있다.
+
+`addAdvisor()` 메서드를 통해 등록하는 순서대로 `advisor`의 `advice`가 호출된다.
+
+```java
+package hello.proxy.common;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+
+@Slf4j
+public class TimeAdvice implements MethodInterceptor {
+    @Override
+    public Object invoke(MethodInvocation invocation) throws Throwable {
+        log.info("TimeProxy called");
+        long startTime = System.currentTimeMillis();
+        Object result = invocation.proceed();
+        long endTime = System.currentTimeMillis();
+        long resultTime = endTime - startTime;
+        log.info("TimeProxy terminated resultTime={}", resultTime);
+        return result;
+    }
+}
+```
+
+```java
+    void interfaceProxy() {
+        ServiceImpl target = new ServiceImpl();
+        ProxyFactory proxyFactory = new ProxyFactory(target);
+        proxyFactory.addAdvice(new TimeAdvice());
+        ServiceInterface proxy = (ServiceInterface)proxyFactory.getProxy();
+        log.info("targetClass={}", target.getClass());
+        log.info("proxyClass={}", proxy.getClass());
+
+        proxy.save();
+
+        assertThat(AopUtils.isAopProxy(proxy)).isTrue();
+        assertThat(AopUtils.isJdkDynamicProxy(proxy)).isTrue();
+        assertThat(AopUtils.isCglibProxy(proxy)).isFalse();
+    }
+```
+
+스프링이 제공하는 포인트컷
+- `NameMatchMethodPointcut`: 메서드 이름 기반으로 매칭한다.
+- `AspectJExpressionPointcut`: aspectJ 표현식으로 매칭한다.
+
+#### 문제점
+
+프록시 팩토리를 통해 직접 프록시 객체를 빈으로 만드는 것은 문제가 있다.
+
+1. 프록시 객체마다 빈을 만들어줘야 한다.
+   - 프록시를 적용한 클래스가 많다면 프록시 객체로 만드는 메서드(빈 생성 메서드) 또한 많아진다.
+2. 컴포넌트 스캔으로 등록된 클래스 처리 불가
+   - 컴포넌트 스캔으로 자동 등록된 빈들은 의존성을 주입 받는데, 이 때 프록시 객체가 아니라 컴포넌트 스캔으로 등록된 빈으로 주입될 수 있다. 
+
+#### TODO 왜 스프링은 cglib만 쓰지 않고 jdk dynamic proxy도 같이 사용할까?
+cglib은 인터페이스 상속받은 클래스도 동적 생성 가능하고, 일반 클래스도 동적 생성 가능한데...
