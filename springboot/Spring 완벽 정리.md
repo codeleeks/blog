@@ -266,3 +266,114 @@ public class OrderControllerV5 {
     }
 }
 ```
+
+## 프록시 패턴
+
+호출자와 피호출자 사이에 프록시를 두는 디자인이다.
+
+프록시의 사전적 의미는 대리, 대신한다 이다.
+
+프록시는 호출자의 호출을 받아 피호출자를 호출한다.
+
+호출을 받고 피호출자를 바로 호출하는 게 아니라 무언가를 한다.
+
+그 무언가는 프록시의 기능이다.
+
+### 프록시 기능
+
+- 접근 제어 (프록시 패턴)
+  - 권한에 따른 접근 차단
+  - 캐싱
+  - 지연 로딩
+- 부가 기능 추가 (데코레이터 패턴)
+  - 요청/응답값 변형
+  - 로깅
+
+### 프록시 패턴과 데코레이터 패턴
+둘은 코드로 보면 매우 유사하다.
+
+둘의 차이는 목적이다.
+
+프록시패턴은 피호출자에 대한 접근 제어이다.
+예를 들어, 피호출자의 메서드가 오래 걸리는 경우 성능 향상을 목적으로 프록시가 캐싱을 할 수 있다.
+
+데코레이터패턴은 메인 기능에 추가적으로 기능을 부여하는 것이다.
+로깅이 좋은 예이다.
+
+### 프록시 패턴 적용하기
+
+스프링에서 클래스는 세 가지 방식으로 운용된다.
+
+1. 인터페이스를 구현한 클래스
+2. 일반 클래스
+3. 자동등록된 빈
+
+프록시 패턴도 운용 방식에 따라 구현 방법이 나뉜다.
+
+||인터페이스 기반 프록시|클래스 기반 프록시|동적 프록시|
+|---|---|---|---|
+|사용|`implements`|`extends`||
+|장점|인터페이스를 구현하는 모든 클래스에 적용할 수 있다.|변경될 일 없는 구체 클래스의 경우 클래스 기반 프록시가 효율적이다.||
+|단점|동일한 로직을 갖지만 대상 클래스만 다른 프록시 클래스가 여러 개 만들어진다. <br /> 변경될 일이 없는 클래스도 인터페이스를 만들어야 한다.| 동일한 로직을 갖지만 대상 클래스만 다른 프록시 클래스가 여러 개 만들어진다. <br /> 불필요한 코드(super() 호출)가 발생한다. <br /> 프록시는 해당 클래스에만 적용가능하다.||
+
+#### 인터페이스 기반 프록시 예제
+
+```java
+public class OrderRepositoryInterfaceProxy implements OrderRepositoryV1 {
+    private final OrderRepositoryV1 target;
+    private final LogTrace logTrace;
+
+    public OrderRepositoryInterfaceProxy(OrderRepositoryV1 target, LogTrace logTrace) {
+        this.target = target;
+        this.logTrace = logTrace;
+    }
+
+    @Override
+    public void save(String itemId) {
+        TraceStatus status = null;
+        try {
+            status = logTrace.begin("OrderRepository.save()");
+            //target 호출
+            target.save(itemId);
+            logTrace.end(status);
+        } catch (Exception e) {
+            logTrace.exception(status, e);
+            throw e;
+        }
+    }
+}
+```
+
+#### 클래스 기반 프록시 예제
+```java
+package hello.proxy.config.v1_proxy.concrete_proxy;
+
+import hello.proxy.app.v2.OrderRepositoryV2;
+import hello.proxy.trace.TraceStatus;
+import hello.proxy.trace.logtrace.LogTrace;
+
+public class OrderRepositoryConcreteProxy extends OrderRepositoryV2 {
+    private final OrderRepositoryV2 target;
+    private final LogTrace logTrace;
+
+    public OrderRepositoryConcreteProxy(OrderRepositoryV2 target, LogTrace logTrace) {
+        this.target = target;
+        this.logTrace = logTrace;
+    }
+
+    @Override
+    public void save(String itemId) {
+        TraceStatus status = null;
+        try {
+            status = logTrace.begin("OrderRepository.save()");
+            //target 호출
+            target.save(itemId);
+            logTrace.end(status);
+        } catch (Exception e) {
+            logTrace.exception(status, e);
+            throw e;
+        }
+    }
+}
+
+```
