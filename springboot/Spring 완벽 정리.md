@@ -198,6 +198,8 @@ public class OrderControllerV4 {
 인터페이스의 메서드가 한 개일 때, 익명 내부 클래스를 람다로 대체할 수 있다.
 콜백은 인터페이스이며, 보통 메서드가 한 개이므로, 람다로 구현할 수 있다.
 
+스프링에서 `JdbcTemplate`, `RestTemplate`, `TransactionTemplate` 등 `xxxTemplate` 클래스는 대부분 템플릿 콜백 패턴으로 만들어졌다.
+
 ```java
 //콜백 정의
 package hello.advanced.trace.callback;
