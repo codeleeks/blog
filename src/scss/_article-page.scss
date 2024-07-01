@@ -126,6 +126,12 @@
           padding: 2px 0;
         }
       }
+      ol {
+        list-style: decimal;
+        li {
+          margin-left: 1em;
+        }
+      }
 
       pre {
         margin: 10px 0;
