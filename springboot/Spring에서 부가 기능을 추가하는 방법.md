@@ -524,7 +524,7 @@ public class TimeAdvice implements MethodInterceptor {
 
 이 두 가지 문제는 스프링이 제공하는 빈 후처리기를 통해 해결할 수 있다.
 
-### 빈 후처리기
+## 빈 후처리기
 스프링 컨테이너가 빈을 생성하고 빈 이름과 객체를 매핑하는 과정이 있다.
 스프링은 이 과정에서 후킹 포인트를 제공한다.
 
@@ -567,7 +567,7 @@ public class PackageLogTraceProxyPostProcessor implements BeanPostProcessor {
 컴포넌트 스캔으로 등록된 빈도 프록시로 감쌀 수 있고, 클래스마다 별도의 프록시 객체를 만드는 코드를 다 적을 필요도 없다.
 빈 후처리기에서 object 타입으로 들어오는 빈들을 프록시로 감싸는 코드 하나면 모든 클래스를 커버할 수 있다.
 
-#### 스프링이 제공하는 프록시 객체 생성을 위한 빈 후처리기
+### 스프링이 제공하는 프록시 객체 생성을 위한 빈 후처리기
 스프링에서는 프록시 객체를 만드는 빈 후처리기(AnnotationAwareAspectJAutoProxyCreator)를 제공하고 있다.
 우리는 Advisor를 빈으로 등록하기만 하면 된다.
 AnnotationAwareAspectJAutoProxyCreator는 Advisor 안에 있는 포인트컷으로 적용할 빈을 걸러낸다.
@@ -670,7 +670,7 @@ public class LogTraceAspect {
 }
 ```
 
-### Aspect oriented programming
+## Aspect oriented programming
 
 cross-concern 문제를 해결하는 방법론이다.
 부가 기능을 최대한 모듈화하여 유지보수에 유리한 코드로 만드는 것이 목적이다.
