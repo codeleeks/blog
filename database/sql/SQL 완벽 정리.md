@@ -190,3 +190,123 @@ grouping된 레코드는 기존의 컬럼값을 조회할 수 없다.
 select sum(id)
 from comments;
 ```
+
+`group by`로 그룹핑된 레코드들을 aggregate 할 수 있다.
+
+```sql
+select photo_id, count(*)
+FROM comments
+group BY comments.photo_id;
+```
+
+주요 aggregates 함수는,
+
+- `count()`: 갯수를 센다
+- `sum()`: 값을 더한다
+- `avg()`: 평균을 낸다
+
+### having
+
+그룹을 필터링한다.
+
+`group by`로 그룹핑한 뒤에 `having` 절 조건으로 그룹을 필터링한다.
+
+`having`절 조건은 aggregates 함수가 사용될 수 있다.
+
+```sql
+select photo_id, count(*)
+from photos
+where photo_id < 3
+group by photo_id
+having count(*) > 2;
+```
+
+### Sorting
+
+레코드를 정렬한다.
+
+첫 번째 정렬 조건에서 같은 것이 나오면, 두 번째 정렬 조건을 따진다.
+
+ASC는 디폴트이다.
+
+```sql
+select *
+FROM products
+order BY price, weight desc;
+```
+
+### Offset and Limit
+
+- offset: skip할 레코드 갯수
+- limit: 결과 레코드 갯수
+
+```sql
+  select *
+	FROM products
+	order BY price desc
+  offset 9
+	LIMIT 10;
+```
+
+### union
+
+`select` 절의 결과를 합친다. (합집합)
+
+중복 레코드는 디폴트로 제외한다.
+
+포함하려면 `union all`을 사용한다.
+
+```sql
+(
+  select *
+	FROM products
+	order BY price desc
+	LIMIT 4
+)
+UNION
+(
+	SELECT *
+  FROM products
+  order BY price / weight DESC
+  LIMIT 4
+);
+```
+
+<MessageBox title='union과 괄호' level='warning`>
+  union 적용할 때는 select 절에 order by, limit 등이 union에 영향을 미치기 때문에 괄호를 잘 써줘야 한다.
+</MessageBox>
+
+<MessageBox title='union과 타입' level='warning`>
+  union은 레코드를 합치는 것이라, select 결과의 컬럼 타입이 맞지 않으면 오류가 난다.
+
+  ```sql
+  -- name과 price 컬럼의 타입 미스매치로 오류 발생
+  select name from products
+  union
+  select price from products;
+  ```
+</MessageBox>
+
+### intersect
+
+`select` 절의 결과에서 공통 레코드를 구한다. (교집합)
+
+### except
+
+`select` 절의 결과에서 첫 번째 결과에만 있는 레코드만 남는다. (차집합)
+
+```sql
+(
+  select *
+	FROM products
+	order BY price desc
+	LIMIT 4
+)
+except
+(
+	SELECT *
+  FROM products
+  order BY price / weight DESC
+  LIMIT 4
+);
+```
