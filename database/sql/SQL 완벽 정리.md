@@ -523,3 +523,52 @@ select (1.9::double precision - 1.8::double precision);
 
 ![image](https://github.com/codeleeks/blog/assets/166087781/8403b7fd-7d74-4c23-856b-e6e50c87df11)
 
+### Characters
+
+- char(10): 공백을 넣더라도 10글자를 맞춘다. 인풋이 10글자가 넘으면 자른다. length 생략하면 char(1)과 같다.
+- varchar: 길이 제한 없이 사용한다.
+- varchar(5): 공백 없이 인풋 글자에 맞춘다. 인풋이 5글자가 넘으면 자른다.
+- text: varchar와 같다.
+
+### Boolean
+
+- true, yes, on, 1, t, y: TRUE
+- false, no, off, 0, f, n: FALSE
+- null: NULL
+
+### Date
+
+- `1980-11-20`, `Nov-20-1980`, `20-Nov-1980`, `1980-November-20`, `November 20, 1980`: `1980-11-20` (TIME)
+- `08:34 PM`, `20:34`: `20:34:00` (TIME WIHTOUT TIME ZONE)
+- `08:34 PM UTC`, `20:34 UTC`: `20:34:00+00:00` (TIME WITH TIME ZONE)
+- `Nov-20-1980 08:34 PM UTC`: `1980-11-21 05:34:00+09` (TIMESTAMP WITH TIME ZONE)
+
+```sql
+select 
+	('Nov-20-1980 08:34 PM UTC'::TIMESTAMP WITH TIME ZONE)
+	- 
+	('Nov-10-1980 08:34 PM UTC'::TIMESTAMP WITH TIME ZONE);
+```
+
+![image](https://github.com/codeleeks/blog/assets/166087781/f052b74b-d755-425c-9f0b-98fe0fc74900)
+
+
+### Interval
+
+- `1d`, `1 day`: `1 day`
+- `1 D 20 H 30 M 45 S`: `1 day 20:30:45`
+
+```sql
+select ('1 D 20 H 30 M 45 S'::INTERVAL) - ('1 D'::interval);
+```
+![image](https://github.com/codeleeks/blog/assets/166087781/d839e12f-0df9-477f-8e01-605a381464b9)
+
+
+```sql
+select 
+	('Nov-20-1980 08:34 PM UTC'::TIMESTAMP WITH TIME ZONE)
+	- 
+	('1 D'::interval);
+```
+
+![image](https://github.com/codeleeks/blog/assets/166087781/245c8f68-c184-44a0-8228-17458bd35442)
