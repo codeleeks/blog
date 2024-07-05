@@ -272,11 +272,11 @@ UNION
 );
 ```
 
-<MessageBox title='union과 괄호' level='warning`>
+<MessageBox title='union과 괄호' level='warning'>
   union 적용할 때는 select 절에 order by, limit 등이 union에 영향을 미치기 때문에 괄호를 잘 써줘야 한다.
 </MessageBox>
 
-<MessageBox title='union과 타입' level='warning`>
+<MessageBox title='union과 타입' level='warning'>
   union은 레코드를 합치는 것이라, select 결과의 컬럼 타입이 맞지 않으면 오류가 난다.
 
   ```sql
