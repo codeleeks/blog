@@ -489,3 +489,37 @@ SELECT
   END
  FROM products;
 ```
+
+## Data Types
+
+### Number
+
+- Numbers without any decial points
+  - smallint
+  - **integer**: 소수점 필요 없는 숫자에 사용
+  - bigint
+- No decimal point, auto increment
+ - smallserial
+ - **serial**: id에 주로 사용
+ - bigserial
+- Numbers with decial points
+ -  decimal
+ -  **numeric**: 정확한 소수점까지 필요할 때 사용 (up to 131072 digits before the decimal point; up to 16383 digits after the decimal point)
+ -  real
+ -  **double precision**: 소수점 15자리까지 표현. 오차가 생김.
+ -  float
+
+
+#### numeric vs double precision
+```sql
+select (1.9::numeric - 1.8::numeric);
+```
+![image](https://github.com/codeleeks/blog/assets/166087781/5bdd74dc-849f-4e25-a7df-1778321ce7ae)
+
+
+```sql
+select (1.9::double precision - 1.8::double precision);
+```
+
+![image](https://github.com/codeleeks/blog/assets/166087781/8403b7fd-7d74-4c23-856b-e6e50c87df11)
+
