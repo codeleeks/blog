@@ -18,13 +18,13 @@
 테이블 간의 관계는 네 가지로 정리한다.
 
 ## 테이블 간의 관계
-- One-to-Many
+- `One-to-Many`
   - User has many photos
-- Many-to-One
+- `Many-to-One`
   - A Photo has one user
-- One-to-One
+- `One-to-One`
   - team has one captain.
-- Many-to-Many
+- `Many-to-Many`
   - students has many classes.
 
 관계 형성시 `foreign key`를 이용한다.
@@ -65,7 +65,7 @@ JOIN users on users.id = photos.user_id;
 
 - User has the photo : works ok.
 - User doesn't have the photo: error 
-- The photo isn't tied to any user: works ok. (putting in 'null' for the user_id)
+- The photo isn't tied to any user: works ok. (putting in `null` for the user_id)
 
 ### primary key와 삭제 (`foreign key constraint`)
 
@@ -77,11 +77,11 @@ primary key를 갖는 레코드를 삭제할 경우 foreign key 레코드를 어
 
 데이터베이스는 5가지 옵션을 제공한다.
 
-- ON DELETE RESTRICT: 에러 발생 (기본 옵션)
-- ON DELETE NO ACTION: 에러 발생
-- ON DELETE CASCADE: 사진들도 삭제한다
-- ON DELETE SET NULL: foreign key 값을 NULL로 수정한다.
-- ON DELETE SET DEFAULT: foreign key 값을 디폴트값으로 수정한다.
+- `ON DELETE RESTRICT`: 에러 발생 (기본 옵션)
+- `ON DELETE NO ACTION`: 에러 발생
+- `ON DELETE CASCADE`: 사진들도 삭제한다
+- `ON DELETE SET NULL`: foreign key 값을 NULL로 수정한다.
+- `ON DELETE SET DEFAULT`: foreign key 값을 디폴트값으로 수정한다.
 
 ```sql
 CREATE TABLE photos (
