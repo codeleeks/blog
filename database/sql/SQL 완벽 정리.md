@@ -310,3 +310,120 @@ except
   LIMIT 4
 );
 ```
+
+
+## subquery
+
+쿼리 안에 쿼리를 또 쓰는 것.
+
+쿼리의 결과를 소스로 사용하기 위해 쓴다.
+(order의 user_id별 count를 구하고, user 당 평균 order 갯수를 구한다. -> group by와 count로 user 별 order count를 구하고, order 테이블에서 count의 avg를 구한다.)
+
+- source of a value
+- source of rows
+- source of a column
+
+![스크린샷 2024-07-05 112504](https://github.com/codeleeks/blog/assets/166087781/a8a8607a-4537-447a-967c-c42ee6ac5ddb)
+
+
+### select 절에서 subquery
+
+source of a value를 반환하는 subquery를 사용한다.
+
+### from 절에서 subquery
+
+compatible한 결과를 반환하는 subquery를 사용한다.
+
+subquery의 결과는 `as`로 이름을 주어야 한다.
+
+```sql
+select name, price_weight_ratio
+FROM (
+  select name, price / weight as price_weight_ratio
+  FROM products
+) as p
+WHERE price_weight_ratio > 5;
+```
+
+```sql
+select *
+from (select max(price) from products) as p
+```
+
+### join 절에서 subquery
+
+compatible한 결과를 반환하는 subquery를 사용한다. (on 절에서 사용할 컬럼과 compatible해야 함)
+
+subquery의 결과는 `as`로 이름을 주어야 한다.
+
+```sql
+select first_name
+FROM users
+JOIN (
+  	select user_id FROM orders WHERE product_id = 3
+  ) as o
+  ON o.user_id = users.id
+```
+
+### where절에서 subquery
+
+compatible한 결과를 반환하는 subquery를 사용한다.
+
+subquery의 결과는 `as`로 이름을 주지 않아도 된다.
+
+```sql
+select id
+FROM orders
+WHERE product_id in (
+  	select id FROM products WHERE price / weight > 50
+  )
+```
+
+where 절에서 subquery의 결과를 비교하는 특별한 연산자를 제공한다.
+- ALL: 모든 레코드가 만족해야 한다.
+- SOME: 적어도 하나의 레코드만 만족하면 된다.
+
+
+#### `ALL`
+
+모든 레코드가 만족해야 한다.
+
+```sql
+-- Industrial 부서의 모든 products의 price보다 큰 price를 갖는 product을 찾는다.
+select name, department, price
+FROM products
+WHERE price > ALL (
+   select price FROM products WHERE department = 'Industrial'
+  )
+```
+
+#### `SOME`
+
+subquery의 결과 중에 적어도 하나의 레코드만 만족하면 된다.
+
+```sql
+-- Industrial 부서의 모든 products 중에 적어도 하나의 price보다 큰 price를 갖는 product을 찾는다.
+select name, department, price
+FROM products
+WHERE price > some (
+   select price FROM products WHERE department = 'Industrial'
+  )
+```
+
+### correlated subqueries
+
+subquery에서 바깥 쿼리의 레코드에 접근할 수 있다.
+
+이중 for-loop으로 생각하면 된다.
+바깥 쿼리는 바깥 루프, 서브 쿼리는 안쪽 루프이다.
+
+```sql
+select name, department, price
+FROM products as p1
+WHERE p1.price = (
+ 	select max(price) 
+  FROM products as p2
+  WHERE p2.department = p1.department
+ );
+```
+
