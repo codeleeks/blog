@@ -572,3 +572,110 @@ select
 ```
 
 ![image](https://github.com/codeleeks/blog/assets/166087781/245c8f68-c184-44a0-8228-17458bd35442)
+
+
+## validation
+
+
+테이블을 만들 때 컬럼에 constraint을 지정한다.
+
+```sql
+create table products (
+  price integer NOT NULL
+);
+```
+
+이미 만들어진 테이블을 삭제하지 않고, constraint을 바꾸고 싶다면
+1. 새 constraint를 위반하고 있는 레코드를 찾아 변경하고,
+2. constraint를 지정한다.
+
+```sql
+update products
+set price = 9999
+where price is NULL;
+
+alter table products
+alter column price
+set not null;
+```
+
+insert 문에 컬럼을 포함하지 않았을 때, default 값을 넣는 방법도 있다. (fallback)
+
+```sql
+create table products (
+  price integer DEFAULT 999
+);
+
+alter table products
+alter column price
+set default 999;
+```
+
+잘 바뀌지 않으면서 중요한 제약사항은 데이터베이스에 걸어둔다.
+
+외부 API가 필요하거나, 복잡한 로직이 필요한 제약사항은 어플리케이션에서 처리한다.
+
+웹 어플리케이션과 데이터베이스 모두에 constraint를 퍼뜨리는 것이 좋다.
+
+### NULL
+
+```sql
+create table products (
+  price integer NOT NULL
+);
+```
+
+```sql
+alter table products
+alter column price
+set not null;
+```
+
+### UNIQUE
+
+```sql
+create table products (
+  name integer unique
+);
+```
+
+```sql
+alter table products
+add unique(name);
+
+-- 여러 컬럼을 묶고 싶으면,
+alter table products
+add unique (name, department);
+```
+
+추가한 constraint를 삭제하려면,
+
+```sql
+alter table products
+drop constraint products_name_key;
+```
+
+### check
+
+`>, <, >=, <=, =` 등의 연산자를 사용한 constrain를 지정한다.
+
+```sql
+create table products (
+  price integer check (price > 0)
+);
+
+alter table products
+add check (price > 0);
+```
+
+컬럼 간의 비교를 통해 constraint 지정도 가능하다.
+
+```sql
+create table orders (
+	id serial primary key,
+	name varchar(40) not null,
+	created_at timestamp not null,
+	est_delivery timestamp not null
+	check (created_at < est_delivery)
+)
+```
