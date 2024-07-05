@@ -142,9 +142,20 @@
 
       p {
         margin: 1.5em 0;
+        line-height: 1.5;
         white-space: pre-wrap;
       }
-      
+      .message-box {
+        p {
+          margin: .8em 0;
+        }
+      }
+ 
+      img {
+        width: 100%;
+        object-fit: contain;
+      }
+
       a {
         text-decoration: underline;
       }

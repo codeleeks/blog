@@ -13,13 +13,18 @@ import { useQuery } from '@tanstack/react-query'
 import PostTableOfContents from '../components/Post/PostTableOfContents'
 import PostNavigationContents from '../components/Post/PostNavigationContents'
 import Article from '../components/UI/Article/Article'
+
+function getPath(params) {
+  return params['*']
+}
+
 export default function CategoryPostPage(props) {
-  const { category, postFileName } = useParams()
+  const path = getPath(useParams())
+  
   const { data: postsData } = useQuery({
     queryKey: ['posts'],
     queryFn: fetchRepositoryPosts,
   })
-  const path = category + '/' + postFileName
   const { data: contentsData } = useQuery({
     queryKey: ['posts', path],
     queryFn: () => fetchRepositoryPostsFileContents({ path }),
@@ -28,7 +33,7 @@ export default function CategoryPostPage(props) {
   const posts = Promise.resolve(postsData)
   const contents = Promise.resolve(contentsData)
 
-  const title = extractTitle(`${category}/${postFileName}`)
+  const title = extractTitle(path)
 
   const NavigationComponent = (
     <AsyncBlock resolve={posts}>
@@ -70,17 +75,17 @@ async function fetchPosts() {
   })
 }
 
-async function fetchPostContents(params) {
-  const { category, postFileName } = params
-  const path = category + '/' + postFileName
+async function fetchPostContents(path) {
   return queryClient.fetchQuery({
     queryKey: ['posts', path],
     queryFn: () => fetchRepositoryPostsFileContents({ path }),
   })
 }
 export async function loader({ params }) {
+  const path = getPath(params)
+  console.log(path)
   return defer({
-    contents: fetchPostContents(params),
+    contents: fetchPostContents(path),
     posts: fetchPosts(),
   })
 }

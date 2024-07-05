@@ -252,7 +252,7 @@ li {
   border-left: 4px solid $border-color;
   border-top-right-radius: var(--main-border-radius);
   border-bottom-right-radius: var(--main-border-radius);
-  padding: 1em 1em 1em $spacing;
+  padding: 1em 3em 1em $spacing;
   margin: 20px 0;
 
   color: $font-color;
@@ -267,18 +267,22 @@ li {
     flex-direction: column;
     gap: 4px;
     align-items: flex-start;
-  }
 
-  a {
-    color: $font-color;
-  }
+    a {
+      color: $font-color;
+    }
 
-  pre {
-    white-space: pre-wrap;
-  }
-  code {
-    background-color: #f2e9c5;
-    color: #111;
+    pre {
+      white-space: pre-wrap;
+    }
+    code {
+      background-color: #f2e9c5;
+      color: #111;
+    }
+
+    p {
+      margin: 1em 0;
+    }
   }
 
   &::before {
