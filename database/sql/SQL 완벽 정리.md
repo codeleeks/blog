@@ -427,3 +427,65 @@ WHERE p1.price = (
  );
 ```
 
+```sql
+select
+(
+  select max(price) from phones
+),
+(
+  select avg(price) from phones
+);
+```
+
+
+## distinct
+
+중복을 제거한다.
+
+```sql
+-- 여러 컬럼에 대한 count는 허용하지 않음.
+-- select count(DISTINCT department, name)
+-- FROM products;
+
+select count(DISTINCT department)
+FROM products;
+
+select count(DISTINCT department, name)
+FROM products;
+```
+
+## greatest
+
+여러 값 중 가장 큰 값을 선택한다.
+
+```sql
+select name, weight, GREATEST(30, 2 * weight)
+FROM products;
+```
+
+## least
+
+여러 값 중 가장 작은 값을 선택한다.
+
+```sql
+select name, price, LEAST(price * 0.5, 400)
+FROM products;
+
+select least(30, 40, 50, 60);
+```
+
+## case
+
+switch 문처럼 사용한다.
+
+```sql
+SELECT
+  name,
+  price,
+  CASE
+    when price > 600 THEN 'high'
+    when price > 300 THEN 'medium'
+    ELSE 'cheap'
+  END
+ FROM products;
+```
