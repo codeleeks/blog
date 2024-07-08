@@ -679,3 +679,40 @@ create table orders (
 	check (created_at < est_delivery)
 )
 ```
+
+## 테이블 설계 팁.
+
+인스타그램 테이블 설계를 예시로 테이블 설계 팁을 설명한다.
+
+예를 들어, like 기능을 개발한다고 하자.
+
+방법1. 테이블 컬럼에 추가하기
+post 테이블과 comment 테이블에 like 컬럼을 추가한다.
+-> like한 post나 comment를 사용자가 취소할 수 없다. (누가 like했는지에 대한 정보가 없기 때문에)
+
+방법2. like 테이블 만들기.
+like 테이블에 post_id, comment_id, user_id 외래키를 걸어둔다.
+-> like를 지원하는 타겟이 많아지면 테이블이 복잡해진다.
+
+방법3. 다형성 테이블 만들기
+like 테이블에 like_type, like_id를 만든다.
+like_type은 post, comment와 같이 타겟을 적어두고, like_id에 각 테이블의 primary id를 적어둔다.
+-> like_id는 중복될 수 있다. (like_type이 다를 수 있기 때문에) 그래서 외래 키로 두지 못하고, 이는 데이터 일관성에 문제가 생긴다. (없는 post id를 like_id로 넣어서 테이블에 삽입할 수 있다)
+
+방법4. 타겟에 대한 like 테이블 만들기
+post_like, comment_like와 같이 타겟마다 like 테이블을 만든다.
+각 테이블은 물론 user_id 외래키를 걸어둔다.
+-> 전체 타겟에 대한 like 통계를 내야 할 때 여러 테이블에서 데이터를 가져와야 해서 좀 복잡할 수 있다.(union이나 view를 써야 함)
+
+
+> 테이블을 나눌 것인가, 하나의 테이블에서 처리할 것인가를 결정하기 위한 질문
+> - Do you expect to query for caption_tags and photo_tags at different rate? (캡션 태그가 훨씬 빈번하다면 성능상 테이블을 분리하는게 나을 수 있다)
+> - Will the meaning of a photo_tag change at some time? (포토 태그에 기능 추가가 예상되나요?)
+
+결국 기능 추가/변경 가능성과 성능을 고려한다.
+
+기능 추가/변경이 발생할 것 같다면, 테이블을 분리하는 게 낫다.
+특정 정보만 사용이 많을 것 같다면 성능을 고려해 테이블을 분리하는 게 낫다.
+그렇지 않다면 하나의 테이블을 가져가는 것도 나쁘지 않다.
+
+또한, derived data(기존에 있는 정보로 계산될 수 있는 정보)는 저장하지 않는다.
