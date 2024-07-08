@@ -199,18 +199,18 @@
 
         position: relative;
 
-        display: flex;
-        align-items: center;
 
         border-left: 5px solid #9b9b9b;
 
         &::before {
+          $h: 24px;
           content: '';
           display: block;
           width: 24px;
-          height: 24px;
+          height: $h;
 
           position: absolute;
+          top: calc(50% - ($h / 2));
           left: -14px;
 
           background-color: #9b9b9b;
