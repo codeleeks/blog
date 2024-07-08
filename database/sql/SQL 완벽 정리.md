@@ -706,7 +706,8 @@ post_like, comment_like와 같이 타겟마다 like 테이블을 만든다.
 
 
 > 테이블을 나눌 것인가, 하나의 테이블에서 처리할 것인가를 결정하기 위한 질문
-> - Do you expect to query for caption_tags and photo_tags at different rate? (캡션 태그가 훨씬 빈번하다면 성능상 테이블을 분리하는게 나을 수 있다)
+>
+>  - Do you expect to query for caption_tags and photo_tags at different rate? (캡션 태그가 훨씬 빈번하다면 성능상 테이블을 분리하는게 나을 수 있다)
 > - Will the meaning of a photo_tag change at some time? (포토 태그에 기능 추가가 예상되나요?)
 
 결국 기능 추가/변경 가능성과 성능을 고려한다.
