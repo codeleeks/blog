@@ -811,3 +811,62 @@ select relname, relkind
 from pg_class
 where relkind = 'i';
 ```
+
+## 쿼리 프로세싱 파이프라인
+
+parse -> rewrite -> planner -> execute
+
+- parser: SQL 문법 검사 및 파서 트리 생성
+- rewrite: view 관련 로직
+- planner: 여러 플랜을 만들고, 가장 성능이 좋은 플랜을 선택
+- execute: 플랜을 실행
+
+
+Planner를 이해해야 성능을 이해할 수 있다.
+
+### Planner 자세히 보기
+
+- rows: A guess at how many rows this step will produce
+- width: A guess at the average number of bytes of each row.
+- cost: step을 실행하는 데 드는 비용
+
+rows와 width는 실제로 테이블 데이터를 읽지 않고 만들어진다.
+pg_stats 테이블을 참고하기 때문이다. (pg_stats에 rows를 직접 명시한 컬럼이 없어서 rows를 어떻게 예측하는지는 모르겠다)
+
+cost의 경우 pages 갯수와 rows 갯수를 가지고 예측을 한다.
+
+Fetch all comments
+- open the comments heap file
+- Load all comments from the first block
+- Process each comment in some way
+- Repeat the process for the next
+
+Loading pages와 Processing rows의 비용을 계산한다.
+
+Loading 작업은 Processing에 비해 비싸기 때문에, 비용 계산시 가중치를 다르게 준다.
+
+`(# of pages) * 1 + (# of rows) * 0.01`
+
+이는 실제 Postgress가 cost를 계산하는 식이기도 하다.
+
+더 일반적인 쿼리에 적용되는 식은,
+
+```
+cost =
+	(# pages read sequentially) * seq_page_cost
++	(# pages read at random) * random_page_cost
++	(# rows scanned) * cpu_tuple_cost
++	(# index entries scanned) * cpu_index_tuple_cost
++	(# times function/operator evaluated) * cpu_operator_cost
+```
+
+seq_page_cost는 baseline cost이다.
+디폴트 셋팅에서는 다른 cost는 seq_page_cost에 비례하여 매겨진다. (seq_page_cost를 변경한다고 다른 값도 비례해서 변경되는 것은 아님)
+
+```
+random_page_cost = seq_page_cost * 4
+cpu_tuple_cost = seq_page_cost * 0.01
+cpu_index_tuple_cost = seq_page_cost * 0.005
+cpu_operator_cost = seq_page_cost * 0.025
+```
+
