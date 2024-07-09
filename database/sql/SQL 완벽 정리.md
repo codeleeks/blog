@@ -717,3 +717,97 @@ post_like, comment_like와 같이 타겟마다 like 테이블을 만든다.
 그렇지 않다면 하나의 테이블을 가져가는 것도 나쁘지 않다.
 
 또한, derived data(기존에 있는 정보로 계산될 수 있는 정보)는 저장하지 않는다.
+
+
+## PostgreSQL Internal
+
+데이터베이스 = 폴더
+things in databse = 파일 (테이블, 인덱스 등)
+
+- heap: 테이블 내 모든 레코드를 갖고 있는 파일.
+- tuple/item: 레코드
+- block/page: 레코드 여러 개. heap은 여러 block/page으로 구성됨.(8kb)
+
+페이지마다 헤더가 있고(메타데이터, 프리스페이스 시작점/끝점 등), 아이템id(아이템 시작 위치, 길이를 알고 있음)가 있고, 프리스페이스가 있고, 실제 아이템(레코드)이 있음
+
+![heap 파일 내부 구조](https://velog.velcdn.com/images/smshack/post/39979562-f84f-4dee-9c9f-b1d13fbe5984/image.png)
+
+출처: https://velog.io/@smshack/postgresql-%EB%81%84%EC%A0%81
+
+<MessageBox title='쿼리로 내부 살펴보기' level='info'>
+	```sql
+	-- 저장 경로 출력
+	show data_directory
+	
+	-- oid와 datname 매핑 출력 (저장 경로 내 폴더가 어떤 의미인지 파악)
+	select oid, datname
+	from pg_database;
+	
+	-- 각 데이터베이스 폴더 내 파일이 어떤 의미인지 파악
+	select *
+	from pg_class;
+	```
+</MessageBox>
+
+## 인덱스
+
+레코드가 저장된 블락/페이지가 무엇인지 효율적으로 알려주는 자료구조 (B-Tree라고 보면 된다)
+
+Full Table Scan(테이블 내 모든 블락/페이지를 메모리로 올리는 것)은 보통의 경우 안 좋은 성능을 보인다.
+
+아래처럼 where 절로 필터링을 어차피 해야 하는 거라면, 해당 값을 갖고 있는 블락/페이지만 메모리에 올리면 성능이 좋아질 것이다.
+
+```sql
+select * from users where username = 'Riann';
+```
+
+인덱스를 도입하면 조회 성능이 13~16배 정도 향상된다. (레코드 5345 개)
+
+```sql
+explain analyze select *
+from users
+where username = 'Emil30';
+```
+
+### 인덱스 생성 방식
+
+- 어떤 컬럼이 빠른 결과 전달이 필요한가? (which column do we want to have very fast lookups on?)
+- 해당 컬럼의 값과 블락 정보를 뽑아낸다 (extract only the property we want to do fast lookups by and the block/index for each)
+- 정렬한다. (sort in a meaningful way)
+- 트리 자료구조로 만든다. (organize into a tree data structure)
+
+쿼리가 실행되면 인덱스에서 탐색을 먼저 한다.
+
+인덱스는 트리 구조로 되어 있어서, 불필요한 비교를 줄인다.
+
+리프 노드에는 탐색값과 일치하는 레코드가 저장된 블락 번호가 있다.
+힙 파일에서 이 블락 번호에 해당하는 블락만 메모리에 올린다. 
+
+불필요한 비교를 줄이는 것과 필요한 블락만 메모리에 올리는 것이 성능을 올리는 주요 요인이다.
+
+```sql
+-- 인덱스 생성하기
+create index on users (username);
+
+-- 인덱스 삭제하기
+drop index users_username_idx;
+```
+
+### 인덱스 단점
+
+- can be large. stores data from at least one column of the real table.
+- slow down inser/update/delete (the index has to be updated)
+- index might not actually get used (쿼리시 사용되지 않을 수도 있다)
+
+
+### 인덱스 자동 생성
+
+- Postgres는 primary key column의 인덱스를 자동으로 생성한다.
+- Postgres는 unique 제약이 걸린 column의 인덱스를 자동으로 생성한다.
+
+```sql
+-- 자동생성된 index를 확인한다.
+select relname, relkind
+from pg_class
+where relkind = 'i';
+```
