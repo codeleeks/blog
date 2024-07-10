@@ -870,3 +870,76 @@ cpu_index_tuple_cost = seq_page_cost * 0.005
 cpu_operator_cost = seq_page_cost * 0.025
 ```
 
+## Common table expression (CTE)
+produces a table that we can refer to anywhere else.
+- 쿼리가독성 높임
+- 재귀적 SQL 문 작성 가능
+
+```sql
+WITH tags AS (
+	select user_id, post_id, created_at from caption_tags 
+	union all
+	select user_id, post_id, created_at from photo_tags
+)
+select username, tags.created_at
+from users
+join tags on tags.user_id = users.id
+where tags.created_at < '2010-01-07';
+```
+
+## Views
+
+쿼리를 감싼다. (wrap up a query)
+
+fake table이다.
+
+CTE와 비슷하지만, CTE는 쿼리할 때마다 만들어줘야 하는데, view는 그렇지 않다.
+
+```sql
+create view tags as (
+	select id, created_at, user_id, post_id, 'photo_tag' as type from photo_tags
+	union all
+	select id, created_at, user_id, post_id, 'caption_tag' as type from caption_tags
+);
+
+select * from tags;
+```
+
+```sql
+-- 뷰 수정하기
+create or replace view tags as (
+	...
+);
+
+-- 뷰 삭제하기
+drop view tags;
+```
+
+### Materialized view
+
+쿼리를 감싼다. (wrap up a query)
+
+쿼리의 결과를 내부적으로 저장해둔다.
+
+실행 시간이 길면서 업데이트는 실시간으로 할 필요 없는 작업에 적합하다. (예를 들어, 배치 작업이다. (주간 포스트 좋아요 갯수, 코멘트 좋아요 갯수))
+
+
+```sql
+create materialized view weekly_likes as (
+	select
+		date_trunc('week', coalesce(posts.created_at, comments.created_at)) as week,
+		count(posts.id) as num_likes_for_posts,
+		count(comments.id) as num_likes_for_comments,
+	from likes
+	left join posts on posts.id = likes.post_id
+	left join comments on comments.id = likes.comment_id
+	group by week
+	order by week
+) with data;
+```
+
+```sql
+-- materialized view를 업데이트한다.
+refresh materialized view weekly_likes;
+```
+
