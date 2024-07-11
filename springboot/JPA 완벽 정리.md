@@ -320,4 +320,440 @@ public class Member {
     private Long id;
 ```
 
+## 엔티티 간 연관 관계
 
+테이블 간의 연관을 맺으려면 조인을 사용한다.
+
+다대일 관계에서 '다'쪽에 해당하는 테이블의 외래키와 '일'쪽에 해당하는 테이블의 기본키를 매핑한다.
+
+객체 간의 연관을 맺으려면 필드로 정의한다.
+
+JPA는 객체 지향에서의 연관 관계를 관계형 데이터베이스에서의 연관 관계로 바꿔준다.
+
+엔티티가 테이블처럼 상대방의 id를 알고 있어야 하는 게 아니라, 일반적인 객체 관계처럼 상대방 엔티티를 필드로 갖고 있으면 된다.
+
+```java
+@Entity
+public class Member {
+    @Id @GeneratedValue
+    private Long id;
+    private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "team_id")
+    private Team team;
+}
+
+@Entity
+public class Team {
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String name;
+```
+
+DDL을 실행하면서 team 필드를 외래키로 만들고, Team 테이블의 기본키와 매핑한다.
+
+```bash
+Hibernate: 
+    create table Member (
+        id bigint not null,
+        team_id bigint,
+        name varchar(255),
+        primary key (id)
+    )
+Hibernate: 
+    create table Team (
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+Hibernate: 
+    alter table if exists Member 
+       add constraint FK5nt1mnqvskefwe0nj9yjm4eav 
+       foreign key (team_id) 
+       references Team
+Hibernate: 
+    select
+        next value for Team_SEQ
+```
+
+### 단방향 연관 관계
+
+A 엔티티가 B 엔티티를 필드로 갖고 있다.
+
+이 경우 단방향 연관 관계라고 한다.
+
+엔티티 필드는 테이블에서 외래키로 바뀌고, 외래키는 엔티티 필드에 매핑되는 테이블을 참조한다.
+
+### 양방향 연관 관계
+
+문제는 양방향 연관 관계이다.
+
+A 엔티티가 B 엔티티를 필드로 갖고 있는데, B 엔티티도 A 엔티티를 필드로 갖고 있는 경우이다.
+
+멤버 엔티티가 팀 엔티티를 갖고 있고, 팀 엔티티가 멤버 리스트를 갖고 있는 상황이다.
+
+```java
+@Entity
+public class Member {
+    @Id @GeneratedValue
+    private Long id;
+    private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "team_id")
+    private Team team;
+}
+
+@Entity
+public class Team {
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String name;
+    @OneToMany
+    @MappedBy("team")
+    private List<Member> members;
+```
+
+객체 간 양방향 연관관계는 실은 단방향 연관 관계 2개이다.
+멤버가 팀 엔티티를 필드로 갖고(단방향 1), 팀 엔티티가 멤버 엔티티 리스트를 필드로 갖는다.(단방향 2)
+
+테이블의 경우 외래키-기본키 매핑이라는 하나의 연관 관계로 양방향을 구현한다.
+
+```sql
+select * from member as m
+join team as t on m.team_id = t.id;
+
+select * from team as t
+join member as m on t.id = m.team_id;
+```
+
+JPA는 객체의 연관 관계를 테이블의 연관 관계로 풀어내기 위해서 두 객체 중 하나를 주인으로 지정한다.
+외래키가 있는 테이블과 매핑되는 객체가 주인이다. 
+주인 객체는 외래키값을 삽입하고 수정하고 삭제할 수 있다.
+
+```java
+//엔티티 필드를 삽입/수정하는 행위는 외래키를 삽입/수정하는 행위이다.
+member.setTeam(team);
+```
+
+주인이 아닌 객체는 외래키를 읽기만 할 수 있다.
+`mappedBy`로 누가 주인인지를 지정한다.
+
+
+#### 연관 관계의 주인
+
+사실 연관 관계 주인을 정하는 것은 개발자의 몫이다.
+연관 관계 주인은 객체의 엔티티 필드를 수정하면 외래키가 수정된다.
+@JoinColumn을 어느 쪽에 붙이느냐에 따라 연관 관계 주인은 바뀐다.
+
+##### '일'쪽 엔티티가 연관 관계 주인일 경우
+'일'쪽에 @JoinColumn을 붙이고, 엔티티 필드를 수정하면 외래키가 수정된다.
+
+```java
+@Entity
+public class Member {
+    @Id @GeneratedValue
+    private Long id;
+    private String name;
+
+    @ManyToOne
+//    @JoinColumn(name = "team_id")
+    private Team team;
+}
+
+@Entity
+public class Team {
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String name;
+
+    @OneToMany
+    @JoinColumn(name = "team_id")
+    private List<Member> members = new ArrayList<>();
+}
+```
+
+```java
+   public static void main(String[] args) {
+
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+        EntityManager em = emf.createEntityManager();
+        //code
+
+        EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        try {
+            Team team = new Team();
+            team.setName("teamA");
+
+            Member member = new Member();
+            member.setName("helloA");
+            System.out.println("member.getTeam() = " + member.getTeam());
+            System.out.println("=====");
+//            member.setTeam(team);
+            System.out.println("=====");
+
+            System.out.println("=====");
+            team.getMembers().add(member);
+            System.out.println("=====");
+
+            System.out.println("=====");
+            em.persist(team);
+            System.out.println("=====");
+
+            System.out.println("=====");
+            em.persist(member);
+            System.out.println("=====");
+
+            System.out.println("=====");
+            em.flush();
+            System.out.println("=====");
+            System.out.println("=====");
+            em.clear();
+            System.out.println("=====");
+            System.out.println("=====");
+            Team foundTeam = em.find(Team.class, team.getId());
+            System.out.println("=====");
+            Member member1 = new Member();
+            member1.setName("helloB");
+            System.out.println("=====");
+//            member1.setTeam(foundTeam);
+            System.out.println("=====");
+            System.out.println("=====");
+            foundTeam.getMembers().add(member1);
+            em.persist(foundTeam);
+            em.persist(member1);
+            System.out.println("=====");
+            System.out.println("=====");
+            tx.commit();
+            System.out.println("=====");
+
+            List<Member> foundMembers = foundTeam.getMembers();
+            for (Member foundMember : foundMembers) {
+                System.out.println("foundMember = " + foundMember.getTeam() + ", member = " + foundMember.getName());
+            }
+
+            System.out.println("member.getTeam() = " + member.getTeam());
+            System.out.println("member1 = " + member1.getTeam());
+        } catch (Exception e) {
+            System.out.println("e.getMessage() = " + e.getMessage());
+            tx.rollback();
+        } finally {
+            em.close();
+        }
+
+        emf.close();
+    }
+```
+
+팀(team) 엔티티가 멤버(member) 리스트를 수정하고 있고, 멤버 엔티티는 팀 필드를 수정하지 않는다.
+
+'일' 쪽 엔티티가 연관 관계 주인인 상황이다.
+
+이 경우, 멤버 엔티티, 팀 엔티티에 대한 insert 쿼리와 팀 엔티티의 외래키를 수정하는 update 쿼리가 실행된다.
+
+```bash
+Hibernate: 
+    /* insert for
+        hellojpa.Team */insert 
+    into
+        Team (name, id) 
+    values
+        (?, ?)
+Hibernate: 
+    /* insert for
+        hellojpa.Member */insert 
+    into
+        Member (name, team_id, id) 
+    values
+        (?, ?, ?)
+Hibernate: 
+    update
+        Member 
+    set
+        team_id=? 
+    where
+        id=?
+```
+
+디비에 반영된 팀 엔티티를 가져와 `getMembers()`를 해보면, 디비에 저장된 멤버 엔티티(helloA)를 찾을 수 있다.
+또한, 해당 멤버는 외래키를 갖고 있기 때문에 팀 엔티티에 접근할 수 있다.(null이 아니다.)
+
+```bash
+foundMember = hellojpa.Team@1980a3f, member = helloA
+foundMember = null, member = helloB
+```
+
+트랜잭션이 끝난 후 디비를 조회하면 두 멤버 엔티티 모두 외래키가 잘 들어갔음을 확인할 수 있다.
+
+![image](https://github.com/codeleeks/blog/assets/166087781/577df0be-b27e-4f93-bae4-6a2fd9892ea3)
+
+##### `다`쪽이 연관 관계 주인일 경우
+
+외래키를 갖는 테이블에 매핑된 엔티티가 연관 관계 주인인 경우로, 외래키를 업데이트하는 쿼리가 필요 없어진다.
+
+```java
+@Entity
+public class Team {
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String name;
+
+    @OneToMany(mappedBy = "team")
+//    @JoinColumn(name = "team_id")
+    private List<Member> members = new ArrayList<>();
+}
+
+@Entity
+public class Member {
+    @Id @GeneratedValue
+    private Long id;
+    private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "team_id")
+    private Team team;
+```
+
+```bash
+Hibernate: 
+    /* insert for
+        hellojpa.Team */insert 
+    into
+        Team (name, id) 
+    values
+        (?, ?)
+Hibernate: 
+    /* insert for
+        hellojpa.Member */insert 
+    into
+        Member (name, team_id, id) 
+    values
+        (?, ?, ?)
+```
+
+멤버가 연관 관계 주인이기 때문에, 엔티티 필드를 수정해야 한다.
+
+```java
+public static void main(String[] args) {
+
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+        EntityManager em = emf.createEntityManager();
+        //code
+
+        EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        try {
+            Team team = new Team();
+            team.setName("teamA");
+
+            Member member = new Member();
+            member.setName("helloA");
+            System.out.println("member.getTeam() = " + member.getTeam());
+            System.out.println("=====");
+            member.setTeam(team);
+            System.out.println("=====");
+
+            System.out.println("=====");
+            team.getMembers().add(member);
+            System.out.println("=====");
+
+            System.out.println("=====");
+            em.persist(team);
+            System.out.println("=====");
+
+            System.out.println("=====");
+            em.persist(member);
+            System.out.println("=====");
+
+            System.out.println("=====");
+            em.flush();
+            System.out.println("=====");
+            System.out.println("=====");
+            em.clear();
+            System.out.println("=====");
+            System.out.println("=====");
+            Team foundTeam = em.find(Team.class, team.getId());
+            System.out.println("=====");
+            Member member1 = new Member();
+            member1.setName("helloB");
+            System.out.println("=====");
+            member1.setTeam(foundTeam);
+            System.out.println("=====");
+            System.out.println("=====");
+            foundTeam.getMembers().add(member1);
+            em.persist(foundTeam);
+            em.persist(member1);
+            System.out.println("=====");
+            System.out.println("=====");
+            tx.commit();
+            System.out.println("=====");
+
+            List<Member> foundMembers = foundTeam.getMembers();
+            for (Member foundMember : foundMembers) {
+                System.out.println("foundMember = " + foundMember.getTeam() + ", member = " + foundMember.getName());
+            }
+
+            System.out.println("member.getTeam() = " + member.getTeam());
+            System.out.println("member1 = " + member1.getTeam());
+        } catch (Exception e) {
+            System.out.println("e.getMessage() = " + e.getMessage());
+            tx.rollback();
+        } finally {
+            em.close();
+        }
+
+        emf.close();
+    }
+```
+
+팀 엔티티에는 팀에 속해 있는 멤버 리스트를 들고 있다.
+`getMembers()`로 멤버 리스트를 조회할 수 있다.
+여기서는 지연 로딩으로 `getMembers()` 호출할 때 select 쿼리가 실행된다.
+
+```bash
+Hibernate: 
+    select
+        m1_0.team_id,
+        m1_0.id,
+        m1_0.name 
+    from
+        Member m1_0 
+    where
+        m1_0.team_id=?
+```
+
+select 쿼리로 디비에서 가져오기 때문에 멤버 엔티티들은 정상적으로 값이 셋팅되어 있음을 확인할 수 있다.
+
+```bash
+foundMember = hellojpa.Team@4130a648, member = helloA
+foundMember = hellojpa.Team@4130a648, member = helloB
+```
+
+##### 비교하기
+
+'일' 쪽 엔티티가 연관 관계 주인이면, 외래키 수정을 위한 update 쿼리가 추가적으로 나간다.
+
+개념적으로도 외래키를 설정한다는 의미로 `team.getMembers().add(member)`보다는 `member.setTeam(team)`이 더 직관적으로 느껴진다.
+
+그래서 외래키를 갖는 테이블에 매핑되는 '다'쪽 엔티티가 연관 관계의 주인이 되어야 한다.
+
+##### 개발 팁
+
+- 양방향 필드 수정: 엔티티 필드를 수정할 때 상대방의 필드도 같이 수정한다.
+
+```java
+    public void setTeam(Team team) {
+        this.team = team;
+        team.getMembers().add(this);
+    }
+```
+
+- 
