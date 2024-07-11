@@ -176,4 +176,148 @@ commit을 호출하기 전에 진행되었던 `em.persist()` 혹은 객체 필�
 ![image](https://github.com/codeleeks/blog/assets/166087781/73fa1558-9702-446d-8cc2-aaa7d74e8137)
 출처: [자바 ORM 표준 JPA 프로그래밍](https://www.inflearn.com/course/ORM-JPA-Basic)
 
+## 엔티티
+@Entity: 클래스를 JPA 엔티티로 지정.
+@Table: JPA 엔티티를 매핑할 데이터베이스 테이블 지정.
+ - name: 매핑할 테이블 이름
+- catalog: 매핑할 카탈로그
+- schema: 매핑할 스키마
+- uniqueConstraints: 매핑할 제약 조건
+
+<MessageBox title='catalog, schema, database, table' level='info'>
+	ASNI 표준에서 카탈로그(catalog) > 스키마(schema) > 데이터베이스(database) > 테이블(table) 순으로 계층을 이룬다.
+	다시 말해, 카탈로그는 여러 개의 스키마를 갖으며, 스키마는 여러 개의 데이터베이스를, 데이터베이스는 여러 개의 테이블을 갖는다.
+	
+	그러나 벤더에 따라 이러한 구분이 엄밀하지 않을 수 있다.
+	예를 들어, MySQL에서는 카탈로그 = 스키마 = 데이터베이스로 보기도 한다. (https://junhyunny.github.io/database/database-schema-and-catalog/#google_vignette)
+</MessageBox>
+
+
+## DDL
+
+엔티티로 테이블 자동 생성한다.
+
+`hibernate.hbm2ddl.auto` 옵션 지정에 따라 동작한다.
+
+- create: 기존 테이블 삭제 후 다시 생성(drop and create)
+- create-drop: create와 동일하나 종료 시점에 테이블 drop
+- update: 변경분만 반영
+- validate: 엔티티와 테이블 간 매핑이 정상적으로 이루어졌는지만 확인
+- none: 사용하지 않음. (기본값)
+
+### DDL 생성 관련 어노테이션
+
+클래스에 어노테이션을 붙여서, 컬럼 이름, 제약 조건 등 DDL 생성을 제어할 수 있다.
+
+- @Table의 uniqueConstraints: 유니크 제약 조건 설정
+- @Column(name = 'username', nullable = false, lentgh = 10): `username varchar(10) NOT NULL`
+	- name: 컬럼 이름 지정
+	- insertable, updatable: 등록, 변경 가능 여부
+	- nullable: NULL 허용 여부 지정
+	- unique: 유니크 제약 조건 지정
+	- columnDefinition: SQL로 컬럼 정의.
+	- length: 최대 길이 지정.
+	- precision, scale: BigDecimal, BigInteger에서만 사용. (precision은 소수점 포함 전체 자리수, scale은 소수 자리수)
+- @Temporal: 날짜 타입 매핑
+	- TemporalType.DATE: 2013-10-11
+	- TemporalType.TIME: 11:12:14
+	- TmporalType.TIMESTAMP: 2013-10-11 11:12:14
+- @Enumerated(EnumType.STRING) : enum 타입 매핑. 
+	- EnumType.ORDINAL: enum 순서가 레코드에 들어감.
+	- EnumType.STRING: enum 이름이 레코드에 들어감.
+- @Lob: 대용량 데이터 저장. 타입에 따라 CLOB 매핑이나 BLOB 매핑 사용
+	- CLOB: String, char[], java.sql.CLOB
+	- BLOB: byte[], java.sql.BLOB
+- @Transient: 컬럼 매핑에서 제외
+- @Id: 기본키 매핑
+	- @GeneratedValue(strategy = GenerateType.AUTO): 키 자동 생성 옵션 지정
+		- GenerateType.IDENTITY: 데이터베이스에 위임.
+		- GenerateType.SEQUENCE: 데이터베이스 시퀀스 오브젝트 사용. @SequenceGenerator 필요.
+		- GenerateType.TABLE: 키 생성용 테이블 사용. @TableGenerator 필요.
+		- GenerateType.AUTO: 데이터베이스에 위임.
+
+#### GenerateType.IDENTITY 전략
+
+키 생성 로직을 데이터베이스에 위임한다. 
+
+데이터베이스의 기본 키 생성 전략을 사용한다.
+
+데이터베이스의 기본 키 생성 전략이 AUTO_INCREMENT인 경우 `em.persist()` 시점에 insert 쿼리를 실행한다.
+
+
+```java
+@Entity
+public class Member {
+ @Id
+ @GeneratedValue(strategy = GenerationType.IDENTITY)
+ private Long id; 
+```
+
+
+#### GenerateType.SEQUENCE 전략
+
+데이터베이스 시퀀스 객체를 사용하여 키를 생성한다.
+
+```java
+@Entity
+public class Member {
+    // 시퀀스 로직을 별도로 지정하지 않았기 때문에 하이버네이트의 시퀀스 로직으로 데이터베이스의 시퀀스 객체를 생성한다.
+    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+```
+
+시퀀스 로직을 테이블마다 다르게 가져가기 위해서 @SequenceGenerator 를 통해 로직을 부여해야 한다.
+
+```java
+@Entity
+// 1(initialValue)부터 시작하여, 1(allocationSize)씩 증가한다.
+@SequenceGenerator(
+        name = "MEMBER_SEQ_GENERATOR",
+        sequenceName = "MEMBER_SEQ",
+        initialValue = 1, allocationSize = 1
+)
+public class Member {
+    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "MEMBER_SEQ_GENERATOR")
+    private Long id;
+```
+
+allocationSize는 기본값이 50인데, 성능과 관련이 있다.
+
+키 생성 전략이 sequence인 엔티티는 영속 상태가 될 때(`em.persist()`) 키 값을 데이터베이스에서 가져온다.
+1차 캐시는 기본키값과 객체 매핑으로 저장하기 때문에, 키 값이 필요하다.
+그래서 `select next value for 시퀀스객체` 쿼리를 실행하여 시퀀스값을 가져온다.
+
+그런데 이렇게 되면 쓰기 지연의 이점을 누리지 못한다.
+객체를 영속성 컨텍스트에 넣을 때마다(영속 상태가 될 때마다) 어쨌든 쿼리가 나가기 때문이다.
+allocationSize를 크게 가져감으로써 이를 해결했다.
+
+allocationSize가 50이면, 한 번의 `select next value for 시퀀스객체` 쿼리로 시퀀스값이 50만큼 증가하고 데이터베이스에 저장된다.
+하지만 JPA는 엔티티 키값을 50만큼 증가시키는 게 아니라 1씩 증가시킨다.
+그러면 엔티티 키값이 50번 증가할 때까지 시퀀스 증가 쿼리를 실행하지 않을 수 있다.
+
+여러 서비스 간의 동시성 문제도 걱정 없다.
+한 서비스가 시퀀스 장가 쿼리로 시퀀스값을 받아서 1부터 50까지 사용한다면, 다른 서비스가 시퀀스 증가 쿼리를 실행할 때에는 시퀀스값이 51부터 100까지 사용한다.
+부여 받는 키값이 겹치지 않기 때문에 동시성 문제가 없는 것이다.
+
+
+#### GenerateType.TABLE 전략
+
+데이터베이스 테이블을 만들어 시퀀스 객체처럼 사용한다.
+시퀀스 객체 역할을 하는 테이블을 자동으로 생성하고, 키 발급시 테이블에서 조회하고 allocationSize 만큼 증가시킨 후 update한다.
+
+시퀀스 객체를 지원하지 않은 데이터베이스에서도 사용할 수 있다.
+그러나 시퀀스 객체보다는 성능이 떨어질 수 있다.
+
+```java
+@Entity
+@TableGenerator(
+        name = "MEMBER_SEQ_GENERATOR",
+        table = "MY_SEQUENCES",
+        pkColumnValue = "MEMBER_SEQ", allocationSize = 1
+)
+public class Member {
+    @Id @GeneratedValue(strategy = GenerationType.TABLE, generator = "MEMBER_SEQ_GENERATOR")
+    private Long id;
+```
+
 
