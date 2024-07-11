@@ -756,4 +756,42 @@ foundMember = hellojpa.Team@4130a648, member = helloB
     }
 ```
 
-- 
+### 일대일 연관 관계
+
+다대일, 일대다 관계처럼 단방향은 직관적이며, 양방향은 `@JoinColumn`과 `mappedBy`로 연관 관계의 주인을 명시해야 한다.
+
+```java
+@Entity
+public class Locker {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+
+    @OneToOne(mappedBy = "locker")
+    private Member member;
+}
+
+@Entity
+public class Member {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "team_id", unique = true)
+    private Team team;
+
+    @OneToOne
+    @JoinColumn(name = "locker_id")
+    private Locker locker;
+}
+```
+
+- 1) 주 엔티티 -> 대상 엔티티 단방향, 외래키는 주 테이블에 있는 경우
+- 2) 주 엔티티 <-> 대상 엔티티 양방향, 외래키는 주 테이블에 있는 경우
+- 3) 주 엔티티 -> 대상 엔티티 단방향, 외래키는 대상 테이블에 있는 경우 (JPA가 지원하지 않음)
+- 4) 주 엔티티 <-> 대상 엔티티 양방향, 외래키는 대상 테이블에 있는 경우
+
+2번과 4번은 코드로 풀면 같은 내용이다.
+외래키가 있는 테이블에 매핑된 엔티티가 연관 관계의 주인이 되어야 하기 때문이다.
+2번의 경우에 주 엔티티가 연관 관계의 주인이 되고, 4번의 경우에는 대상 엔티티가 연관 관계의 주인이 된다.
