@@ -778,7 +778,7 @@ public class Member {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name = "team_id", unique = true)
+    @JoinColumn(name = "team_id")
     private Team team;
 
     @OneToOne
@@ -795,3 +795,55 @@ public class Member {
 2번과 4번은 코드로 풀면 같은 내용이다.
 외래키가 있는 테이블에 매핑된 엔티티가 연관 관계의 주인이 되어야 하기 때문이다.
 2번의 경우에 주 엔티티가 연관 관계의 주인이 되고, 4번의 경우에는 대상 엔티티가 연관 관계의 주인이 된다.
+
+### 다대다 연관 관계
+
+두 개의 테이블이 다대다 관계를 맺는 것은 불가능하다.
+연결 테이블을 도입해서 세 개의 테이블이 관계를 가져야 한다.
+
+그런데 두 개의 객체는 다대다 관계를 가질 수 있기 때문에,
+JPA는 이러한 간극을 메꿔야 했다.
+
+그래서 JPA는 두 개의 엔티티가 다대다 관계를 맺을 때(`@ManyToMany`) 세 개의 테이블이 나오도록 변환한다. (각 엔티티에 매핑되는 테이블과 연결테이블)
+연결테이블은 `@JoinTable` 어노테이션으로 이름, 컬럼명 등을 지정할 수 있다.
+
+그러나 `@JoinTable`을 사용해서는 연결테이블에 컬럼을 추가할 수 없다.
+
+그래서 다대다 관계는 엔티티 레벨에서 @OneToMany, @ManyToOne으로 풀어낸다.
+연결테이블에 해당하는 엔티티를 추가하는 격이다.
+
+```java
+@Entity
+public class Member {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+
+    @OneToMany(mappedBy = "member")
+    private List<Order> orders = new ArrayList<>();
+}
+
+@Entity
+public class Product {
+    @Id @GeneratedValue
+    private Long id;
+    private String name;
+
+    @OneToMany(mappedBy = "product")
+    private List<Order> orders = new ArrayList<>();
+}
+
+@Entity
+public class Order {
+    @Id @GeneratedValue
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "MEMBER_ID")
+    private Member member;
+
+    @ManyToOne
+    @JoinColumn(name = "PRODUCT_ID")
+    private Product product;
+}
+```
