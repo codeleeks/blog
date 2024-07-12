@@ -440,7 +440,7 @@ member.setTeam(team);
 ```
 
 주인이 아닌 객체는 외래키를 읽기만 할 수 있다.
-`mappedBy`로 누가 주인인지를 지정한다.
+`mappedBy`로 누가 주인인지를 지정한다. (The field that owns the relationship. (https://docs.oracle.com/javaee%2F6%2Fapi%2F%2F/javax/persistence/OneToMany.html))
 
 
 #### 연관 관계의 주인
