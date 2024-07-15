@@ -1085,3 +1085,53 @@ Hibernate:
 - `@OneToOne`: FetchType.EAGER (즉시로딩)
 - `@OneToMany`: FetchType.LAZY (지연로딩)
 - `@ManyToMany`: FetchType.LAZY (지연로딩)
+
+
+## 영속성 전이
+
+어떤 엔티티를 영속성 컨텍스트에 넣을 때, 연관된 엔티티도 같이 영속화할 것인지 아닐지를 설정한다.
+
+엔티티 간의 관계가 종속 관계일 때 쓴다.
+
+종속 관계란 두 가지 조건을 만족한다. 
+
+- A가 B에서만 쓰인다.
+- B가 있어야 A를 추가할 수 있고, B를 삭제하면 A도 삭제해야 한다.
+
+```java
+@Entity
+public class Team {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+
+    //default는 {}.
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "team_id")
+    private List<Member> members = new ArrayList<>();
+}
+```
+
+### 고아 객체
+
+종속 관계에서 연관 관계가 없는 자식 엔티티는 삭제하는 기능이다.
+
+예를 들어, `team.getMembers().remove(0)` 코드를 실행하면 0번째 멤버 엔티티의 연관 관계가 끊어지는데,
+이 때 멤버 테이블에서 해당하는 레코드도 삭제하는 기능이다.
+
+```java
+
+@Entity
+public class Team {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+
+    //default는 false
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "team_id")
+    private List<Member> members = new ArrayList<>();
+}
+```
