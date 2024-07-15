@@ -1135,3 +1135,278 @@ public class Team {
     private List<Member> members = new ArrayList<>();
 }
 ```
+
+## 값 타입
+
+JPA에서 취급하는 타입은 크게 두 가지이다.
+
+- 엔티티: 일반적으로 pk를 두기 때문에(식별자) JPA가 추적이 가능하다. (추적이 가능하다는 것은 엔티티의 필드가 변하면 테이블에 있는 레코드를 모두 지우고 새 값들로 다시 넣는게 아니라 update 쿼리를 날릴 수 있다는 뜻이다.)
+- 값 타입: JPA가 추적이 불가능하다. 값 자체는 변경 이력을 추적할 수 있는 식별자가 없다. 엔티티에 종속적인 관계이다.(그러므로 라이플사이클을 같이 가져간다. 마치 `Cascade.ALL, OrphanRemoval=true` 처럼)
+
+
+값 타입은 세 가지로 나뉜다.
+
+- 기본값타입: 자바 기본 타입, Integer, String 등의 객체 타입.
+- 임베디드타입: `@Embeddable`이 붙은 클래스
+- 값타입컬렉션: 기본값타입이나 임베디드타입의 컬렉션
+
+### 임베디드 타입
+
+기본값 타입의 필드들을 별도의 클래스로 분리하여 사용한다.
+`@Column` 등 엔티티에서 사용하는 어노테이션을 사용할 수 있다.
+
+```java
+@Embeddable
+public class Address {
+    private String city;
+    private String street;
+    private String zipcode;
+}
+
+@Entity
+public class Member {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+
+    @Embedded
+    private Period workPeriod;
+    @Embedded
+    private Address homeAddress;
+```
+
+임베디드 타입의 필드는 객체이기 때문에 엔티티 객체 간의 공유가 가능하다.
+이는 부수효과(side effect)를 발생하기 때문에 임베디드 타입을 정의할 때 불변 객체로 만들어야 한다.
+빌더 패턴은 대표적인 불변 객체이다.
+
+<MessageBox title='불변 객체 정의시 주의 사항' level='warning'>
+	엔티티나 임베디드 타입은 기본생성자를 만들어줘야 한다.
+</MessageBox>
+
+```java
+package hellojpa;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+
+@Embeddable
+public class Address {
+    private String city;
+    private String street;
+    private String zipcode;
+
+    private Address() {
+
+    }
+
+    protected Address(String city, String street, String zipcode) {
+        this.city = city;
+        this.street = street;
+        this.zipcode = zipcode;
+    }
+
+    //값 비교를 위한 재정
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null) {
+            return false;
+        } else if (obj instanceof Address) {
+            Address target = (Address) obj;
+            return Objects.equals(this.city, target.city) && Objects.equals(this.street, target.street)
+                    && Objects.equals(this.zipcode, target.zipcode);
+        } else {
+            return false;
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String city;
+        private String street;
+        private String zipcode;
+
+        public Builder city(String city) {
+            this.city = city;
+            return this;
+        }
+        public Builder street(String street) {
+            this.street = street;
+            return this;
+        }
+        public Builder zipcode(String zipcode) {
+            this.zipcode = zipcode;
+            return this;
+        }
+
+        public Address build() {
+            return new Address(city, street, zipcode);
+        }
+    }
+}
+```
+
+### 값 타입 컬렉션
+
+관계형 데이터베이스에서는 테이블 내에 컬렉션을 두는 방법이 없다.
+값 타입 컬렉션도 별도의 테이블로 만들어지고, 외래키로 엔티티에 연결하는 방식으로 구현되었다. (디폴트로 지연 로딩)
+
+`@ElementCollection`과 `@CollectionTable` 조합으로 정의한다.
+
+```java
+@Entity
+public class Member {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "roles",
+            joinColumns = @JoinColumn(name = "member_id")
+    )
+    private List<String> roles;
+    @ElementCollection
+    @CollectionTable(
+            name = "addresses",
+            joinColumns = @JoinColumn(name = "member_id")
+    )
+    private List<Address> addresses;
+}
+```
+
+값 타입 컬렉션을 수정할 때 치명적인 문제가 있다.
+값 타입은 식별자가 없어 추적이 불가능하다.
+그래서 컬렉션에서 수정이 발생하면 컬렉션 테이블에서 관련된 레코드를 싹 지우고, 다시 넣을 수밖에 없다.
+
+```java
+Member member = new Member();
+member.setName("memberA");
+
+ArrayList<Address> addresses = new ArrayList<>();
+Address address = Address.builder()
+    .city("seoul")
+//                    .street("gangnam")
+    .zipcode("123456")
+    .build();
+Address address1 = Address.builder()
+    .city("busan")
+    .street("haeundae")
+    .zipcode("1234")
+    .build();
+
+
+addresses.add(address);
+addresses.add(address1);
+
+member.setAddresses(addresses);
+
+em.persist(member);
+
+em.flush();
+em.clear();
+
+//컬렉션을 수정한다.
+Member foundMember = em.find(Member.class, 1L);
+foundMember.getAddresses().remove(address);
+foundMember.getAddresses().add(Address.builder()
+    .city("sa")
+    .street("1st")
+    .zipcode("5555")
+    .build());
+```
+
+```bash
+Hibernate: 
+    /* one-shot delete for hellojpa.Member.addresses */delete 
+    from
+        addresses 
+    where
+        member_id=?
+Hibernate: 
+    /* insert for
+        hellojpa.Member.addresses */insert 
+    into
+        addresses (member_id, city, street, zipcode) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    /* insert for
+        hellojpa.Member.addresses */insert 
+    into
+        addresses (member_id, city, street, zipcode) 
+    values
+        (?, ?, ?, ?)
+```
+
+#### 값 타입 컬렉션의 대안
+
+엔티티로 만들고, 엔티티가 값 타입을 갖게 한다.
+부모 엔티티와 일대다 연관 관계를 맺는다.
+
+```java
+@Entity
+@Table(name = "Address")
+public class AddressEntity {
+    @Id @GeneratedValue
+    private Long id;
+    private Address address;
+
+    public AddressEntity(String city, String street, String zipcode) {
+        this.address = Address.builder()
+                .zipcode(zipcode)
+                .street(street)
+                .city(city)
+                .build();
+    }
+}
+
+@Entity
+public class Member {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "roles",
+            joinColumns = @JoinColumn(name = "member_id")
+    )
+    private List<String> roles;
+//    @ElementCollection
+//    @CollectionTable(
+//            name = "addresses",
+//            joinColumns = @JoinColumn(name = "member_id")
+//    )
+    //private List<Address> addresses;
+    @OneToMany
+    @JoinColumn(name = "member_id")
+    private List<AddressEntity> addresses;
+}
+```
+
+```java
+Member member = new Member();
+member.setName("memberA");
+
+ArrayList<AddressEntity> addresses = new ArrayList<>();
+addresses.add(new AddressEntity("seoul", "gangnam", "123456"));
+addresses.add(new AddressEntity("busan", "haeundae", "1234"));
+
+member.setAddresses(addresses);
+
+em.persist(member);
+
+em.flush();
+em.clear();
+
+
+Member foundMember = em.find(Member.class, 1L);
+foundMember.getAddresses().remove(new AddressEntity("seoul", "gangnam", "123456"));
+foundMember.getAddresses().add(new AddressEntity("sa", "1st", "555"));
+
+```
