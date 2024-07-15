@@ -849,7 +849,7 @@ public class Order {
 ```
 
 
-## 상속 엔티티
+## 상속 관계 매핑
 
 엔티티 간 상속 관계는 테이블에서 어떻게 표현될까?
 
@@ -902,3 +902,59 @@ public class Album extends Item {
 |---|---|---|
 |장점|정규화가 되어 있음|조회, 삽입 쿼리가 단순함|
 |단점|테이블이 여러 개라 관리가 복잡할 수 있음. 또한, 조회시 조인, 삽입은 슈퍼타입, 서브타입에 각각 실행됨.|레코드의 무결성이 깨짐.(컬럼값이 null인 경우가 많음)|
+
+## @MappedSuperclass
+
+부모 클래스의 필드를 자식 엔티티가 상속받을 수 있게 해준다.
+엔티티는 엔티티나 `@MappedSuperClass` 어노테이션이 붙은 클래스만 상속받을 수 있다.
+
+여러 엔티티에서 공통적으로 사용할 필드를 한 곳에 정의하여 관리할 수 있다.
+
+```java
+package hellojpa;
+
+import jakarta.persistence.MappedSuperclass;
+
+import java.time.LocalDateTime;
+
+@MappedSuperclass
+public abstract class BaseEntity {
+    private String createdBy;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+}
+
+package hellojpa;
+
+import jakarta.persistence.*;
+
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "type")
+public class Item extends BaseEntity {
+    @Id @GeneratedValue
+    private Long id;
+    private String name;
+    private int price;
+}
+
+void main() {
+  Album album = new Album();
+  album.setArtist("zico");
+  album.setCreatedAt(LocalDateTime.now());
+  album.setCreatedBy("zico");
+  album.setUpdatedAt(LocalDateTime.now());
+}
+```
