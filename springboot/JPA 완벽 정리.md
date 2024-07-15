@@ -999,3 +999,89 @@ Album album1 = em.getReference(Album.class, 1L);
             System.out.println("album1.getArtist() = " + album1.getArtist());
   	```
 </MessageBox>
+
+
+## 지연 로딩과 즉시 로딩
+
+비즈니스 로직에서 연관된 두 엔티티가 대부분 같이 쓰일 때는 당장 모두 가져오는 것이 유리할 것이고, 반대로 아주 가끔 같이 쓰일 때는 매번 가져오지 않고 사용될 때만 연관된 엔티티를 가져오는 게 나을 것이다.
+
+JPA는 이러한 상황을 커버하기 위해 즉시 로딩과 지연 로딩을 지원한다.
+
+즉시 로딩은 엔티티 간의 연관 관계가 있을 때, 연관된 엔티티까지 모두 가져온다. (조인 사용. 그 연관된 엔티티가 또 다른 엔티티와 연관되어 있는 경우라면 또 다른 엔티티도 가져온다)
+지연 로딩은 연관된 엔티티가 사용될 때 그제서야 가져온다.
+
+### 즉시 로딩의 단점
+
+즉시 로딩은 성능상 위험한 선택지일 가능성이 높다.
+
+즉시 로딩은 한 번의 쿼리로 연관 관계에 있는 테이블을 다 가져오기 때문에 여러 개의 조인으로 엮은 쿼리가 발생할 수 있다.
+또한, 직접 쿼리를 작성하는 경우에 연관된 테이블의 레코드를 조회하기 위해 N+1 문제를 일으킬 수 있다.
+
+```java
+Team team = new Team();
+team.setName("teamA");
+
+Team team1 = new Team();
+team1.setName("teamB");
+
+Member member = new Member();
+member.setName("memberA");
+
+Member member1 = new Member();
+member1.setName("memberB");
+
+team.getMembers().add(member);
+team1.getMembers().add(member1);
+
+em.persist(team);
+em.persist(team1);
+em.persist(member);
+em.persist(member1);
+
+em.flush();
+em.clear();
+
+List<Team> teams = em.createQuery("select t from Team t", Team.class)
+    .getResultList();
+```
+
+Team 엔티티 리스트를 조회하는데, 멤버 엔티티의 레코드를 가져올 때 조인이 아니라 각 팀에 속한 멤버 리스트를 구하는 방식으로 실행된다. 
+다시 말해, 각 team_id로 member 테이블을 여러 번 조회한다.
+하나의 쿼리(팀 테이블 조회 쿼리)가 여러 개의 쿼리(team_id별 멤버 테이블 조회 쿼리 여러 개)를 유발하는 것이다.
+
+```bash
+Hibernate: 
+    /* select
+        t 
+    from
+        Team t */ select
+            t1_0.id,
+            t1_0.name 
+        from
+            Team t1_0
+Hibernate: 
+    select
+        m1_0.team_id,
+        m1_0.id,
+        m1_0.name 
+    from
+        Member m1_0 
+    where
+        m1_0.team_id=?
+Hibernate: 
+    select
+        m1_0.team_id,
+        m1_0.id,
+        m1_0.name 
+    from
+        Member m1_0 
+    where
+        m1_0.team_id=?
+```
+
+### 연관 관계별 FetchType 기본 설정
+
+- `@ManyToOne`: FetchType.EAGER (즉시로딩)
+- `@OneToOne`: FetchType.EAGER (즉시로딩)
+- `@OneToMany`: FetchType.LAZY (지연로딩)
+- `@ManyToMany`: FetchType.LAZY (지연로딩)
