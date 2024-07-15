@@ -847,3 +847,58 @@ public class Order {
     private Product product;
 }
 ```
+
+
+## 상속 엔티티
+
+엔티티 간 상속 관계는 테이블에서 어떻게 표현될까?
+
+테이블에는 슈퍼타입-서브타입 개념이 있다.
+
+추상화된 타입인 슈퍼타입과 구체화된 타입인 서브 타입의 관계는 세 가지 전략으로 설계된다.
+
+- Identity(각 테이블로 분리): 서브 타입은 슈퍼타입을 외래키로 걸고, 슈퍼타입은 서브 타입을 지칭하는 컬럼(type)으로 구분한다.
+- Rollup(하나의 테이블로 처리): 슈퍼 타입에 서브 타입 컬럼을 다 넣는다. 다른 서브 타입의 컬럼값은 null이 된다.
+- Rolldown(서브 타입으로만 처리): 슈퍼 타입의 컬럼을 각각의 서브타입에 넣는다.
+
+고려할 만한 전략은 Identity와 Rollup이다.
+Rolldown은 변경에 취약하기 때문이다.
+
+JPA에선 Identity는 InheritanceType.JOINNED로(조인전략), Rollup은 InheritanceType.SINGLE_TABLE(싱글 테이블 전략)으로 설정한다.
+싱글테이블 전략은 디폴트 설정으로서, `@Inheritance`를 적지 않으면 자동으로 설정된다.
+
+```java
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "type")
+public abstract class Item {
+    @Id @GeneratedValue
+    private Long id;
+    private String name;
+    private int price;
+}
+
+@Entity
+@DiscriminatorValue("AlbumType")
+public class Album extends Item {
+    private String artist;
+
+    public String getArtist() {
+        return artist;
+    }
+
+    public void setArtist(String artist) {
+        this.artist = artist;
+    }
+}
+```
+
+- `@DiscriminatorColumn`: 서브 타입을 구분하기 위해 사용되는 슈퍼 타입의 컬럼.
+- `@DiscriminatorValue`: `@DiscriminatorColumn`으로 지정한 슈퍼 타입의 컬럼에 들어갈 서브 타입의 타입값.(기본값은 서브 타입의 엔티티 이름)
+
+### 조인 전략과 싱글테이블 전략 비교
+
+||조인전략|싱글테이블전략|
+|---|---|---|
+|장점|정규화가 되어 있음|조회, 삽입 쿼리가 단순함|
+|단점|테이블이 여러 개라 관리가 복잡할 수 있음. 또한, 조회시 조인, 삽입은 슈퍼타입, 서브타입에 각각 실행됨.|레코드의 무결성이 깨짐.(컬럼값이 null인 경우가 많음)|
