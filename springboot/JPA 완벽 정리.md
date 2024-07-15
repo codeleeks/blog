@@ -958,3 +958,44 @@ void main() {
   album.setUpdatedAt(LocalDateTime.now());
 }
 ```
+
+##  프록시
+
+하이버네이트는 성능 이점을 갖기 위해, 필요한 테이블만 조회하도록 지연 로딩 기능을 제공한다.
+지연 로딩은 가짜 엔티티를 만들어서, 비즈니스 로직에서 실제로 필드를 사용할 때 데이터베이스에 조회를 하는 방식으로 구현되었다.
+필드에 최초로 접근할 때에만 데이터베이스에서 조회한다.
+
+가짜 엔티티는 다른 말로 프록시라고 한다.
+프록시는 엔티티를 상속해서 만든다. 프록시 안에 엔티티 객체를 갖고 있고, 프록시 메서드를 호출하면 해당하는 엔티티 메서드를 호출한다.
+
+![image](https://github.com/user-attachments/assets/fd818f80-7e79-46d7-ad84-65249e8f4a39)
+
+필드에 최초로 접근할 때 프록시는 초기화된다.
+초기화 과정에서 영속성 컨텍스트에게 엔티티 조회 요청을 하고, 결과를 1차 캐시에 저장한다.
+
+![image](https://github.com/user-attachments/assets/fdcd1677-102b-40cb-95d9-e87ec76585ea)
+
+`em.find()`는 영속성 객체가 없는 경우 실제 엔티티를 반환하며, `em.getReference()`는 영속성 객체가 없는 경우 프록시를 반환한다.
+
+```java
+Album album1 = em.getReference(Album.class, 1L);
+```
+
+<MessageBox title='REPEATABLE_READ와 프록시' level='warning'>
+	`em.getReference()`는 "영속성 객체가 없는 경우" 프록시 객체를 만든다.
+	이미 `em.find()`를 통해 데이터베이스를 조회해서 실제 엔티티를 1차 캐시에 넣어놨다면 이후의 `em.getReference()`도 프록시가 아니라 엔티티를 반환한다.
+	이렇게 함으로써, 같은 트랜잭션 내의 REPEATABLE_READ 격리성을 제공하는 효과가 있기 때문이다.
+
+	반대로 `em.getReference()`로 프록시 객체를 생성해서 1차 캐시에 넣어놨다면 이후의 `em.find()`도 엔티티가 아니라 프록시를 반환한다.	
+</MessageBox>
+
+<MessageBox title='준영속과 프록시' level='warning'>
+	영속성 컨텍스트에서 제외된 프록시는 초기화를 할 수 없다.
+	프록시의 초기화 과정에서 영속성컨텍스트를 사용하여 엔티티를 만드는데, 영속성 컨텍스트에서 프록시를 제외했기 때문이다. (`LazyInitializationException`이 발생한다)
+	준영속된 이후에 프록시에서 엔티티 필드를 가져오는 작업은 이러한 이유로 실패한다.
+ 	```java
+            Album album1 = em.getReference(Album.class, 1L);
+            em.detach(album1);
+            System.out.println("album1.getArtist() = " + album1.getArtist());
+  	```
+</MessageBox>
