@@ -1428,10 +1428,139 @@ JPA가 이러한 메서드들의 코드를 다 분석해 쿼리를 만드는 것
 정적 쿼리.
 
 ```java
+// like 검색
 String jpql = "select m from Member m where m.name like '%member1%'";
 List<Member> foundMembers = em.createQuery(jpql, Member.class)
     .getResultList();
+
+// aggregation
+String jpql = "select sum(m.age) from Member m";
+Long singleResult = em.createQuery(jpql, Long.class)
+    .getSingleResult();
+
+//파라미터 바인
+String jpql = "select m from Member m where m.name=:name";
+TypedQuery<Member> query = em.createQuery(jpql, Member.class);
+Member result = query.setParameter("name", "member12")
+    .getSingleResult();
+
+//프로젝션
+//엔티티 프로젝 (조인 사용)
+String jpql = "select m.team from Member m";
+List<Team> teams = em.createQuery(jpql, Team.class)
+    .getResultList();
+
+//임베디드 타입 프로젝션
+String jpql = "select m.address from Member m";
+List<Address> resultList = em.createQuery(jpql, Address.class)
+    .getResultList();
+
+//스칼라 타입 프로젝션
+String jpql = "select new hellojpa.Aggregate(sum(m.age), count(m)) from Member m";
+Aggregate singleResult = em.createQuery(jpql, Aggregate.class)
+    .getSingleResult();
+
+
+//조인
+//이너 조인. (SELECT m FROM Member m [INNER] JOIN m.team t)
+String jpql = "select m from Member m join m.team";
+List<Member> resultList = em.createQuery(jpql, Member.class)
+    .getResultList();
+
+//아우터 조인. (SELECT m FROM Member m LEFT [OUTER] JOIN m.team t)
+String jpql = "select m from Member m left join m.team";
+List<Member> resultList = em.createQuery(jpql, Member.class)
+    .getResultList();
+
+//on을 통한 조건 적용
+String jpql = "select m from Member m join Team t on t.name = 'A'";
+List<Member> resultList = em.createQuery(jpql, Member.class)
+    .getResultList();
+//on을 통한 연관 관계 없는 엔티티 간 조인
+String jpql = "select m, t from Member m left join Team t on m.name = t.name";
+List<Object[]> resultList = em.createQuery(jpql, Object[].class)
+    .getResultList();
+
+//서브쿼리
+//평균 나이보다 많은 회원 조회
+String jpql = "select m from Member m where m.age > (select avg(m2.age) from Member m2)";
+List<Member> resultList = em.createQuery(jpql, Member.class)
+    .getResultList();
+
+//팀 member1에 속한 멤버 조회
+String jpql = "select m from Member m where exists (select t from m.team t where t.name = 'member1')";
+List<Member> resultList = em.createQuery(jpql, Member.class)
+    .getResultList();
+
+//어떤 팀이든 속해 있는 멤버 조회
+String jpql = "select m from Member m where m.team = ANY (select t from Team t)";
+List<Member> resultList = em.createQuery(jpql, Member.class)
+    .getResultList();
+
+//제공 함수
+// coalesce, is null 
+String jpql = "select coalesce(m.name, '이름 없는 회원') from Member m where m.name is null";
+List<String> resultList = em.createQuery(jpql, String.class)
+    .getResultList();
 ```
+
+#### JPQL에서 제공되는 기본 함수
+
+- concat
+- substring
+- trim
+- lower, upper
+- length
+- abs, sqrt, mod
+- size, index
+- coalesce
+- nullif: `nullif(m.username, '관리자')`일 때 m.username가 관리자면 null을, 아니면 m.username을 반환.
+- exists, in
+- and, or, not
+- between, like, is null
+- `type(m) = Member`: 상속 관계 확인.
+
+
+#### 경로 표현식
+
+`.`을 통해 엔티티 필드를 접근할 수 있다.
+필드는 상태 필드, 연관 필드로 나뉜다.
+
+상태 필드는 단순히 값을 저장하기 위한 필드이다. (m.name)
+연관 필드는 다른 엔티티와 연관 관계에 놓인 필드이다. 단일값 연관 필드와 컬렉션 연관 필드로 나뉜다.
+
+단일값 연관 필드는 `@ManyToOne`, `@OneToOne` 관계처럼 대상이 엔티티 하나다.
+반면, 컬렉션 연관 필드는 `@OneToMany`, `@ManyToMany` 관계처럼 대상이 컬렉션이다.
+
+필드의 구분에 따라 특징이 있다.
+
+||상태필드|단일값 연관 필드|컬렉션 연관 필드|
+|---|---|---|---|
+|경로 탐색|경로 탐색의 끝|경로 탐색을 이어감|**경로 탐색의 끝**|
+|묵시적 이너 조인|X|O|O|
+
+"경로 탐색의 끝"은 `.`으로 다음 필드로 이어갈 수 없다는 뜻이다.
+
+```bash
+# 성공 - 묵시적 조인 발생
+select o.member.team from Order o
+# 성공 - 묵시적 조인 발생
+select t.members from Team
+# 실패 - 컬렉션 연관 필드에서 그 다음 필드로 탐색을 이어나갈 수 없다.
+select t.members.username from Team t
+# 성공 - 명시적 조인
+select m.username from Team t join t.members m
+```
+
+묵시적 조인은 지양하고, 명시적 조인으로 코드 가독성을 높여야 한다.
+
+#### fetch join
+
+JPQL만의 특별한 기능. (SQL에는 fetch join이 없다)
+
+연관된 필드를 SQL 한 번에 조회하는 기능이다.
+
+#### JPQL 한계
 
 동적으로 변경되는 조건인 경우에 대응이 어렵다.
 
