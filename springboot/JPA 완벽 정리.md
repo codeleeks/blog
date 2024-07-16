@@ -1560,6 +1560,42 @@ JPQL만의 특별한 기능. (SQL에는 fetch join이 없다)
 
 연관된 필드를 SQL 한 번에 조회하는 기능이다.
 
+단일 값 필드, 컬렉션 필드 모두 한 번에 가져온다.
+
+```java
+String jpql = "select t from Team t join fetch t.members";
+List<Team> teams = em.createQuery(jpql, Team.class)
+    .getResultList();
+```
+
+```sql
+-- 팀 레코드, 멤버 레코드 모두 가져온다.
+SELECT T.*, M.*
+FROM TEAM T
+INNER JOIN MEMBER M ON T.ID=M.TEAM_ID
+```
+
+<MessageBox title='페치 조인과 일대다 관계' level='warning'>
+	일대다 연관 관계 필드를 가져올 때는 조인된 테이블의 레코드가 원래 갯수보다 늘어날 수 있기 때문에 중복 데이터가 발생한다.
+
+ 	![image](https://github.com/user-attachments/assets/57a7fe0a-3f14-4e90-b111-47868113c531)
+
+	`distinct` 키워드를 사용해서 데이터베이스 차원에서 중복 데이터를 걸러내고, 어플리케이션 차원에서 중복 데이터를 걸러낸다.
+	하이버네이트6부터는 `distinct`를 적지 않아도 중복 데이터를 자동으로 없애준다.
+</MessageBox>
+
+
+##### 페치 조인의 한계
+
+- 페치 조인 대상에 대해 별칭을 사용해 필터링하는 작업은 피해야 한다.
+  - 코드를 잘 이해하지 못하면 오해의 여지가 있다. (모든 레코드를 가지고 있는 게 아니라 몇 개만 가지고 있기 때문에)
+- 한 엔티티의 여러 개의 컬렉션 필드를 한 번에 페치 조인하면 안 된다.
+  - 일대다대다의 상황으로 레코드가 폭증할 수 있다.
+- 일대다 연관 관계일 때 페이징 API가 동작하지 않는다.
+  - 데이터베이스 차원에서 일대다 관계의 조인테이블은 레코드가 기존 테이블의 레코드 갯수보다 증가하기 때문에 페이징의 의미가 없어진다.
+
+
+
 #### JPQL 한계
 
 동적으로 변경되는 조건인 경우에 대응이 어렵다.
