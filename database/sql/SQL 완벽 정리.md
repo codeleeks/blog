@@ -163,6 +163,23 @@ ref: https://www.udemy.com/course/sql-and-postgresql/
 select url, username from photos full join users on users.id = photos.user_id
 ```
 
+#### 다대일 조인과 일대다 조인의 차이
+
+사용자는 여러 장의 사진을 가질 수 있다.
+사진을 기준으로 조인을 하면 사진당 사용자를 매핑하기 때문에 원래 사진 테이블의 레코드 갯수와 조인된 테이블의 레코드 갯수가 동일하다.
+
+```sql 
+select url, username from photos join users on users.id = photos.user_id
+```
+
+그런데 사용자를 기준으로 조인을 할 수도 있다.
+
+```sql
+select url, username, from users join photos on users.id = photos.user_id
+```
+
+사용자를 기준으로 조인을 하면 사용자당 사진을 매핑하는데, 사용자 한 명이 가질 수 있는 사진은 1개 이상이기 때문에 조인된 테이블의 레코드 갯수는 사용자 테이블의 레코드 갯수보다 늘어날 수 있다.
+
 #### aggregation
 - grouping: 여러 레코드를 더 적은 여러 레코드로 줄인다.
 - aggregates: 동일한 컬럼의 여러 레코드 값을 하나의 값으로 줄인다.
