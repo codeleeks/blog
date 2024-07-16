@@ -1410,3 +1410,70 @@ foundMember.getAddresses().remove(new AddressEntity("seoul", "gangnam", "123456"
 foundMember.getAddresses().add(new AddressEntity("sa", "1st", "555"));
 
 ```
+
+## 객체향 쿼리 언어
+
+객체 세계에서 복잡한 조건 조회는 타겟 객체 무리가 제공하는 여러 메서드로 처리한다.
+
+객체 간 협력으로 필요한 내용을 전달하는 것이다.
+
+JPA가 이러한 메서드들의 코드를 다 분석해 쿼리를 만드는 것보다, SQL와 같은 객체향 쿼리 언어를 제공하는 것이 효율적이다.
+
+객체향 쿼리 언어는 문법에 따라 SQL로 변환되어 데이터베이스에서 실행된다.
+
+따라서 조건에 맞는 필요한 레코드만 얻어올 수 있다. (어플리케이션에 레코드를 모두 얻어온 뒤 조건에 따라 필터링하지 않아도 된다)
+
+### JPQL
+
+정적 쿼리.
+
+```java
+String jpql = "select m from Member m where m.name like '%member1%'";
+List<Member> foundMembers = em.createQuery(jpql, Member.class)
+    .getResultList();
+```
+
+동적으로 변경되는 조건인 경우에 대응이 어렵다.
+
+### CriteriaQuery
+
+동적 쿼리.
+
+JPA에서 공식 지원하는 JPQL 빌더.
+
+```java
+CriteriaBuilder cb = em.getCriteriaBuilder();
+CriteriaQuery<Member> query = cb.createQuery(Member.class);
+
+Root<Member> m = query.from(Member.class);
+
+CriteriaQuery<Member> cq = query.select(m)
+    .where(cb.like(m.get("name"), "%member1%"));
+
+List<Member> foundMembers = em.createQuery(cq).getResultList();
+```
+
+동적 쿼리를 작성하기 복잡하다.
+
+### QueryDSL
+
+동적 쿼리.
+
+서드파티 라이브러리이다.
+
+```java
+```
+
+## 네이티브 SQL
+
+JPA에서 제공하는 네이티브 SQL을 사용할 수도 있고, 
+
+```java
+List<Member> foundMembers = em.createNativeQuery("select * from Member as m where m.name like '%member1%'", Member.class)
+    .getResultList();
+```
+
+SQL 매퍼를 사용할 수 있다.
+SQL 매퍼는 JdbcTemplate, MyBatis 등을 사용한다.
+
+[관련 포스팅] (https://codeleeks.github.io/blog/posts/springboot/Spring%20DB%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC.md)
