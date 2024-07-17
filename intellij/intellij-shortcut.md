@@ -21,3 +21,7 @@ ctrl + alt + n
 ## getter and setter 생성하기
 
 alt + insert 후 getter and setter 클릭.
+
+## 파일 생성하기
+
+ctrl + alt + insert
