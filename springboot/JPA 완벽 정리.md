@@ -1426,6 +1426,66 @@ JPA가 이러한 메서드들의 코드를 다 분석해 쿼리를 만드는 것
 ### JPQL
 
 정적 쿼리.
+JPA가 SQL로 변환한다.
+
+```java
+// like 검색
+String jpql = "select m from Member m where m.name like '%member1%'";
+List<Member> foundMembers = em.createQuery(jpql, Member.class)
+    .getResultList();
+```
+
+동적으로 변경되는 조건인 경우에 대응이 어렵다.
+이 경우에는 동적 쿼리 솔루션을 사용한다.
+
+
+### CriteriaQuery
+
+동적 쿼리.
+
+JPA에서 공식 지원하는 JPQL 빌더.
+
+```java
+CriteriaBuilder cb = em.getCriteriaBuilder();
+CriteriaQuery<Member> query = cb.createQuery(Member.class);
+
+Root<Member> m = query.from(Member.class);
+
+CriteriaQuery<Member> cq = query.select(m)
+    .where(cb.like(m.get("name"), "%member1%"));
+
+List<Member> foundMembers = em.createQuery(cq).getResultList();
+```
+
+동적 쿼리를 작성하기 복잡하다.
+
+### QueryDSL
+
+동적 쿼리.
+
+서드파티 라이브러리이다.
+
+```java
+```
+
+## 네이티브 SQL
+
+JPA에서 제공하는 네이티브 SQL을 사용할 수도 있고, 
+
+```java
+List<Member> foundMembers = em.createNativeQuery("select * from Member as m where m.name like '%member1%'", Member.class)
+    .getResultList();
+```
+
+SQL 매퍼를 사용할 수 있다.
+SQL 매퍼는 JdbcTemplate, MyBatis 등을 사용한다.
+
+[관련 포스팅] (https://codeleeks.github.io/blog/posts/springboot/Spring%20DB%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC.md)
+
+
+## JPQL
+
+정적 쿼리.
 
 ```java
 // like 검색
@@ -1438,14 +1498,14 @@ String jpql = "select sum(m.age) from Member m";
 Long singleResult = em.createQuery(jpql, Long.class)
     .getSingleResult();
 
-//파라미터 바인
+//파라미터 바인딩
 String jpql = "select m from Member m where m.name=:name";
 TypedQuery<Member> query = em.createQuery(jpql, Member.class);
 Member result = query.setParameter("name", "member12")
     .getSingleResult();
 
 //프로젝션
-//엔티티 프로젝 (조인 사용)
+//엔티티 프로젝션 (조인 사용)
 String jpql = "select m.team from Member m";
 List<Team> teams = em.createQuery(jpql, Team.class)
     .getResultList();
@@ -1504,7 +1564,7 @@ List<String> resultList = em.createQuery(jpql, String.class)
     .getResultList();
 ```
 
-#### JPQL에서 제공되는 기본 함수
+### JPQL에서 제공되는 기본 함수
 
 - concat
 - substring
@@ -1521,7 +1581,7 @@ List<String> resultList = em.createQuery(jpql, String.class)
 - `type(m) = Member`: 상속 관계 확인.
 
 
-#### 경로 표현식
+### 경로 표현식
 
 `.`을 통해 엔티티 필드를 접근할 수 있다.
 필드는 상태 필드, 연관 필드로 나뉜다.
@@ -1554,13 +1614,13 @@ select m.username from Team t join t.members m
 
 묵시적 조인은 지양하고, 명시적 조인으로 코드 가독성을 높여야 한다.
 
-#### fetch join
+### fetch join
 
 JPQL만의 특별한 기능. (SQL에는 fetch join이 없다)
 
 연관된 필드를 SQL 한 번에 조회하는 기능이다.
 
-단일 값 필드, 컬렉션 필드 모두 한 번에 가져온다.
+단일 값 필드, 컬렉션 필드 모두 한 번에 가져와 성능 최적화를 꾀한다.
 
 ```java
 String jpql = "select t from Team t join fetch t.members";
@@ -1585,60 +1645,60 @@ INNER JOIN MEMBER M ON T.ID=M.TEAM_ID
 </MessageBox>
 
 
-##### 페치 조인의 한계
+#### 페치 조인 사용시 주의 사항
 
 - 페치 조인 대상에 대해 별칭을 사용해 필터링하는 작업은 피해야 한다.
   - 코드를 잘 이해하지 못하면 오해의 여지가 있다. (모든 레코드를 가지고 있는 게 아니라 몇 개만 가지고 있기 때문에)
 - 한 엔티티의 여러 개의 컬렉션 필드를 한 번에 페치 조인하면 안 된다.
   - 일대다대다의 상황으로 레코드가 폭증할 수 있다.
 - 일대다 연관 관계일 때 페이징 API가 동작하지 않는다.(어플리케이션 메모리에서 페이징한다)
-  - 데이터베이스 차원에서 일대다 관계의 조인테이블은 레코드가 기존 테이블의 레코드 갯수보다 증가하기 때문에 페이징의 의미가 없어진다.
+  - 데이터베이스 차원에서 일대다 관계의 조인테이블은 레코드가 기존 테이블의 레코드 갯수보다 증가하기 때문에 페이징의 의미가 없어진다. [관련 포스팅](https://codeleeks.github.io/blog/posts/springboot/N+1%20%EB%AC%B8%EC%A0%9C.md)
 
+### Named 쿼리
 
-
-#### JPQL 한계
-
-동적으로 변경되는 조건인 경우에 대응이 어렵다.
-
-### CriteriaQuery
-
-동적 쿼리.
-
-JPA에서 공식 지원하는 JPQL 빌더.
+쿼리를 재사용하기 위해 이름을 붙인다.
 
 ```java
-CriteriaBuilder cb = em.getCriteriaBuilder();
-CriteriaQuery<Member> query = cb.createQuery(Member.class);
+@Entity
+@NamedQuery(
+        name = "Member.findMemberByName",
+        query = "select m from Member m where m.name = :memberName"
+)
+public class Member {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private Integer age;
+}
 
-Root<Member> m = query.from(Member.class);
-
-CriteriaQuery<Member> cq = query.select(m)
-    .where(cb.like(m.get("name"), "%member1%"));
-
-List<Member> foundMembers = em.createQuery(cq).getResultList();
-```
-
-동적 쿼리를 작성하기 복잡하다.
-
-### QueryDSL
-
-동적 쿼리.
-
-서드파티 라이브러리이다.
-
-```java
-```
-
-## 네이티브 SQL
-
-JPA에서 제공하는 네이티브 SQL을 사용할 수도 있고, 
-
-```java
-List<Member> foundMembers = em.createNativeQuery("select * from Member as m where m.name like '%member1%'", Member.class)
+List<Member> resultList = em.createNamedQuery("Member.findMemberByName", Member.class)
+    .setParameter("memberName", "member1")
     .getResultList();
 ```
 
-SQL 매퍼를 사용할 수 있다.
-SQL 매퍼는 JdbcTemplate, MyBatis 등을 사용한다.
+네임드 쿼리는 어플리케이션 로딩 시점에 JPA가 jpql를 SQL로 변환하고 캐싱해놓는다.
+쿼리를 사용할 때마다 매번 jpql을 SQL로 변환하는 비용을 줄일 수 있으며, 쿼리의 문법 오류를 로딩 시점에 파악할 수 있다.
 
-[관련 포스팅] (https://codeleeks.github.io/blog/posts/springboot/Spring%20DB%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC.md)
+네임드 쿼리는 Spring Data에서 `@Query` 어노테이션으로 제공된다.
+
+### 벌크 연산
+
+JPA에서는 `update`, `delete`, `insert into select`와 같은 벌크 연산도 지원한다.
+
+```java
+String qlString = "update Member m set m.age = m.age * 2";
+int count = em.createQuery(qlString)
+    .executeUpdate();
+```
+
+벌크 연산 이후에는 영속성 컨텍스트를 초기화해야 한다.
+벌크 연산은 영속성 컨텍스트를 무시하고 바로 데이터베이스에 반영하기 때문이다.
+
+```java
+String qlString = "update Member m set m.age = m.age * 2";
+int count = em.createQuery(qlString)
+    .executeUpdate();
+em.clear();
+Member foundMember = em.find(Member.class, 1L);
+System.out.println("foundMember.getAge() = " + foundMember.getAge()); // 2. em.clear()가 없었다면 1.(1차 캐시에 저장된 값을 가져오기 때문)
+```
