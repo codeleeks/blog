@@ -1649,10 +1649,61 @@ INNER JOIN MEMBER M ON T.ID=M.TEAM_ID
 
 - 페치 조인 대상에 대해 별칭을 사용해 필터링하는 작업은 피해야 한다.
   - 코드를 잘 이해하지 못하면 오해의 여지가 있다. (모든 레코드를 가지고 있는 게 아니라 몇 개만 가지고 있기 때문에)
+  - 페치 조인 대상, 즉 컬렉션의 요소를 삭제하다가 전체 컬렉션이 삭제되는 경우가 발생할 수 있다.
 - 한 엔티티의 여러 개의 컬렉션 필드를 한 번에 페치 조인하면 안 된다.
   - 일대다대다의 상황으로 레코드가 폭증할 수 있다.
 - 일대다 연관 관계일 때 페이징 API가 동작하지 않는다.(어플리케이션 메모리에서 페이징한다)
   - 데이터베이스 차원에서 일대다 관계의 조인테이블은 레코드가 기존 테이블의 레코드 갯수보다 증가하기 때문에 페이징의 의미가 없어진다. [관련 포스팅](https://codeleeks.github.io/blog/posts/springboot/N+1%20%EB%AC%B8%EC%A0%9C.md)
+
+<MessageBox title='페치 조인 대상으로 필터링해서 가져올 때 조심해야 하는 이유' level='warning'>
+	```java
+	String jpql = "select t from Team t join fetch t.members m where m.id < 2";
+	List<Team> teams = em.createQuery(jpql, Team.class)
+	    .getResultList();
+	
+	for (Team team : teams) {
+	  for (Member member : team.getMembers()) {
+	    System.out.println("member.getName() = " + member.getName());
+	  }
+	}
+	
+	teams.get(0).getMembers().remove(0);
+	
+	List<Team> fountTeams = findAll(em);
+	for (Team fountTeam : fountTeams) {
+	  for (Member member : fountTeam.getMembers()) {
+	    System.out.println("member.getName() = " + member.getName());
+	  }
+	}
+
+	private static List<Team> findAll(EntityManager em) {
+	  String jpql = "select t from Team t join fetch t.members";
+	  return em.createQuery(jpql, Team.class)
+		.getResultList();
+	}
+ 	```
+
+	팀은 3명의 멤버를 가진다.
+ 	쿼리는 멤버에 필터링을 걸어서 멤버 1명만 반환된다. (`select t from Team t join fetch t.members m where m.id < 2`)
+ 	반환된 1명의 멤버를 컬렉션에서 삭제한다. (`teams.get(0).getMembers().remove(0);`)
+   	JPA는 컬렉션이 비었다고 판단하고(1명의 멤버를 갖는 리스트에서 한 명을 삭제했으니 컬렉션은 비어있다), 아래의 쿼리를 실행한다.
+  	
+   	```bash
+	Hibernate: 
+    	/* one-shot delete for hellojpa.Team.members */update Member 
+    	set
+        	team_id=null 
+    	where
+	        team_id=?
+   	```
+
+     	그런데 데이터베이스에는 3명의 멤버가 있었다. (id가 1,2,3인 멤버)
+      	JPA의 update 쿼리로 3명의 멤버 모두 팀을 잃게 된다.
+
+       ![image](https://github.com/user-attachments/assets/1157eb56-7ca1-489b-8e36-5a1be4b15192)
+
+      	페치 조인 대상이 컬렉션이라면 이를 필터링해서 가져온 후 수정 및 삭제 작업을 하면 데이터베이스에 저장된 데이터와 달라질 수 있다.
+</MessageBox>
 
 ### Named 쿼리
 
