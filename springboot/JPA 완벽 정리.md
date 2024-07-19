@@ -1960,3 +1960,106 @@ Book을 직접 쓰고 싶다면 `em.getReference()`시 `Book.class`로 지정해
 출처: 자바 ORM 표준 JPA 프로그래밍
 ![image](https://github.com/user-attachments/assets/2ea4534b-38c2-43bd-9569-eb004476fa81)
 출처: 자바 ORM 표준 JPA 프로그래밍
+
+## 두 번의 갱신 분실 문제 (second lost updates problem)
+
+사용자 A가 게시물 1을 수정하는 중이다. (트랜잭션 A 생성) 
+사용자 B도 게시물 1을 수정하는 중이다. (트랜잭션 B 생성)
+
+사용자 B가 수정을 마치고 완료 버튼을 눌렀다. (트랜잭션 B 커밋)
+이후에 사용자 A도 수정을 마치고 완료 버튼을 눌렀다. (트랜잭션 A 커밋)
+
+시간이 좀 지난 후 사용자 B가 새로고침해서 게시물1을 확인해보니, 자신이 수정한 내용이 반영되어 있지 않았다.
+마지막으로 게시물1을 수정한 사용자A가 수정한 내용이 반영되어 있었다.
+B의 수정 이력이 날라간 것이다.
+
+이후의 수정이 이전의 수정을 덮어썼다.
+
+이 문제는 사실 비즈니스 도메인의 정책 문제로서, 선택지는 3가지이다.
+- 마지막 커밋만 인정하기
+- 최초 커밋만 인정하기
+- 충돌되는 내용을 병합하기
+
+세 가지 선택지를 기술적으로 구현하는 방법은 락을 사용하는 것이다.
+
+락은 두 가지 종류가 있다.
+
+- 낙관적 락: 커밋해보고 안 되면 예외를 발생한다.
+- 비관적 락: 수정 전에 락을 걸고 시작한다.
+
+### 낙관적 락
+
+낙관적 락은 최초 커밋만 인정한다.
+낙관적 락은 데이터베이스 락을 사용하지 않는다.
+JPA에서 제공하는 유사 락 기법이다.
+
+낙관적 락에는 세 가지 종류가 있다.
+
+- `@Version`: 버전 컬럼을 추가하고, 엔티티를 수정했다면 트랜잭션 커밋 시점에 버전을 업데이트해본다.
+- `LockModeType.OPTIMISTIC`: 버전 컬럼을 추가하고, 엔티티를 수정하지 않아도 트랜잭션 커밋 시점에 버전을 조회해본다.
+- `LockModeType.OPTIMISTIC_FORCE_INCREMENT`: 버전 컬럼을 추가하고, 엔티티를 수정하지 않아도 트랜잭션 커밋 시점에 버전을 업데이트해본다.
+
+#### 버전 (`@Version`)
+
+버전 컬럼으로 다른 트랜잭션에서 수정했는지 여부를 판단한다.
+
+엔티티를 변경했다면 트랜잭션 커밋할 때 레코드의 버전을 업데이트한다.
+업데이트 쿼리는 `where` 절 조건에 엔티티의 버전 필드가 추가로 들어간다.
+다른 트랜잭션에서 레코드를 먼저 수정했다면 엔티티의 버전 필드값보다 높은 값이 들어있으므로 조건에 맞는 레코드를 찾지 못해 업데이트 쿼리가 실패한다.
+
+```java
+@Entity
+public class Board {
+  @Id
+  private Long id;
+
+  @Version
+  private Integer version;
+}
+```
+```bash
+update BOARD
+SET
+  TITLE=?
+  VERSION=?
+WHERE
+  ID=?
+  VERSION=?
+```
+![image](https://github.com/user-attachments/assets/67113a60-b045-4988-96c1-ce3ad4c6830e)
+출처: 자바 ORM 표준 JPA 프로그래밍
+
+#### `LockType.OPTIMISTIC`
+
+엔티티에 `@Version` 필드가 있어야 한다.
+
+엔티티 수정 여부와 상관없이 트랜잭션 커밋 시점에 `SELECT` 쿼리를 사용해서 테이블 레코드의 버전 컬럼값을 확인한다.
+엔티티의 버전값과 일치하지 않으면 예외가 발생한다.
+
+```java
+Board board = em.find(Board.class, id, LockModeType.OPTIMISTIC);
+```
+
+#### `LockModeType.OPTIMISTIC_FORCE_INCREMENT`
+
+엔티티에 `@Version` 필드가 있어야 한다.
+
+엔티티를 수정하지 않았어도 트랜잭션 커밋 시점에 `UPDATE` 쿼리를 사용해서 테이블 레코드의 버전 컬럼값을 갱신 시도한다.
+레코드가 없으면(이미 레코드를 수정했다면) 예외가 발생한다.
+
+### 비관적 락
+
+데이터베이스가 제공하는 락에 의존한다.
+
+주로 `select for update`를 사용한다.
+
+세 가지 종류가 있다.
+
+- `LockModeType.PESSIMISTIC_WRITE`: 쓰기 락을 건다. (`select for update`)
+- `LockModeType.PESSIMISTIC_READ`: 읽기 락을 건다.
+- `LockModeType.PESSIMISTIC_FORCE_UPDATE`: 버전 정보를 증가시킨다.
+
+비관적 락은 타임아웃을 줄 수 있다.
+
+
+#### TODO 엔티티 연관 관계에서 비관적 락의 동작 방식? 연관된 테이블 모두 락을 걸까?
