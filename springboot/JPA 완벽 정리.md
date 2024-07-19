@@ -848,6 +848,44 @@ public class Order {
 }
 ```
 
+### 컬렉션 엔티티
+
+일대다, 다대다의 연관관계인 경우 필드는 컬렉션으로 정의한다.
+하이버네이트는 컬렉션 필드를 자체 컬렉션으로 래핑한다.
+
+|컬렉션|내장 컬렉션|중복 허용|순서 보관|요소 추가시 초기화 유무|
+|---|---|---|---|---|
+|Collection, List|PersistenceBag|O|X|X|
+|Set|PersistenceSet|X|X|O|
+|List + @OrderColumn|PersistenceList|X|O|X|
+
+중복을 허용하는 컬렉션은 `add()`시 중복된 데이터가 있는지 확인하지 않아도 된다.
+반대로 중복을 허용하지 않는 컬렉션은 `add()`시 중복된 데이터가 있는지 확인해야 한다.
+
+확인하는 과정은 프록시 입장에선 초기화가 필요하다.
+그래서 중복을 허용하지 않는 `Set`은 `add()` 호출시 프록시를 초기화한다.(쿼리 발생)
+
+<MessageBox title='`@OrderColumn`과 `@OrderBy`' level='info'>
+	`@OrderColumn`은 순서를 저장하는 컬럼을 두는 것이다.
+	해당 컬럼을 채우지 않고 insert하면 null로 채워진다.
+
+ 	컬럼으로 순서를 저장하는 것은 문제가 있다.
+  	레코드가 삭제될 때 나머지 레코드의 순서를 업데이트해줘야 한다.
+   	그래서 여러 개의 update 쿼리가 나갈 수 있다.
+    
+	순서가 필요한 경우에는 `@OrderBy`를 사용한다.
+ 	```java
+  		@Entity
+		public class Team {
+  			@OneToMany(mappedBy = "team")
+     			@OrderBy("username desc, id asc")
+  			private Set<Member> members = new HashSet<Member>();
+  		}
+  	```
+
+   	`@OrderBy`는 컬렉션 조회시 order by 키워드가 추가되어 쿼리가 실행된다.
+</MessageBox>
+
 
 ## 상속 관계 매핑
 
@@ -1840,3 +1878,85 @@ OSIV는 요청당 트랜잭션 방식의 OSIV와 스프링의 OSIV로 나뉜다.
 
 	스프링은 영속성 컨텍스트의 범위가 트랜잭션 범위보다 넓으면 트랜잭션 롤백시 영속성 컨텍스트를 초기화한다.
 </MessageBox>
+
+
+## 프록시
+
+지연 로딩으로 걸린 연관 관계 엔티티는 실제 엔티티 클래스가 아니라 프록시 클래스이다.
+프록시 클래스의 메서드가 호출될 때 그제서야 영속성 컨텍스트의 도움을 받아 엔티티를 초기화하고 실제 엔티티의 메서드를 호출한다.
+
+프록시 클래스는 지연 로딩을 제공하지만, 프록시 클래스를 사용하기 때문에 발생하는 몇 가지 문제들이 있다.
+
+### 동등성 비교
+- 객체는 equals() 메서드롤 통해 동등성을 비교한다.
+- 일반적인 라이브러리는 프록시를 고려하지 않기 때문에 프록시 클래스와 일반 엔티티 간 비교를 할 때 문제가 발생한다.
+
+```java
+public boolean equals(Object obj) {
+	if (this == obj) return true;
+	if (obj == null) return false;
+	//문제 발생1
+	if (this.getClass() != obj.getClass()) return false;
+
+	Member member = (Member) obj;
+	//문제 발생 2
+	if (name != null ? !name.equals(member.name) : member.name != null) {
+		return false;
+	}
+	return true;
+}
+```
+
+`if (this.getClass() != obj.getClass()) return false;`는 클래스를 비교하는데, 프록시 클래스와 일반 엔티티는 클래스가 다르다.
+`if (name != null ? !name.equals(member.name) : member.name != null)`는 멤버변수 간 비교를 수행하는데, 프록시는 초기화되어 있지 않기 때문에 null이다.
+
+equals를 직접 구현해야 한다.
+
+```java
+public boolean equals(Object obj) {
+	if (this == obj) return true;
+	if (obj == null) return false;
+	//문제 발생1
+	if (!(obj instanceof Member)) return false;
+
+	Member member = (Member) obj;
+	//문제 발생 2
+	if (name != null ? !name.equals(member.getName()) : member.getName() != null) {
+		return false;
+	}
+	return true;
+}
+```
+
+### 상속관계
+
+프록시는 엔티티를 상속해서 만들어진다.
+엔티티가 다형성을 가진다면 어떨까?
+
+```java
+Book book = new Book();
+book.setName("jpa");
+
+em.persist(book);
+em.flush();
+em.clear();
+
+Item foundItem = em.getReference(Item.class, 1L);
+assertTrue(foundItem instanceof Book); //테스트 실패
+```
+
+`em.getReference()`가 반환하는 프록시는 Item을 상속받는다. 
+`Item.class`라고 지정했기 때문이다.
+그리고 프록시는 Book 객체를 갖고 있다.
+
+![image](https://github.com/user-attachments/assets/d2f8f754-3045-4fa8-8aee-3c44511ce766)
+출처: 자바 ORM 표준 JPA 프로그래밍
+
+Book을 직접 쓰고 싶다면 `em.getReference()`시 `Book.class`로 지정해야 한다.
+다형성을 살리고 싶다면 Item을 상속받는 프록시 또한 추상화 범위에 포함해야 한다.
+다시 말해, Item 레이어에서 추상화 메서드를 추가하거나, Item 레이어 위의 또 다른 추상화 레이어를 붙이는 것이다.(Item에 abstract 메서드를 추가하거나, Item이 인터페이스를 상속받으면 된다.)
+
+![image](https://github.com/user-attachments/assets/ab834d97-02a0-48b2-89f1-25c0896b1045)
+출처: 자바 ORM 표준 JPA 프로그래밍
+![image](https://github.com/user-attachments/assets/2ea4534b-38c2-43bd-9569-eb004476fa81)
+출처: 자바 ORM 표준 JPA 프로그래밍
