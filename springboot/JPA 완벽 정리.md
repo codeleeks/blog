@@ -1753,3 +1753,90 @@ em.clear();
 Member foundMember = em.find(Member.class, 1L);
 System.out.println("foundMember.getAge() = " + foundMember.getAge()); // 2. em.clear()가 없었다면 1.(1차 캐시에 저장된 값을 가져오기 때문)
 ```
+
+## OSIV
+
+Open Session In View. (하이버네이트 용어)
+JPA 표준에는 Open EntityManager In View (OEIV)라고 한다.
+
+영속성 엔티티를 View 영역(프레젠테이션)에서도 사용할 수 있게 한다.
+
+```bash
+# 기본값은 true
+spring.jpa.open-in-view=true 
+```
+
+기본적으로 영속성 컨텍스트는 트랜잭션과 라이브사이클을 같이 한다.
+
+### 트랜잭션당 영속성 컨텍스트 전략
+
+![image](https://github.com/user-attachments/assets/d6e9f1b7-9f01-47f7-a2b5-8dc825cff581)
+
+- OSIV를 false로 설정하면 선택되는 전략
+- 트랜잭션마다 영속성컨텍스트를 새로 만들고, 트랜잭션이 종료되면서 영속성컨텍스트도 종료된다.
+- 프레젠테이션에서 엔티티는 준영속 상태라 지연로딩이 안 된다. (예외 발생)
+
+```bash
+spring.jpa.open-in-view=false
+```
+
+<MessageBox title='트랜잭션당 영속성 컨텍스트 전략에서의 EntityManager' level='info'>
+	한 서비스가 여러 레포지토리로 작업할 수 있다.
+	각 레포지토리는 EntityManager를 주입받아 사용한다.
+	이 경우에도 트랜잭션으로는 하나이기 때문에, 각 EntityManager는 영속성 컨텍스트를 공유한다.
+
+ 	![image](https://github.com/user-attachments/assets/d8edc88e-e8c9-4595-918a-2a68cb062f5a)
+	출처: 자바 ORM 표준 JPA 프로그래밍
+ 
+ 	반대로 여러 트랜잭션에서 같은 레포지토리를 사용할 때에는 같은 EntityManager를 사용해도 다른 영속성 컨텍스트를 사용한다.
+
+  	![image](https://github.com/user-attachments/assets/8cf95df3-2572-4aa8-9d2e-218bba5317ff)
+	출처: 자바 ORM 표준 JPA 프로그래밍
+</MessageBox>
+
+
+
+프레젠테이션에서 필요한 데이터가 지연 로딩을 통해 얻을 수 없는 경우 쓸 수 있는 전략은 두 가지이다.
+- DTO 전략
+- OSIV
+
+### DTO 전략.
+
+- 서비스에서 엔티티를 DTO로 변경하여 프레젠테이션에 전달한다.
+- 성능 최적화 포인트가 서비스 레이어로 집중된다. 
+  - 간단하게 지연로딩을 사용하든, 성능을 위해 페치 조인이나 DTO 전략을 사용할 수 있다.
+- 지루하고 귀찮은 DTO 클래스를 만들어야 한다.
+
+### OSIV
+
+- 프레젠테이션에서 영속화된 엔티티를 사용한다.
+
+OSIV는 요청당 트랜잭션 방식의 OSIV와 스프링의 OSIV로 나뉜다.
+
+
+#### 요청당 트랜잭션 방식의 OSIV (초기 방법)
+- 요청 하나에 트랜잭션 하나, 트랜잭션 하나에 영속성 컨텍스트 하나가 매핑된다.
+	- 요청이 발생하면 서블릿 필터나 스프링 인터셉터에서 트랜잭션과 영속성 컨텍스트를 초기화한다. 
+	- 요청이 끝나기 직전에 호출되는 서블릿 필터 혹은 스프링 인터셉터의 메서드에서 영속성 컨텍스트를 플러시하고 트랜잭션을 종료한다.
+- 프레젠테이션에서 엔티티를 수정하면 데이터베이스에 반영된다.
+
+#### 스프링 OSIV
+
+![image](https://github.com/user-attachments/assets/d9c34cf4-9d00-432e-8b94-ae6ba2ba57c7)
+
+
+- 트랜잭션은 서비스에서, 영속성 컨텍스트는 프레젠테이션에서 시작하고 끝낸다.
+- 하나의 영속성 컨텍스트를 여러 트랜잭션에서 공유한다.
+- 프레젠테이션에서는 영속성 엔티티를 읽기만 한다. 수정해도 데이터베이스에 반영이 안 된다.(서비스 종료 이후에만 해당)
+  - 트랜잭션 범위가 아니므로 수정해도 데이터베이스에 반영이 안 된다.
+  - `EntityManager`로 강제로 flush해도 트랜잭션 범위가 아니라서 예외가 발생한다.
+- 서비스에서는 영속성 엔티티를 읽고 수정한다.
+
+<MessageBox title='롤백과 OSIV' level='info'>
+	트랜잭션 도중 오류가 나면 롤백을 한다.
+	그런데 롤백은 데이터베이스만 롤백하는 것이지 영속성컨텍스트가 롤백되지 않는다.
+	
+	OSIV처럼 영속성 컨텍스트의 범위가 트랜잭션 범위보다 넓은 경우, 트랜잭션의 롤백으로 비정상 데이터가 영속성 컨텍스트에 남아있을 수 있다.
+
+	스프링은 영속성 컨텍스트의 범위가 트랜잭션 범위보다 넓으면 트랜잭션 롤백시 영속성 컨텍스트를 초기화한다.
+</MessageBox>
