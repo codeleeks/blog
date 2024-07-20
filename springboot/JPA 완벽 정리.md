@@ -2061,5 +2061,165 @@ Board board = em.find(Board.class, id, LockModeType.OPTIMISTIC);
 
 비관적 락은 타임아웃을 줄 수 있다.
 
+#### 엔티티 연관 관계에서의 비관적 락
 
-#### TODO 엔티티 연관 관계에서 비관적 락의 동작 방식? 연관된 테이블 모두 락을 걸까?
+엔티티가 다른 엔티티 필드를 갖고 있을 때(연관 관계) 엔티티에 락을 거면 다른 엔티티 필드를 가져올 때에도 락을 걸까?
+락은 엔티티 간에 전파되지 않는다.
+
+단순히 지연 로딩을 이용해서 필드를 가져오면 락을 걸지 않는다.
+
+```java
+Member member = em.find(Member.class, 2L, LockModeType.PESSIMISTIC_WRITE);
+
+Team team = member.getTeam();
+team.incrementAge();
+```
+
+```bash
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.city,
+        m1_0.street,
+        m1_0.zipcode,
+        m1_0.age,
+        m1_0.name,
+        m1_0.team_id 
+    from
+        Member m1_0 
+    where
+        m1_0.id=? for update
+Hibernate: 
+    select
+        t1_0.id,
+        t1_0.age,
+        t1_0.name 
+    from
+        Team t1_0 
+    where
+        t1_0.id=?
+```
+
+멤버를 통해서만 팀을 접근할 수 있다면 이 방법이 간단하다.
+그러나 멤버를 직접 조회하고 수정하는 케이스가 있다면 동시성 이슈가 발생할 수 있다.
+
+이를 해결하려면 한 번의 쿼리로 가져와야 한다.
+조인을 사용한다.
+```java
+String jpql = "select t from Member m join m.team t where t.id = :teamId";
+List<Team> teams = em.createQuery(jpql, Team.class)
+    .setParameter("teamId", 1L)
+    .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+    .getResultList();
+
+teams.get(0).incrementAge();
+```
+
+```bash
+Hibernate: 
+    /* select
+        t 
+    from
+        Member m 
+    join
+        m.team t 
+    where
+        t.id = :teamId */ select
+            t1_0.id,
+            t1_0.age,
+            t1_0.name 
+        from
+            Member m1_0 
+        join
+            Team t1_0 
+                on t1_0.id=m1_0.team_id 
+        where
+            t1_0.id=? for update
+```
+
+위의 케이스는 일대다이지만, 다대일이든 일대다든 마찬가지이다.
+
+``java
+Team team = em.find(Team.class, 1L, LockModeType.PESSIMISTIC_WRITE);
+team.getMembers().get(1).incrementAge(); // 지연로딩 (락x)
+```
+```bash
+Hibernate: 
+    select
+        t1_0.id,
+        t1_0.name 
+    from
+        Team t1_0 
+    where
+        t1_0.id=? for update
+Hibernate: 
+    select
+        m1_0.team_id,
+        m1_0.id,
+        m1_0.city,
+        m1_0.street,
+        m1_0.zipcode,
+        m1_0.age,
+        m1_0.name 
+    from
+        Member m1_0 
+    where
+        m1_0.team_id=?
+```
+
+참고로, 쿼리에서 조인을 쓰지 않고 컬렉션을 조회하면 문제가 더 심각해진다.
+
+```java
+            String jpql = "select distinct t.members from Team t where t.id = :teamId";
+            List<Member> members = em.createQuery(jpql)
+                    .setParameter("teamId", 1L)
+                    .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                    .getResultList();
+	    members.get(1).incrementAge();
+```
+```bash
+Hibernate: 
+    /* select
+        distinct t.members 
+    from
+        Team t 
+    where
+        t.id = :teamId */ select
+            distinct m1_0.id,
+            m1_0.city,
+            m1_0.street,
+            m1_0.zipcode,
+            m1_0.age,
+            m1_0.name,
+            m1_0.team_id 
+        from
+            Team t1_0 
+        join
+            Member m1_0 
+                on t1_0.id=m1_0.team_id 
+        where
+            t1_0.id=?
+Hibernate: 
+    /* PESSIMISTIC_WRITE lock hellojpa.Member */ select
+        id 
+    from
+        Member 
+    where
+        id=? for update
+Hibernate: 
+    /* PESSIMISTIC_WRITE lock hellojpa.Member */ select
+        id 
+    from
+        Member 
+    where
+        id=? for update
+Hibernate: 
+    /* PESSIMISTIC_WRITE lock hellojpa.Member */ select
+        id 
+    from
+        Member 
+    where
+        id=? for update
+```
+
+멤버별로 쿼리가 나가기 때문에 지연 로딩보다 쿼리수가 많아진다.
