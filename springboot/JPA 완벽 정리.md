@@ -2223,3 +2223,112 @@ Hibernate:
 ```
 
 멤버별로 쿼리가 나가기 때문에 지연 로딩보다 쿼리수가 많아진다.
+
+## 2차 캐시
+
+![image](https://github.com/user-attachments/assets/212f408b-ec0f-4c52-81ff-274d39ebc681)
+
+어플리케이션 범위의 캐시.
+
+1차캐시는 영속성 컨텍스트 범위이다. 
+2차 캐시는 여러 영속성 컨텍스트가 공유하는 캐시다.
+동시성 보장을 위해 데이터베이스에서 얻어온 엔티티의 복사본을 만들어서 1차 캐시에게 전한다.
+
+JPA 구현체가 사용하는 캐시 라이브러리를 직접 사용해야 한다.
+하이버네이트는 hibernate-ehcache를 사용한다.
+
+캐시할 대상은 세 가지이다.
+
+- 엔티티
+- 쿼리
+- 컬렉션(연관 관계)
+
+### 엔티티 캐싱
+
+엔티티에 `@Cache` 어노테이션(하이버네이트가 제공하는 어노테이션)을 붙인다. 
+`@Cacheable`(JPA가 제공하는 어노테이션)은 일종의 컨벤션이다.
+
+2차 캐시에 엔티티가 저장된다. (id를 키값으로 함)
+
+```java
+@Entity
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+public class Foo {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "ID")
+    private long id;
+
+    @Column(name = "NAME")
+    private String name;
+    
+    // getters and setters
+}
+```
+
+### 쿼리 캐싱
+
+쿼리 힌트를 통해 캐싱을 설정한다.
+
+쿼리는 엔티티 id와 파라미터를 저장한다.
+쿼리 캐시 영역에는 두 가지가 있다.
+- StandardQueryCache: 쿼리가 실행된 시각, 쿼리 등을 저장한다.
+- UpdateTimestampsCache: 데이터베이스에서 테이블의 최근 변경 시각을 가져와 저장한다.
+
+<MessageBox title='쿼리 캐싱과 엔티티 캐싱' level='warning'>
+	캐싱된 쿼리가 실행되면 엔티티 캐시에서 하나씩 가져와 반환한다.
+	엔티티가 캐싱 설정되어 있지 않다면 데이터베이스에서 하나씩 가져온다. 
+	이 때 여러 개의 SQL 실행이 되어서 성능이 오히려 저하될 수 있다.
+</MessageBox>
+
+
+```bash
+hibernate.cache.use_query_cache=true
+```
+```java
+entityManager.createQuery("select f from Foo f")
+  .setHint("org.hibernate.cacheable", true)
+  .getResultList();
+```
+
+### 컬렉션 캐싱
+
+엔티티 컬렉션은 2차 캐시에 각 요소의 id만 저장된다.
+실제 엔티티는 엔티티 캐시 영역에 저장된다. (그래서 해당 엔티티도 `@Cache` 설정이 되어 있어야 한다.)
+
+```java
+@Entity
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+public class Foo {
+
+    ...
+
+    @Cacheable
+    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @OneToMany
+    private Collection<Bar> bars;
+
+    // getters and setters
+```
+
+## 읽기 전용 쿼리
+
+읽기 전용 쿼리를 사용하면 영속성 컨텍스트에서 스냅샷 관리를 하지 않기 때문에 성능을 좀 더 최적화할 수 있다.
+
+- 값 타입 조회: `select o.id, o.name, o.price from Order o`
+- 하이버네이트 전용 힌트 설정: `query.setHint("org.hibernate.readOnly", true)`. 엔티티에 대한 스냅샷 관리를 하지 않게 한다.
+- 읽기 전용 트랜잭션 사용: `@Transactional(readonly = true)`. 플러시를 일으키지 않는다.
+
+값 타입 조회는 엔티티의 필드가 많을 때 작성할 게 많아진다.
+하이버네이트 전용 힌트 설정과 읽기 전용 트랜잭션 사용은 상대적으로 간편하게 설정할 수 있으므로, 읽기만 필요한 요청은 이 두 가지를 모두 사용해서 최적화한다.
+
+```java
+@Transactional(readonly= true)
+public List<Order> orders() {
+	return em.createQuery("select o from Order o", Order.class)
+		.setHint("org.hibernate.readOnly", true)
+		.getResultList();
+}
+```
