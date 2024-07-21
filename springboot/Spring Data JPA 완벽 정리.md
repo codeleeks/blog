@@ -37,8 +37,10 @@ public class AppConfig {}
 
 ## `JpaRepository<T, ID extends Serializable>`
 
-기본적인 CRUD 메서드, 페이징, 배치 메서드를 제공한다.
+기본적인 CRUD 메서드, 페이징/솔팅, 배치 메서드를 제공한다.
 `PagingAndSortingRepository<T, ID>, CrudRepository<T, ID>`를 상속받았다.
+
+![image](https://github.com/user-attachments/assets/77b0cb3c-f717-438a-bc6c-2dd4bb55486e)
 
 엔티티타입, 식별자 타입으로 설정한다.
 
@@ -47,4 +49,12 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 }
 ```
 
-![image](https://github.com/user-attachments/assets/fd4027b2-4b4d-45be-b6e8-ef5ac558a103)
+### 주요 메서드
+- `save(S)`: 새 엔티티를 저장하고, 이미 있는 엔티티는 병합한다.
+- `delete(T)`: 엔티티를 삭제한다. (내부에서 `em.remove()` 호출)
+- `findById(ID)`: 엔티티를 조회한다. (내부에서 `em.find()` 호출)
+- `getReferenceById(ID)`: 엔티티를 프록시로 조회한다. (내부에서 `em.getReference()` 호출)
+- `findAll(...)`: 모든 엔티티를 조회한다. 정렬이나 페이징 조건을 지정할 수 있다.
+
+
+
