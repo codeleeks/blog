@@ -65,7 +65,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
 ### 메서드 이름으로 쿼리 생성
 
-메서드 이름으로 가져올 필드와 조건을 명시할 수 있다.
+메서드 이름으로 쿼리를 간접적으로 명시할 수 있다.
 
 - 조회: `find...By`, `read...By`, `query...By`, `get...By`
 - 집계(Aggregation): `count...By` 반환 타입 `long`
@@ -76,6 +76,18 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
 [관련 레퍼런스 참고](https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html)
 
+<MessageBox title='`find...by`와 엔티티 필드' level='warning'>
+ `...`은 메서드의 동작을 설명하는 주석 정도가 들어가야 한다. 
+ 엔티티의 필드가 들어간다고 엔티티의 필드가 반환되는 게 아니다.
+
+ ```java
+    @Query("select m.id from Member m where m.username = :username")
+    Long findIdByUsername(@Param("username") String username);
+ ```
+
+ `@Query`가 없다면 `Id`라고 적었어도 `Long` 타입이 아니라 `Member` 타입이 리턴된다.
+</MessageBox>
+
 메서드 이름 안에 정의한 필드가 엔티티에 없으면 부트 타임에 오류가 발생한다.
 
 ```java
@@ -83,6 +95,34 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
  List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
 }
 ```
+
+#### 치트시트
+
+```java
+interface PersonRepository extends Repository<Person, Long> {
+
+  List<Person> findByEmailAddressAndLastname(EmailAddress emailAddress, String lastname);
+
+  // Enables the distinct flag for the query
+  List<Person> findDistinctPeopleByLastnameOrFirstname(String lastname, String firstname);
+  List<Person> findPeopleDistinctByLastnameOrFirstname(String lastname, String firstname);
+
+  // Enabling ignoring case for an individual property
+  List<Person> findByLastnameIgnoreCase(String lastname);
+  // Enabling ignoring case for all suitable properties
+  List<Person> findByLastnameAndFirstnameAllIgnoreCase(String lastname, String firstname);
+
+  // Enabling static ORDER BY for a query
+  List<Person> findByLastnameOrderByFirstnameAsc(String lastname);
+  List<Person> findByLastnameOrderByFirstnameDesc(String lastname);
+
+  //person.address.zipcode일 때 zipcode로 person을 조회
+  List<Person> findByAddress_ZipCode(ZipCode zipCode);
+}
+```
+
+[공식 예약 키워드](https://docs.spring.io/spring-data/jpa/reference/repositories/query-keywords-reference.html#appendix.query.method.subject)
+
 
 ### Named Query
 
@@ -120,6 +160,8 @@ age);
   List<Member> findByNames(@Param("names") List<String> names);
 }
 ```
+
+
 
 ### 반환 타입
 
@@ -294,4 +336,84 @@ Page<Member> page = repository.find(10, pageRequest);
 PageRequest pageRequest = PageRequest.of(0, 3);
 Page<Member> page = repository.find(10, pageRequest);
 Page<MemberDto> dto = page.map(m -> new MemberDto(m.getUsername(), m.getAge()));
+```
+
+
+## 배치 연산
+
+`@Query`에 JPQL로 배치 쿼리를 적는다.
+`@Query`는 기본적으로 `select`문을 기대한다.
+
+```bash
+org.springframework.dao.InvalidDataAccessApiUsageException: Query executed via 'getResultList()' or 'getSingleResult()' must be a 'select' query [update Member m set m.age = m.age + 1 where m.age >= :age]
+```
+
+`@Modifying`을 붙여서 조회 쿼리가 아니라 변경 쿼리임을 명시해야 한다.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    @Modifying
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int updateAllAges(@Param("age") int age);
+}
+```
+
+`@Modifying`은 쿼리 실행 후 영속성 초기화 여부를 설정할 수 있다.
+배치 쿼리는 영속성 컨텍스트와 상관없이 데이터베이스에 직접 영향을 끼치기 때문에 영속성 컨텍스트와 데이터베이스와의 데이터 정합성의 문제가 발생할 수 있다.
+
+배치 쿼리 후에 영속성 컨텍스트를 사용한다면 먼저 영속성 컨텍스트를 초기화를 해야 한다.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    @Modifying(clearAutomatically = true)
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int updateAllAges(@Param("age") int age);
+}
+```
+
+## `@EntityGraph`
+
+페치 조인을 간편하게 사용한다.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findAll();
+}
+```
+```bash
+2024-07-21T22:14:22.057+09:00 DEBUG 16628 --- [data-jpa] [    Test worker] org.hibernate.SQL                        : 
+    select
+        m1_0.id,
+        m1_0.age,
+        t1_0.id,
+        t1_0.name,
+        m1_0.username 
+    from
+        member m1_0 
+    left join
+        team t1_0 
+            on t1_0.id=m1_0.team_id
+```
+
+## JPA Hint
+
+JPA 구현체에게 힌트를 설정할 수 있다.
+
+```java
+@QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+Member findReadOnlyByUsername(String username);
+```
+
+readonly 힌트는 변경 감지를 하지 않는다.
+필드를 변경해도 update 쿼리가 실행되지 않는다.
+
+## Lock
+
+데이터베이스 락을 걸 수 있다.
+
+```java
+@Lock(LockModeType.PESSIMISTIC_WRITE)
+List<Member> findByUsername(String name);
 ```
