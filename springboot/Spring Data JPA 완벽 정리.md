@@ -417,3 +417,57 @@ readonly 힌트는 변경 감지를 하지 않는다.
 @Lock(LockModeType.PESSIMISTIC_WRITE)
 List<Member> findByUsername(String name);
 ```
+
+## 커스텀 레포지토리
+
+JPQL 쿼리로는 해결하지 못하고, 자바 로직이 필요한 기능의 경우를 위해 스프링 데이터는 커스텀 레포지토리 기능을 제공한다.
+
+인터페이스(fragment interface)를 정의하고, 그 구현체(fragment)를 만들어 구현한다.
+레포지토리 인터페이스가 프래그먼트 인터페이스를 상속받게 한다.
+
+이러면 스프링 데이터는 프래그먼트를 빈으로 등록하고, 레포지토리 인터페이스를 통해 프래그먼트의 구현 로직을 호출할 수 있게 제공한다.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
+    @Query(value = "select m from Member m join m.team t order by t.name")
+    Page<Member> find(int age, Pageable pageable);
+
+    @Modifying
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int updateAllAges(@Param("age") int age);
+
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findAll();
+
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyByUsername(String username);
+}
+
+public interface MemberRepositoryCustom {
+    List<Member> findMemberCustom();
+}
+
+@RequiredArgsConstructor
+public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
+ private final EntityManager em;
+ @Override
+ public List<Member> findMemberCustom() {
+   return em.createQuery("select m from Member m")
+          .getResultList();
+ }
+}
+```
+
+### 동작 원리
+
+스프링 jdk 프록시(`JdkDynamicAopProxy`) 내부에 `interceptorsAndDynamicMethodMatchers`에서 인터셉터 체이닝 처리를 한다.
+호출된 메서드의 실제 타겟 객체를 갖고 처리할 수 있는 인터셉터를 찾는 것 같다.
+
+커스텀 레포지토리의 경우, `RepositoryFactorySupport$ImplementationMethodExecutionInterceptor` 인터셉터가 처리한다.
+이 인터셉터는 `RepositoryComposition` 객체를 통해 `fragments`를 관리한다.
+이 fragments 배열에 `SimpleJpaRepository`(jpaRepository 인터페이스를 상속받고 사용되는 기본 구현체)와 우리가 정의한 커스텀 레포지토리 구현체가 들어 있다.
+
+결국 이 `ImplementationMethodExecutionInterceptor`에서 커스텀 레포지토리 구현체의 메서드가 호출된다. 
+
+간단하게, jdk 프록시에서 프래그먼트(커스텀 인터페이스의 구현체)를 들고 있다고 보면 될 것 같다.
