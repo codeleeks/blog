@@ -57,4 +57,241 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 - `findAll(...)`: 모든 엔티티를 조회한다. 정렬이나 페이징 조건을 지정할 수 있다.
 
 
+## 레포지토리 인터페이스의 메서드
 
+레포지토리 인터페이스가 제공하는 추상 메서드 외에도 사용자가 정의하는 메서드를 프록시에서 사용할 수 있게 한다.
+
+스프링 데이터 JPA는 메서드 이름으로 쿼리를 생성하거나, `@Query` 어노테이션을 통해 명시된 JPQL을 실행한다.
+
+### 메서드 이름으로 쿼리 생성
+
+메서드 이름으로 가져올 필드와 조건을 명시할 수 있다.
+
+- 조회: `find...By`, `read...By`, `query...By`, `get...By`
+- 집계(Aggregation): `count...By` 반환 타입 `long`
+- 존재 유무: `exists...By` 반환 타입 `boolean`
+- 삭제: `delete...By`, `remove...By` 반환 타입 `long`
+- 중복 제거: `findDistinct`, `findMemberDistinctBy`
+- 갯수 제한: `findFirst3`, `findFirst`, `findTop`, `findTop3`
+
+[관련 레퍼런스 참고](https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html)
+
+메서드 이름 안에 정의한 필드가 엔티티에 없으면 부트 타임에 오류가 발생한다.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+ List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
+}
+```
+
+### Named Query
+
+엔티티에 정의한 네임드쿼리를 인터페이스에 적용한다.
+
+```java
+@Entity
+@NamedQuery(
+ name="Member.findByUsername",
+ query="select m from Member m where m.username = :username")
+public class Member {
+ ...
+}
+
+
+public interface MemberRepository
+ extends JpaRepository<Member, Long> {
+ @Query(name = "Member.findByUsername") //생략 가능. 생략하면 "엔티티.메서드 이름"으로 네임드쿼리가 있는지 확인한다. 없으면 메서드 이름 쿼리 생성 전략으로 진행된다.
+ List<Member> findByUsername(@Param("username") String username);
+}
+```
+
+### `@Query`에 JPQL 명시하기
+
+Named 쿼리와 유사하다.
+Named 쿼리처럼 부트 타임에 문법 오류를 체크한다.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+  @Query("select m from Member m where m.username= :username and m.age = :age")
+  List<Member> findUser(@Param("username") String username, @Param("age") int
+age);
+
+  @Query("select m from Member m where m.username in :names")
+  List<Member> findByNames(@Param("names") List<String> names);
+}
+```
+
+### 반환 타입
+
+스프링 데이터 JPA는 사용자가 적은 메서드 반환 타입을 보고 내부적으로 `getSingleResult()`나 `getResultList()`를 호출한다.
+
+그런데 실제 결과가 명시한 반환 타입보다 많거나 없을 수 있다.
+예를 들어 반환 타입을 단일 타입으로 명시했는데, 여러 개의 데이터가 반환될 수 있다.
+
+이 경우에는 `NonUniqueResultException` 예외가 발생한다.
+단일 반환 타입의 경우 내부적으로 `getSingleResult()`를 호출하기 때문이다.
+
+결과가 없는 경우에는 null을 리턴한다. 
+스프링 데이터 JPA가 `getSingleResult()`가 발생시키는 `NoResultException` 예외를 잡아 null로 리턴하기 때문이다.
+
+### 페이징과 정렬
+
+페이징 기능을 위한 반환 타입은 세 가지가 있다.
+
+- `Slice<T>`: 다음 페이지, 이전 페이지 등 전체 페이지 갯수가 필요없는 페이징.
+  - `한 페이지의 레코드 갯수 + 1`만큼 가져온다. `+1`은 '더보기'와 같이 다음 페이징을 위한 UI로 사용될 수 있다.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    Slice<Member> findByAge(int age, Pageable pageable);
+}
+
+//페이지 사이즈는 3. 그러나 쿼리는 4개를 요청한다.
+PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+Slice<Member> slice = repositorySlice.findByAge(10, pageRequest);
+```
+```bash
+select m1_0.id,m1_0.age,m1_0.team_id,m1_0.username from member m1_0 where m1_0.age=10 order by m1_0.username desc fetch first 4 rows only
+```
+
+- `Page<T>`: 전체 레코드 갯수, 전체 페이지 갯수 등 조회 가능한 일반적인 게시판 페이징.
+  - `Slice<T>`의 자식 클래스이기 때문에 `Slice<T>`의 기능을 모두 사용할 수 있다.
+  - 전체 페이지를 얻기 위해 count 쿼리도 실행된다.
+    - 페이징 레코드가 0보다 클 때에만 실행된다.
+    - 페이징 레코드 조회 쿼리가 조인이라면 조인된 테이블에 대한 count 쿼리가 실행된다.
+      - count 쿼리 최적화를 위해 `@Query` 어노테이션은 `countQuery` 속성을 제공한다.
+
+```java
+@Query(value = "select m from Member m join m.team",
+ countQuery = "select count(m.username) from Member m")
+Page<Member> findMemberAllCountBy(Pageable pageable);
+```
+
+<MessageBox title='left join과 count 쿼리' level='info'>
+  하이버네이트 6부터 `left join`일 때 연관 관계 테이블을 쓰지 않는 경우 조인된 테이블이 아니라 원본 테이블에 대한 count 쿼리가 실행된다.
+
+  ```java
+  public interface MemberRepository extends JpaRepository<Member, Long> {
+    @Query(value = "select m from Member m left join m.team t")
+    Page<Member> find(int age, Pageable pageable);
+  }
+  ```
+  쿼리 내에서 t를 쓰고 있지 않기 때문에 스프링 데이터 JPA는 최적화된 count 쿼리로 변환해서 실행한다.
+  ```bash
+  select count(m1_0.id) from member m1_0;
+  ```
+
+  그러나 이너 조인이나 t를 사용하는 경우 조인 테이블에 대한 count 쿼리로 실행된다.
+  ```java
+  public interface MemberRepository extends JpaRepository<Member, Long> {
+      @Query(value = "select m from Member m join m.team t")
+      Page<Member> find(int age, Pageable pageable);
+  }
+  ```
+  ```bash
+  select count(m1_0.id) from member m1_0 join team t1_0 on t1_0.id=m1_0.team_id;
+  ```
+</MessageBox>
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    Page<Member> findByAge(int age, Pageable pageable);
+}
+
+PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+Page<Member> page = repository.findByAge(10, pageRequest);
+```
+```bash
+select m1_0.id,m1_0.age,m1_0.team_id,m1_0.username from member m1_0 where m1_0.age=10 order by m1_0.username desc fetch first 3 rows only;
+select count(m1_0.id) from member m1_0 where m1_0.age=10;
+```
+
+<MessageBox title='`Page<T>`의 count 쿼리와 조인' level='warning'>
+  
+</MessageBox>
+
+- `List<T>`: 레코드 정보만 반환.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    Page<Member> findByAge(int age, Pageable pageable);
+}
+
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    Slice<Member> findByAge(int age, Pageable pageable);
+}
+
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    List<Member> findByAge(int age, Pageable pageable);
+}
+```
+
+#### 페이징 제공 메서드
+
+page는 slice를 상속받고 있기 때문에 slice가 제공하는 기능은 page도 제공한다.
+
+- `page.getTotalElements()`: 전체 레코드 갯수
+- `page.getTotalPages()`: 전체 페이지 수
+- `slice.getNumber()`: 현재 페이지
+- `slice.isFirst()`: 현재 페이지가 첫 번째 페이지인지 확인
+- `slice.isLast()`: 현재 페이지가 마지막 페이지인지 확인
+- `slice.hasNext()`: 다음 페이지가 있는지 확인
+- `slice.hasPrevious()`: 이전 페이지가 있는지 확인
+- `slice.getContent()`: 가져온 레코드 조회
+
+
+#### 페이지 리퀘스트 생성
+
+페이징을 지원하는 레포지토리 인터페이스는 파라미터로 `Pageable`을 받는다.
+`Pageable`을 통해 현재 페이지를 확인하고 레코드를 가져온다.
+
+`Pageable`에 넣을 대표적인 구현체는 `PageRequest` 클래스이다.
+
+```java
+//0번째 페이지(첫 번째 페이지), 페이지 크기는 3, username으로 정렬된 레코드를 기준으로 페이징.
+PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+Page<Member> page = repository.findByAge(10, pageRequest);
+```
+
+#### 복잡한 정렬 케이스
+
+정렬이 복잡하거나 다른 엔티티의 필드로 정렬을 해야 하는 경우에는 어떻게 할까?
+
+`PageRequest`를 만들 때 Sort 객체를 빼고, JPQL에 정렬 조건을 작성한다.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    @Query(value = "select m from Member m join m.team t order by t.name")
+    Page<Member> find(int age, Pageable pageable);
+}
+
+PageRequest pageRequest = PageRequest.of(0, 3);
+Page<Member> page = repository.find(10, pageRequest);
+```
+```bash
+2024-07-21T16:59:27.234+09:00 DEBUG 20600 --- [data-jpa] [    Test worker] org.hibernate.SQL                        : 
+    select
+        m1_0.id,
+        m1_0.age,
+        m1_0.team_id,
+        m1_0.username 
+    from
+        member m1_0 
+    join
+        team t1_0 
+            on t1_0.id=m1_0.team_id 
+    order by
+        t1_0.name 
+    fetch
+        first ? rows only
+```
+
+#### 페이지 엔티티를 DTO로 반환하기
+
+`Page<T>`의 `map` 메서드를 사용한다.
+
+```java
+PageRequest pageRequest = PageRequest.of(0, 3);
+Page<Member> page = repository.find(10, pageRequest);
+Page<MemberDto> dto = page.map(m -> new MemberDto(m.getUsername(), m.getAge()));
+```
