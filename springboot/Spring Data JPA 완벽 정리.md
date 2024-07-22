@@ -471,4 +471,78 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 
 결국 이 `ImplementationMethodExecutionInterceptor`에서 커스텀 레포지토리 구현체의 메서드가 호출된다. 
 
-간단하게, jdk 프록시에서 프래그먼트(커스텀 인터페이스의 구현체)를 들고 있다고 보면 될 것 같다.
+간단하게 말하자면, jdk 프록시에서 프래그먼트(커스텀 인터페이스의 구현체)를 들고 있다고 보면 될 것 같다.
+
+## Auditing
+
+엔티티가 저장된 시각, 수정된 시각, 생성자, 수정자 등 정보를 엔티티에 같이 기록할 수 있다.
+
+순수 JPA만 사용한다면 JPA가 제공하는 Event를 사용하면 된다.
+
+![image](https://github.com/user-attachments/assets/a396b8ac-a4fb-496a-b5e8-21513b662cfd)
+출처: 김영한의 자바 ORM의 표준 JPA 프로그래밍
+
+```java
+@MappedSuperclass
+@Getter
+public class JpaBaseEntity {
+    @Column(updatable = false)
+    private LocalDateTime createdDate;
+    private LocalDateTime updatedDate;
+
+    @PrePersist
+    public void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        createdDate = now;
+        updatedDate = now;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedDate = LocalDateTime.now();
+    }
+}
+```
+
+스프링 데이터에서는 조금 더 편리하게 제공한다.
+
+- `@CreatedDate`: 엔티티 저장 시각을 저장하는 필드 지정
+- `@LastModifiedDate`: 엔티티 수정 시각을 저장하는 필드 지정
+- `@CreatedBy`: 엔티티 생성자를 저장하는 필드 지정. 
+- `@LastModifiedBy`: 엔티티 수정자를 저장하는 필드 지정.
+- `@EntityListeners(AuditingEntityListener.class)`: 엔티티를 Auditing 한다.
+
+`@EnableJpaAuditing`을 메인 클래스에 꼭 달아줘야 한다.
+그렇지 않으면 필드에 값이 채워지지 않는다.
+
+```java
+@EntityListeners(AuditingEntityListener.class)
+@MappedSuperclass
+@Getter
+public class BaseEntity {
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdDate;
+
+    @LastModifiedDate
+    private LocalDateTime lastModifiedDate;
+
+    @CreatedBy
+    @Column(updatable = false)
+    private String createdBy;
+
+    @LastModifiedBy
+    private String lastModifiedBy;
+}
+
+@EnableJpaAuditing
+@SpringBootApplication
+public class DataJpaApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(DataJpaApplication.class, args);
+	}
+}
+```
+
