@@ -394,6 +394,24 @@ Page 객체는 스프링 컨버터에서 json으로 바꿀 때 아래와 같이 
 }
 ```
 
+page 정보를 파라미터로 전달하지 않으면 기본 설정이 적용된다.
+기본 페이징 사이즈는 20개이다.
+
+기본값 설정은 프로퍼티 파일이나 개별 메서드에 적용 할 수 있다.
+
+```bash
+spring.data.web.pageable.default-page-size=20 /# 기본 페이지 사이즈/
+spring.data.web.pageable.max-page-size=2000 /# 최대 페이지 사이즈/
+```
+
+```java
+@RequestMapping(value = "/members_page", method = RequestMethod.GET)
+public String list(@PageableDefault(size = 12, sort = "username",
+ direction = Sort.Direction.DESC) Pageable pageable) {
+ ...
+}
+```
+
 ## 배치 연산
 
 `@Query`에 JPQL로 배치 쿼리를 적는다.
@@ -612,6 +630,4 @@ public class DataJpaApplication {
 	}
 }
 ```
-
-##
 
