@@ -338,6 +338,61 @@ Page<Member> page = repository.find(10, pageRequest);
 Page<MemberDto> dto = page.map(m -> new MemberDto(m.getUsername(), m.getAge()));
 ```
 
+#### 프레젠테이션 영역에서 페이지 객체
+
+컨트롤러에서 파라미터와 반환 타입으로 Pageable, Page 객체를 사용할 수 있다.
+
+```java
+@GetMapping("/members")
+public Page<MemberDto> list(Pageable pageable) {
+	Page<Member> page = repository.findAll(pageable);
+	return page.map(MemberDto::new);
+}
+```
+
+`/members?page=0&size=3&sort=id,desc&sort=username,desc` 요청시 url 파라미터 방식으로 페이징과 정렬 정보를 전달한다. (페이지 번호 0번, 페이지 사이즈 3개, 정렬은 id 내림차순과 username 내림차순)
+
+Page 객체는 스프링 컨버터에서 json으로 바꿀 때 아래와 같이 페이징 정보를 모두 담아 보낸다.
+
+```json
+{
+    "totalElements": 1,
+    "totalPages": 1,
+    "pageable": {
+        "pageNumber": 0,
+        "pageSize": 3,
+        "sort": {
+            "sorted": true,
+            "unsorted": false,
+            "empty": false
+        },
+        "offset": 0,
+        "paged": true,
+        "unpaged": false
+    },
+    "first": true,
+    "last": true,
+    "size": 3,
+    "content": [{
+        "createdDate": "2024-07-22T12:36:32.849955",
+        "lastModifiedDate": "2024-07-22T12:36:32.991581",
+        "createdBy": "570fe27a-5426-4ddd-acdb-15e37da90099",
+        "lastModifiedBy": "848c01f6-787e-4aa5-8d2b-7063946b5b59",
+        "id": 1,
+        "username": "member2",
+        "age": 0,
+        "team": null
+    }],
+    "number": 0,
+    "sort": {
+        "sorted": true,
+        "unsorted": false,
+        "empty": false
+    },
+    "numberOfElements": 1,
+    "empty": false
+}
+```
 
 ## 배치 연산
 
@@ -508,8 +563,8 @@ public class JpaBaseEntity {
 
 - `@CreatedDate`: 엔티티 저장 시각을 저장하는 필드 지정
 - `@LastModifiedDate`: 엔티티 수정 시각을 저장하는 필드 지정
-- `@CreatedBy`: 엔티티 생성자를 저장하는 필드 지정. 
-- `@LastModifiedBy`: 엔티티 수정자를 저장하는 필드 지정.
+- `@CreatedBy`: 엔티티 생성자를 저장하는 필드 지정. `AuditorAware` 빈의 `getCurrentAuditor()`의 반환값으로 값을 셋팅한다.
+- `@LastModifiedBy`: 엔티티 수정자를 저장하는 필드 지정. `AuditorAware` 빈의 `getCurrentAuditor()`의 반환값으로 값을 셋팅한다.
 - `@EntityListeners(AuditingEntityListener.class)`: 엔티티를 Auditing 한다.
 
 `@EnableJpaAuditing`을 메인 클래스에 꼭 달아줘야 한다.
@@ -543,6 +598,20 @@ public class DataJpaApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(DataJpaApplication.class, args);
 	}
+
+	@Bean
+	public AuditorAware<String> auditorProvider() {
+//		return new AuditorAware<String>() {
+//			@Override
+//			public Optional<String> getCurrentAuditor() {
+//				return Optional.of(UUID.randomUUID().toString());
+//			}
+//		};
+		
+		return () -> Optional.of(UUID.randomUUID().toString());
+	}
 }
 ```
+
+##
 
