@@ -631,3 +631,68 @@ public class DataJpaApplication {
 }
 ```
 
+## `SimpleJpaRepository`
+
+jpaRepository의 기본 구현체.
+
+```java
+@Repository
+@Transactional(readOnly = true)
+public class SimpleJpaRepository<T, ID> implements JpaRepositoryImplementation<T, ID> {
+	...
+}
+```
+
+- `@Repository`: 컴포넌트 스캔에 포함되고, 데이터 접근 기술의 예외를 스프링 예외로 바꾼다.
+- `@Transactional(readOnly = true)`: 트랜잭션을 시작하거나, 시작된 트랜잭션을 사용(트랜잭션 전파)한다.
+
+## merge 피하기
+
+`em.merge()`는 `em.persist()`와 달리 데이터베이스에서 id로 레코드를 조회해보고 없으면 인서트하고, 있으면 업데이트한다.
+새로운 데이터를 넣는 과정에서 조회할 필요는 없으므로 웬만하면 `em.persist()`가 동작하게 만드는 것이 좋다.
+
+`em.merge()`는 `save()` 메서드의 파라미터로 넘어온 엔티티 객체의 id가 null이 아니거나 0이 아니면 실행된다.
+`@GeneratedValue`를 쓰면 인서트 이후 생성된 값으로 id를 셋팅하기 때문에 `save()` 시점에서는 항상 null이거나 0이다.
+그런데 직접 id 생성을 하기 위해 `@GeneratedValue`를 쓰지 않고 엔티티에 id를 셋팅한 뒤 `save()`를 호출하면 내부에서 `em.persist()`가 호출된다.
+
+이를 해결하기 위한 방법은 엔티티에서 `Persistent` 인터페이스를 구현하는 것이다.
+`isNew()` 메서드에서 새 엔티티인지 아닌지를 결정할 수 있다.
+
+```java
+@EntityListeners(AuditingEntityListener.class)
+@MappedSuperclass
+@Getter
+public abstract class BaseEntity implements Persistable<Long> {
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdDate;
+
+    @LastModifiedDate
+    private LocalDateTime lastModifiedDate;
+
+    @CreatedBy
+    @Column(updatable = false)
+    private String createdBy;
+
+    @LastModifiedBy
+    private String lastModifiedBy;
+
+    @Override
+    public boolean isNew() {
+        return createdDate == null;
+    }
+}
+
+@Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+public class Item extends BaseEntity {
+    @Id
+    private Long id;
+
+    public Item(Long id) {
+        this.id = id;
+    }
+}
+```
