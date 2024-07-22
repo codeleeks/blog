@@ -233,23 +233,23 @@ Page<Member> findMemberAllCountBy(Pageable pageable);
   ```bash
   select count(m1_0.id) from member m1_0 join team t1_0 on t1_0.id=m1_0.team_id;
   ```
+  
+  그래서 카운트 쿼리를 따로 지정해줘야 한다.
+  ```java
+  public interface MemberRepository extends JpaRepository<Member, Long> {
+      @Query(
+        value = "select m from Member m join m.team t",
+        countQuery = "select count(m) from Member m"
+      )
+      Page<Member> find(int age, Pageable pageable);
+  }
+  ```
 </MessageBox>
 
-```java
-public interface MemberRepository extends JpaRepository<Member, Long> {
-    Page<Member> findByAge(int age, Pageable pageable);
-}
 
-PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
-Page<Member> page = repository.findByAge(10, pageRequest);
-```
-```bash
-select m1_0.id,m1_0.age,m1_0.team_id,m1_0.username from member m1_0 where m1_0.age=10 order by m1_0.username desc fetch first 3 rows only;
-select count(m1_0.id) from member m1_0 where m1_0.age=10;
-```
-
-<MessageBox title='`Page<T>`의 count 쿼리와 조인' level='warning'>
-  
+<MessageBox title='count 쿼리가 실행되는 경우' level='info'>
+  페이지 사이즈보다 레코드가 적은 경우 count 쿼리는 실행되지 않는다.
+  count 쿼리는 결국 레코드를 페이징하기 위해 실행되는 건데, 레코드가 페이징 사이즈보다 적으면 그냥 한 페이지에 모든 레코드를 다 가져오면 되기 때문이다.
 </MessageBox>
 
 - `List<T>`: 레코드 정보만 반환.
@@ -886,3 +886,28 @@ public void nativeQuery() {
     fetch
         first ? rows only
 ```
+
+<MessageBox title='JPQL과 Projections' level='info'>
+	사실 native query 옵션을 켜지 않아도 projection을 쓸 수 있다.
+	
+	```java
+	@Query(
+	    value = "select m.id as id, m.username, t.name as teamName from Member m left join m.team t",
+            countQuery = "select count(m) from Member m"
+	)
+    	Page<MemberProjection> findMembers(Pageable pageable);
+ 	```
+	```bash
+ 	    select
+	        m1_0.id,
+	        m1_0.username,
+	        t1_0.name 
+	    from
+	        member m1_0 
+	    left join
+	        team t1_0 
+	            on t1_0.id=m1_0.team_id 
+	    fetch
+	        first ? rows only
+ 	```
+</MessageBox>
