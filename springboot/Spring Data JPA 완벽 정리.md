@@ -696,3 +696,193 @@ public class Item extends BaseEntity {
     }
 }
 ```
+
+## Projections
+
+조회할 때 멤버 엔티티 전부가 아니라 특정 필드만 가지고 오고 싶을 때 사용한다.
+인터페이스만 적어주면 스프링 데이터가 프록시로 만들어준다.
+
+```java
+//메서드명은 get필드명이어야 한다. (카멜케이스)
+//필드명이 username이기 때문에, getusername, getUserName은 스프링 데이터가 인식을 하지 못한다.
+public interface UserName {
+    String getUsername();
+}
+
+//반환 타입에 인터페이스를 적어준다.
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    List<UserName> findUserNameByUsername(String username);
+}
+
+//test
+@Test
+public void projections() {
+	repository.save(new Member("member1", 10));
+	repository.save(new Member("member2", 20));
+	repository.save(new Member("member3", 30));
+	
+	List<UserName> members = repository.findUserNameByUsername("member1");
+	for (UserName member : members) {
+	    System.out.println("member.getUsername() = " + member.getUsername());
+	}
+}
+```
+```bash
+    select
+        m1_0.username 
+    from
+        member m1_0 
+    where
+        m1_0.username=?
+```
+
+인터페이스가 아니라 클래스도 된다.
+DTO로 사용하는 클래스를 적으면 쿼리 결과를 DTO 객체로 바로 만들어주는 장점이 있다.
+하지만, nested projections은 되지 않는다. [참고](https://docs.spring.io/spring-data/jpa/reference/repositories/projections.html#projections.dtos)
+
+
+
+```java
+public class UserNameDto {
+    private String username;
+    //파라미터를 엔티티 필드와 동일하게 적어야 한다.
+    public UserNameDto(String username) {
+        this.username = username;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+}
+
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    //반환 타입으로 DTO 클래스를 적는다.
+    List<UserNameDto> findUserNameByUsername(String username);
+}
+
+
+@Test
+public void projections() {
+	repository.save(new Member("member1", 10));
+	repository.save(new Member("member2", 20));
+	repository.save(new Member("member3", 30));
+	
+	List<UserNameDto> members = repository.findUserNameByUsername("member1");
+	for (UserNameDto member : members) {
+	    System.out.println("member.getUsername() = " + member.getUsername());
+	}
+}
+```
+```bash
+    select
+        m1_0.username 
+    from
+        member m1_0 
+    where
+        m1_0.username=?
+```
+
+루트 엔티티에 대해선 `select m.username from Member m`처럼 쿼리 자체적으로 특정 필드만 조회해오지만,
+연관된 엔티티를 가져올 때에는 전체 필드를 가져온 후 어플리케이션에서 필드를 걸러낸다.
+
+```java
+public interface UserTeamName {
+    String getUsername();
+    TeamInfo getTeam();
+
+    interface TeamInfo {
+        String getName();
+    }
+}
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    List<UserTeamName> findUserNameByUsername(String username);
+}
+@Test
+public void projections() {
+	Team team = new Team("team1");
+	repository.save(new Member("member1", 10, team));
+	repository.save(new Member("member2", 20, team));
+	
+	List<UserTeamName> members = repository.findUserNameByUsername("member1");
+	for (UserTeamName member : members) {
+	    System.out.println("member.getUsername() = " + member.getUsername());
+	    System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+	}
+}
+```
+```bash
+    select
+        m1_0.username,
+        t1_0.id,
+        t1_0.name 
+    from
+        member m1_0 
+    left join
+        team t1_0 
+            on t1_0.id=m1_0.team_id 
+    where
+        m1_0.username=?
+```
+
+## 네이티브 쿼리
+
+SQL을 직접 작성할 수 있다.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+ @Query(value = "select * from member where username = ?", nativeQuery =
+true)
+ Member findByNativeQuery(String username);
+}
+```
+
+`Projections`과 같이 쓸 수 있다.
+
+```java
+//projections
+public interface UserTeamName {
+    String getUsername();
+    TeamInfo getTeam();
+
+    interface TeamInfo {
+        String getName();
+    }
+}
+
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    @Query(value = "select m.id as id, m.username, t.name as teamName from Member as m " +
+            "left join team as t on m.team_id = t.id",
+            countQuery = "select count(*) from member",
+            nativeQuery = true)
+    Page<MemberProjection> findMembers(Pageable pageable);
+}
+
+@Test
+public void nativeQuery() {
+	Team team = new Team("team1");
+	repository.save(new Member("member1", 10, team));
+	repository.save(new Member("member2", 20, team));
+	
+	Page<MemberProjection> page = repository.findMembers(PageRequest.of(0, 10));
+	List<MemberProjection> members = page.getContent();
+	for (MemberProjection member : members) {
+	    System.out.println("member.getUsername() = " + member.getUsername());
+	    System.out.println("member.getId() = " + member.getId());
+	    System.out.println("member.getTeamName() = " + member.getTeamName());
+	}
+}
+```
+```bash
+2024-07-22T23:08:22.618+09:00 DEBUG 23080 --- [data-jpa] [    Test worker] org.hibernate.SQL                        : 
+    select
+        m.id as id,
+        m.username,
+        t.name as teamName 
+    from
+        Member as m 
+    left join
+        team as t 
+            on m.team_id = t.id 
+    fetch
+        first ? rows only
+```
