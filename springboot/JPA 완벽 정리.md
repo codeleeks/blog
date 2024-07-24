@@ -1602,6 +1602,77 @@ List<String> resultList = em.createQuery(jpql, String.class)
     .getResultList();
 ```
 
+<MessageBox title='on과 외부 조인' level='warning'>
+	`on`을 통한 필터링과 `where`을 통한 필터링은 유사해보이지만 다르다.
+	`on`은 조인할 때 가져올 레코드에 조건을 걸고, `where`은 SQL 실행 결과로 반환될 레코드에 대해 필터링을 한다.
+
+ 	차이는 외부 조인(left join, right join)할 때 나타난다.
+  	외부 조인은 매칭되지 않는 레코드도 포함하기 때문에 where 절에서 조건을 걸면 매칭되지 않는 레코드는 제외된다.
+   	그러나 on에서 조건을 걸면 매칭되지 않아도 포함한다.
+
+	`where` 절에서 조건을 걸 때.
+    	```bash
+	    /* select
+	        member1,
+	        team 
+	    from
+	        Member member1   
+	    left join
+	        member1.team as team 
+	    where
+	        team.name = ?1 */ select
+	            m1_0.member_id,
+	            m1_0.age,
+	            m1_0.team_id,
+	            m1_0.username,
+	            t1_0.team_id,
+	            t1_0.name 
+	        from
+	            member m1_0 
+	        left join
+	            team t1_0 
+	                on t1_0.team_id=m1_0.team_id 
+	        where
+	            t1_0.name=?
+     	```
+      	```bash
+       	tuple = [Member(id=1, username=member1, age=10), Team(id=1, name=teamA)]
+	tuple = [Member(id=2, username=member2, age=20), Team(id=1, name=teamA)]
+       	```
+
+	`on` 절에서 조건을 걸 때
+ 	```bash
+  	    /* select
+        	member1,
+	        team 
+	    from
+	        Member member1   
+	    left join
+	        member1.team as team with team.name = ?1 */ select
+	            m1_0.member_id,
+	            m1_0.age,
+	            m1_0.team_id,
+	            m1_0.username,
+	            t1_0.team_id,
+	            t1_0.name 
+	        from
+	            member m1_0 
+	        left join
+	            team t1_0 
+	                on t1_0.team_id=m1_0.team_id 
+	                and t1_0.name=?
+
+  	```
+   	```bash
+	tuple = [Member(id=1, username=member1, age=10), Team(id=1, name=teamA)]
+	tuple = [Member(id=2, username=member2, age=20), Team(id=1, name=teamA)]
+	tuple = [Member(id=3, username=member3, age=30), null]
+	tuple = [Member(id=4, username=member4, age=40), null]
+    	```
+ 	
+</MessageBox>
+
+
 ### JPQL에서 제공되는 기본 함수
 
 - concat
