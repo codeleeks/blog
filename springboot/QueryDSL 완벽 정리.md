@@ -1058,3 +1058,98 @@ List<MemberDto> result = queryFactory
         from
             member m1_0
 ```
+
+## 동적 쿼리
+
+- boolean builder 사용
+
+```java
+    @Test
+    public void dynamicquery_booleanbuilder() throws Exception {
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+
+        List<Member> members = searchMember1(usernameParam, ageParam);
+        assertThat(members.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMember1(String usernameCond, Integer ageCond) {
+        BooleanBuilder builder = new BooleanBuilder();
+        if (usernameCond != null) {
+            builder.and(member.username.eq(usernameCond));
+        }
+        if (ageCond != null) {
+            builder.and(member.age.eq(ageCond));
+        }
+        return queryFactory
+                .selectFrom(member)
+                .where(builder)
+                .fetch();
+    }
+```
+```bash
+2024-07-24T16:17:48.195+09:00 DEBUG 18504 --- [querydsl] [    Test worker] org.hibernate.SQL                        : 
+    /* select
+        member1 
+    from
+        Member member1 
+    where
+        member1.username = ?1 
+        and member1.age = ?2 */ select
+            m1_0.member_id,
+            m1_0.age,
+            m1_0.team_id,
+            m1_0.username 
+        from
+            member m1_0 
+        where
+            m1_0.username=? 
+            and m1_0.age=?
+```
+
+- where 다중 파라미터 사용
+
+```java
+    @Test
+    public void dynamicquery_whereparam() throws Exception {
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+
+        List<Member> members = searchMember2(usernameParam, ageParam);
+        assertThat(members.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMember2(String usernameCond, Integer ageCond) {
+        return queryFactory
+                .selectFrom(member)
+                .where(usernameEq(usernameCond), ageEq(ageCond))
+                .fetch();
+    }
+
+    private BooleanExpression usernameEq(String usernameCond) {
+        return usernameCond != null ? member.username.eq(usernameCond) : null;
+    }
+
+    private BooleanExpression ageEq(Integer ageCond) {
+        return ageCond != null ? member.age.eq(ageCond) : null;
+    }
+```
+```bash
+2024-07-24T16:17:48.062+09:00 DEBUG 18504 --- [querydsl] [    Test worker] org.hibernate.SQL                        : 
+    /* select
+        member1 
+    from
+        Member member1 
+    where
+        member1.username = ?1 
+        and member1.age = ?2 */ select
+            m1_0.member_id,
+            m1_0.age,
+            m1_0.team_id,
+            m1_0.username 
+        from
+            member m1_0 
+        where
+            m1_0.username=? 
+            and m1_0.age=?
+```
