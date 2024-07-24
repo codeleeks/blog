@@ -919,3 +919,142 @@ end desc
         where
             m1_0.username=?
 ```
+
+- DTO로 프로젝션할 수 있다.
+  - 방법은 네 가지이다. `@QueryProjection` 방법이 컴파일 타임에 오류를 확인할 수 있어 가장 안전하다.
+    - 빈
+    - 필드
+    - 생성자
+    - `@QueryProjection`: DTO 생성자에 해당 어노테이션을 붙인다. 빌드시 Q DTO가 만들어진다.
+  - 쿼리 실행시 DTO에 들어갈 필드만 가져온다.(쿼리 레벨에서도 프로젝션이 일어난다)
+
+```java
+    //빈, 필드 방식
+    @Test
+    public void dto() {
+        List<MemberDto> fetch = queryFactory
+//                .select(Projections.fields(MemberDto.class
+                .select(Projections.bean(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : fetch) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
+
+    //DTO 필드명과 매칭해야 할 때는 as를 사용한다.
+    @Test
+    public void dto_alias() {
+        QMember memberSub = new QMember("memberSub");
+        List<UserDto> result = queryFactory
+                .select(Projections.fields(
+                        UserDto.class,
+                        member.username.as("name"),
+                        ExpressionUtils.as(
+                                JPAExpressions
+                                        .select(memberSub.age.max())
+                                        .from(memberSub),
+                                "age"
+                        )
+                ))
+                .from(member)
+                .fetch();
+
+        for (UserDto userDto : result) {
+            System.out.println("userDto = " + userDto);
+        }
+    }
+
+    //생성자 방식
+    @Test
+    public void dto_constructor() {
+        List<MemberDto> fetch = queryFactory
+                .select(Projections.constructor(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+    }
+```
+```bash
+2024-07-24T16:01:01.451+09:00 DEBUG 10468 --- [querydsl] [    Test worker] org.hibernate.SQL                        : 
+    /* select
+        member1.username,
+        member1.age 
+    from
+        Member member1 */ select
+            m1_0.username,
+            m1_0.age 
+        from
+            member m1_0
+
+2024-07-24T16:01:01.335+09:00 DEBUG 10468 --- [querydsl] [    Test worker] org.hibernate.SQL                        : 
+    /* select
+        member1.username as name,
+        (select
+            max(memberSub.age) 
+        from
+            Member memberSub) as age 
+    from
+        Member member1 */ select
+            m1_0.username,
+            (select
+                max(m2_0.age) 
+            from
+                member m2_0) 
+        from
+            member m1_0
+
+2024-07-24T16:01:01.523+09:00 DEBUG 10468 --- [querydsl] [    Test worker] org.hibernate.SQL                        : 
+    /* select
+        member1.username,
+        member1.age 
+    from
+        Member member1 */ select
+            m1_0.username,
+            m1_0.age 
+        from
+            member m1_0
+```
+
+`@QueryProjection` 방식.
+
+```java
+@Data
+public class MemberDto {
+    private String username;
+    private int age;
+
+    public MemberDto() {
+    }
+
+    @QueryProjection
+    public MemberDto(String username, int age) {
+        this.username = username;
+        this.age = age;
+    }
+}
+
+@Test
+public void dto_queryProjections() {
+List<MemberDto> result = queryFactory
+	.select(new QMemberDto(member.username, member.age))
+	.from(member)
+	.fetch();
+}
+```
+```bash
+2024-07-24T16:01:01.451+09:00 DEBUG 10468 --- [querydsl] [    Test worker] org.hibernate.SQL                        : 
+    /* select
+        member1.username,
+        member1.age 
+    from
+        Member member1 */ select
+            m1_0.username,
+            m1_0.age 
+        from
+            member m1_0
+```
