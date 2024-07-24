@@ -1153,3 +1153,78 @@ List<MemberDto> result = queryFactory
             m1_0.username=? 
             and m1_0.age=?
 ```
+
+## 배치 연산(벌크 연산)
+
+```java
+    @Test
+    public void bulk() throws Exception {
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+
+        System.out.println("count = " + count);
+
+        count = queryFactory
+                .update(member)
+                .set(member.age, member.age.add(1))
+                .execute();
+
+        System.out.println("count = " + count);
+
+        count = queryFactory
+                .update(member)
+                .set(member.age, member.age.multiply(2))
+                .execute();
+
+        System.out.println("count = " + count);
+
+        count = queryFactory
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
+        System.out.println("count = " + count);
+    }
+```
+```bash
+2024-07-24T16:22:45.521+09:00 DEBUG 804 --- [querydsl] [    Test worker] org.hibernate.SQL                        : 
+    /* update
+        Member member1 
+    set
+        member1.username = ?1 
+    where
+        member1.age < ?2 */ update member m1_0 
+    set
+        username=? 
+    where
+        m1_0.age<?
+
+2024-07-24T16:22:45.544+09:00 DEBUG 804 --- [querydsl] [    Test worker] org.hibernate.SQL                        : 
+    /* update
+        Member member1 
+    set
+        member1.age = member1.age + ?1 */ update member m1_0 
+    set
+        age=(m1_0.age+cast(? as integer))
+
+2024-07-24T16:22:45.554+09:00 DEBUG 804 --- [querydsl] [    Test worker] org.hibernate.SQL                        : 
+    /* update
+        Member member1 
+    set
+        member1.age = member1.age * ?1 */ update member m1_0 
+    set
+        age=(m1_0.age*cast(? as integer))
+
+2024-07-24T16:22:45.567+09:00 DEBUG 804 --- [querydsl] [    Test worker] org.hibernate.SQL                        : 
+    /* delete 
+    from
+        Member member1 
+    where
+        member1.age > ?1 */ delete 
+    from
+        member m1_0 
+    where
+        m1_0.age>?
+```
