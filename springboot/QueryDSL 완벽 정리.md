@@ -1228,3 +1228,234 @@ List<MemberDto> result = queryFactory
     where
         m1_0.age>?
 ```
+
+## Spring Data에서 연동
+
+스프링 데이터의 커스텀 레포지토리 기능을 활용한다.
+
+```java
+//레포지토리
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberSearch {
+}
+
+//커스텀 레포지토리
+public interface MemberSearch {
+    List<MemberTeamDto> search(MemberSearchCondition condition);
+    Page<MemberTeamDto> findAllOnce(MemberSearchCondition condition, Pageable pageable);
+
+    Page<MemberTeamDto> findAllSeparately(MemberSearchCondition cond, Pageable pageable);
+}
+
+//커스텀 레포지토리 구현체
+public class MemberSearchImpl implements MemberSearch {
+    private final JPAQueryFactory queryFactory;
+
+    //JPAQueryFactory 객체를 생성하기 위해 EntityManager를 주입받는다.
+    public MemberSearchImpl(EntityManager em) {
+        this.queryFactory = new JPAQueryFactory(em);
+    }
+
+    @Override
+    public List<MemberTeamDto> search(MemberSearchCondition condition) {
+        return queryFactory
+                .select(new QMemberTeamDto(
+                        member.id,
+                        member.username,
+                        member.age,
+                        team.id,
+                        team.name
+                ))
+                .from(member)
+                .join(member.team, team)
+                .where(
+                        equalUsername(condition.getUsername()),
+                        equalTeamName(condition.getTeamName()),
+                        goeAge(condition.getAgeGoe()),
+                        loeAge(condition.getAgeLoe())
+                )
+                .fetch();
+    }
+
+    //페이징 처리 1. fetchResult()로 레코드와 카운트를 한 번에 가져옴(deprecated)
+    @Override
+    public Page<MemberTeamDto> findAllOnce(MemberSearchCondition condition, Pageable pageable) {
+        QueryResults<MemberTeamDto> pages = queryFactory
+                .select(new QMemberTeamDto(
+                        member.id,
+                        member.username,
+                        member.age,
+                        team.id,
+                        team.name
+                ))
+                .from(member)
+                .leftJoin(member.team, team)
+                .where(
+                        equalUsername(condition.getUsername()),
+                        equalTeamName(condition.getTeamName()),
+                        goeAge(condition.getAgeGoe()),
+                        loeAge(condition.getAgeLoe())
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetchResults();
+
+        return new PageImpl<>(pages.getResults(), pageable, pages.getTotal());
+
+    }
+
+    //페이징 처리 2. 레코드 조회 쿼리와 카운트 쿼리를 분리.
+    // 스프링이 제공하는 PageableExecutionUtils 클래스를 써서 필요할 때만 카운트 쿼리 실행 (예를 들어, 검색 조건에 만족하는 레코드 수가 페이지 사이즈보다 작을 때 카운트 쿼리를 실행하지 않음)
+    @Override
+    public Page<MemberTeamDto> findAllSeparately(MemberSearchCondition cond, Pageable pageable) {
+        List<MemberTeamDto> fetch = queryFactory
+                .select(new QMemberTeamDto(
+                        member.id,
+                        member.username,
+                        member.age,
+                        team.id,
+                        team.name
+                ))
+                .from(member)
+                .leftJoin(member.team, team)
+                .where(
+                        equalUsername(cond.getUsername()),
+                        equalTeamName(cond.getTeamName()),
+                        goeAge(cond.getAgeGoe()),
+                        loeAge(cond.getAgeLoe())
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        JPAQuery<Long> countQuery = queryFactory
+                .select(
+                        Wildcard.count
+                )
+                .from(member)
+                .join(member.team, team)
+                .on(equalTeamName(cond.getTeamName()))
+                .where(
+                        equalUsername(cond.getUsername()),
+                        goeAge(cond.getAgeGoe()),
+                        loeAge(cond.getAgeLoe())
+                );
+
+//        return new PageImpl<>(fetch, pageable, count);
+        return PageableExecutionUtils.getPage(fetch, pageable, countQuery::fetchOne);
+    }
+
+    //필드별 검색 조건을 메서드 단위로 쪼개서 재사용성을 높인다.
+    private BooleanExpression equalUsername(String username) {
+        return nullIfNull(
+                username,
+                member.username::eq
+        );
+    }
+
+    private BooleanExpression equalTeamName(String teamName) {
+        return nullIfNull(
+                teamName,
+                member.team.name::eq
+        );
+    }
+
+    private BooleanExpression goeAge(Integer age) {
+        return nullIfNull(
+                age,
+                member.age::goe
+        );
+    }
+
+    private BooleanExpression loeAge(Integer age) {
+        return nullIfNull(
+                age,
+                member.age::loe
+        );
+    }
+
+    private <T> BooleanExpression nullIfNull(T cond, Function<? super T, ? extends BooleanExpression> mapper) {
+        return Optional.ofNullable(cond)
+                .map(mapper)
+                .orElse(null);
+    }
+}
+
+//검색 조건 DTO
+@Data
+public class MemberSearchCondition {
+    private String username;
+    private String teamName;
+    private Integer ageGoe;
+    private Integer ageLoe;
+}
+```
+
+<MessageBox title='`JPAQueryFactory` 주입하기' level='warning'>
+	`JPAQueryFactory`는 스프링에서 자동으로 주입해주지 않는다.
+	`@Bean`으로 만들어주거나, `EntityManager`를 주입 받아서 수동으로 만들어준다.
+
+ 	```java
+  	public class MemberSearchImpl implements MemberSearch {
+	    private final JPAQueryFactory queryFactory;
+	
+	    public MemberSearchImpl(EntityManager em) {
+	        this.queryFactory = new JPAQueryFactory(em);
+	    }
+     	}
+	```
+</MessageBox>
+
+<MessageBox title='DTO에서 primitive 타입' level='warning'>
+	DTO에서는 primitive 타입을 쓰지 말자.
+	queryDSL의 `BooleanExpression`은 null일 때 무시하지만, 0일 때는 무시하지 않는다.
+	primitive 타입을 쓰면 리퀘스트에 값이 없을 때 기본값인 0을 사용하는데, queryDSL 입장에서는 0을 셋팅한 것으로 이해하여 조건에 포함시킨다.
+	그래서 의도와는 다른 동작을 할 수 있다.
+
+ 	```java
+	import lombok.Data;
+	
+	@Data
+	public class MemberSearchCondition {
+	    private String username;
+	    private String teamName;
+     	    //private int ageGoe;
+	    private Integer ageGoe;
+     	    //private int ageLoe;
+	    private Integer ageLoe;
+	}
+
+  	```
+</MessageBox>
+
+### 정렬
+
+스프링의 Sort를 querydsl의 OrderSpecifier로 바꾼다.
+
+```java
+public List<Member> findSort(Pageable pageable) {
+	JPAQuery<Member> query = queryFactory
+		.selectFrom(member);
+	
+	Sort sort = pageable.getSort();
+	for (Sort.Order order : sort) {
+	    PathBuilder<? extends Member> pathBuilder = new PathBuilder<>(member.getType(), member.getMetadata());
+	
+	    query.orderBy(new OrderSpecifier(order.isAscending() ? Order.ASC : Order.DESC, pathBuilder.get(order.getProperty())));
+	}
+	
+	return query.fetch();
+}
+
+
+@Test
+public void sort() {
+	PageRequest pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Order.asc("username"), Sort.Order.desc("age")));
+	List<Member> sort = repository.findSort(pageRequest);
+	for (Member foundMember : sort) {
+	    System.out.println("foundMember.getUsername() = " + foundMember.getUsername());
+	}
+	
+	assertThat(sort.size()).isEqualTo(20);
+	assertThat(sort.get(0).getUsername()).isEqualTo("member0");
+}
+```
