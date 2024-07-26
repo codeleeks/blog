@@ -1,14 +1,27 @@
 ## 빈 출력하기
 
 ```java
+@SpringBootTest
+class DemoApplicationTests {
+	//1. new AnnotationConfigApplicationContext()으로 스프링 컨테이너를 만든다.
+	//2. AppConfig.class를 빈으로 등록한다.(다중 파라미터로 여러 개의 빈 등록 가능)
+	AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+	@Autowired
+	MemberService memberService;
+	@Autowired
+	MemberRepository repository;
+
 	@Test
 	@DisplayName("모든 빈 찾기")
 	void findAllBean() {
 		String[] beanDefinitionNames = ac.getBeanDefinitionNames();
 		for (String beanDefinitionName : beanDefinitionNames) {
 			System.out.println("beanDefinitionName = " + beanDefinitionName);
-
 		}
+
+		System.out.println("memberService = " + memberService);
+		System.out.println("repository = " + repository);
 	}
 
 	@Test
@@ -29,7 +42,7 @@
 	@Test
 	@DisplayName("특정 타입을 모두 조회하기")
 	void findAllBeanByType() {
-		Map<String, MemberService> beansOfType = ac.getBeansOfType(MemberService.class);
+		Map<String, MemberServiceImpl> beansOfType = ac.getBeansOfType(MemberServiceImpl.class);
 		for (String key : beansOfType.keySet()) {
 			System.out.println("key = " + key + " value = " + beansOfType.get(key));
 		}
@@ -49,7 +62,16 @@
 			}
 		}
 	}
+}
 ```
+
+<MessageBox title='AnnotationConfigApplicationContext와 빈 등록하기' level='info'>
+	```java
+	//1. new AnnotationConfigApplicationContext()으로 스프링 컨테이너를 만든다.
+	//2. AppConfig.class를 빈으로 등록한다.(다중 파라미터로 여러 개의 빈 등록 가능)
+	AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+ 	```
+</MessageBox>
 
 ## 스프링 컨테이너
 
@@ -234,4 +256,206 @@ public class OrderService {
 ```bash
 repository called
 repository = com.example.demo.MemberRepository@24a1c17f
+```
+
+### 인터페이스 구현체가 두 개 이상일 때 빈 충돌
+
+어떤 빈이 인터페이스를 의존하고 있고, 그 인터페이스를 구현하는 빈이 두 개 이상일 때 빈 충돌이 발생한다.
+
+해결 방법은 세 가지이다.
+- `@AutoWired` 매칭 조건 사용
+- `@Qualifier`
+- `@Primary`
+
+#### `@AutoWired` 매칭 조건
+
+```java
+//DiscountPolicy 인터페이스를 구현하는 rateDiscountPolicy 빈을 찾는다.
+@Autowired
+private DiscountPolicy rateDiscountPolicy
+```
+
+`@AutoWired`가 빈을 찾는 순서가 있다.
+
+1. 타입 매칭
+2. 필드명(혹은 파라미터명) 매칭
+
+#### `@Qualifier`
+
+빈에 추가적인 정보를 부여하고, 클라이언트에서 추가적인 정보로 빈을 찾는다.
+
+```java
+@Component
+@Qualifier("mainDiscountPolicy") //추가적인 정보
+public class RateDiscountPolicy implements DiscountPolicy {}
+
+@Component
+@Qualifier("fixDiscountPolicy") //추가적인 정보
+public class FixDiscountPolicy implements DiscountPolicy {}
+
+//클라이언트
+//@Qualifier("mainDiscountPolicy")가 붙은 빈을 찾는다.
+@Autowired
+public OrderServiceImpl(MemberRepository memberRepository, @Qualifier("mainDiscountPolicy") DiscountPolicy discountPolicy) {
+ this.memberRepository = memberRepository;
+ this.discountPolicy = discountPolicy;
+}
+```
+
+`@Qualifier`는 빈을 찾는 순서가 있다.
+- `@Qualifier` 매칭
+- `@Qualifier`에 적은 텍스트가 빈 이름과 매칭하는지 확인
+
+
+#### `@Primary`
+
+빈 충돌시 우선이 되는 빈을 지정한다.
+
+```java
+//빈 충돌시 RateDiscountPolicy 빈이 우선한다.
+@Component
+@Primary
+public class RateDiscountPolicy implements DiscountPolicy {}
+
+@Component
+public class FixDiscountPolicy implements DiscountPolicy {}
+```
+
+#### 결론
+
+`@Primary`와 `@Qualifier`를 섞어서 쓰자.
+
+주로 사용되는 구현체는 `@Primary`를 붙이고, 가끔 사용되는 구현체는 `@Qualifier`를 적용한다.
+클라이언트에서는 `@Qualifier`를 붙이지 않으면 주로 사용되는 구현체가 선택된다.
+`@Qualifier`를 붙인다면 가끔 사용되는 구현체가 선택된다.
+
+오타 방지를 위해 `@Qualifier`는 커스텀 어노테이션으로 만들어버리는 것도 좋다.
+
+```java
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER,
+ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Qualifier("mainDiscountPolicy")
+public @interface MainDiscountPolicy {
+}
+
+@Component
+@MainDiscountPolicy
+public class RateDiscountPolicy implements DiscountPolicy {}
+
+@Autowired
+public OrderServiceImpl(MemberRepository memberRepository, @MainDiscountPolicy DiscountPolicy discountPolicy) {
+ this.memberRepository = memberRepository;
+ this.discountPolicy = discountPolicy;
+}
+```
+
+### 인터페이스 구현체가 두 개 이상일 때, 모두 가져오는 방법
+
+인터페이스를 구현하는 모든 빈을 가져와야 하는 경우도 있다.
+
+이 때는 컬렉션을 사용한다.
+
+```java
+
+@Service
+@RequiredArgsConstructor
+class DiscountService {
+ private final Map<String, DiscountPolicy> policyMap;
+ //키는 각 빈의 이름, 밸류는 빈
+ private final List<DiscountPolicy> policies;
+}
+```
+
+## 의존관계 주입
+
+의존관계를 주입하는 방법은 세 가지가 있다.
+모두 `@Autowired`를 사용한다.
+
+- 생성자 주입
+- 수정자 주입
+- 필드 주입
+
+### 생성자 주입
+```java
+@Component
+public class OrderServiceImpl implements OrderService {
+ private final MemberRepository memberRepository;
+ private final DiscountPolicy discountPolicy;
+
+ @Autowired
+ public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy discountPolicy) {
+ 	this.memberRepository = memberRepository;
+ 	this.discountPolicy = discountPolicy;
+ }
+}
+```
+
+생성자가 한 개라면 `@Autowired`를 생략할 수 있다.
+그래서 lombok의 `@RequiredArgsConstructor`를 사용하면 편리하게 생성자 주입을 사용할 수 있다.
+
+객체를 생성할 때 필요한 의존관계를 받아야 하므로(+final을 사용함으로써 추가적인 보완), 의존관계가 채워지지 않으면 컴파일 오류를 낸다.
+또한, 의존 관계는 객체 생성 시점에 세팅이 되기 때문에 생성 이후에는 의존 관계가 불변한다.
+
+### 수정자 주입
+```java
+@Component
+public class OrderServiceImpl implements OrderService {
+ private MemberRepository memberRepository;
+ private DiscountPolicy discountPolicy;
+
+ @Autowired
+ public void setMemberRepository(MemberRepository memberRepository) {
+ 	this.memberRepository = memberRepository;
+ }
+ @Autowired
+ public void setDiscountPolicy(DiscountPolicy discountPolicy) {
+ 	this.discountPolicy = discountPolicy;
+ }
+}
+```
+
+세터 메서드를 통해 의존관계를 주입한다.
+세터 메서드의 이름은 자바빈 메서드 규약을 따라야 한다. (`set필드이름`)
+
+의존관계 주입없이 객체를 생성할 수 있으므로, 런타임 오류(특히 NPE)가 발생할 수 있다.
+
+### 필드 주입
+
+```java
+@Component
+public class OrderServiceImpl implements OrderService {
+ @Autowired
+ private MemberRepository memberRepository;
+ @Autowired
+ private DiscountPolicy discountPolicy;
+}
+```
+
+의존 관계 필드에 `@AutoWired`를 달아버린다.
+
+의존 관계를 외부에서 셋팅할 수 있는 방법이 없으므로, 의존관계를 모킹하여 테스트하기 어렵다는 단점이 있다.
+
+### 의존 관계 강제화 해제
+
+의존 관계 주입을 생략하거나 null을 넣는 방법도 있다.
+
+```java
+```
+//호출 안됨
+@Autowired(required = false)
+public void setNoBean1(Member member) {
+ System.out.println("setNoBean1 = " + member);
+}
+//null 호출
+@Autowired
+public void setNoBean2(@Nullable Member member) {
+ System.out.println("setNoBean2 = " + member);
+}
+//Optional.empty 호출
+@Autowired(required = false)
+public void setNoBean3(Optional<Member> member) {
+ System.out.println("setNoBean3 = " + member);
+}
 ```
