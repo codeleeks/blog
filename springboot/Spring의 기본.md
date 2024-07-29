@@ -458,3 +458,134 @@ public void setNoBean3(Optional<Member> member) {
  System.out.println("setNoBean3 = " + member);
 }
 ```
+
+## 빈 생명주기
+
+> 스프링 컨테이너 생성 ➡️ 스프링 빈 생성 ➡️ 의존관계 주입 ➡️ 초기화 콜백 ➡️ 사용 ➡️ 소멸전 콜백 ➡️ 스프링 컨테이너 종료
+
+개발자는 초기화 콜백과 소멸전 콜백에 어떤 작업을 할지를 메서드로 작할 수 있다.
+
+세 가지 방법이 있다.
+
+- `initializingBean`, `DisposableBean`의 추상 메서드를 구현한다.
+- `@Bean(initMethod = "", destroyMehtod = "")`
+- `@PostConstruct`, `@PreDestroy`, `@EventListener(ApplicationReadyEvent.class)`
+
+
+### `initializingBean`, `DisposableBean`의 추상 메서드를 구현한다.
+
+이 방법은 다른 두 방법이 더 편리하기 때문에 사용하지 않는다.
+
+### `@Bean(initMethod = "", destroyMehtod = "")`
+
+`@Bean` 어노테이션을 붙일 때 콜백함수명을 적는다.
+
+```java
+@Configuration
+static class LifeCycleConfig {
+ @Bean(initMethod = "init", destroyMethod = "close")
+ 	public NetworkClient networkClient() {
+ 	NetworkClient networkClient = new NetworkClient();
+ 	networkClient.setUrl("http://hello-spring.dev");
+	return networkClient;
+ }
+}
+```
+
+소스 코드를 변경할 수 없는 외부 라이브러리 객체를 사용할 때 유용하다.
+외부 라이브러리 객체가 제공하는 초기화 메서드의 이름과 소멸 전 작업을 처리하는 메서드의 이름만 알면 된다.
+
+추가적으로 `destroyMehtod`는 `close`, `shutdown` 등의 메서드 이름을 발견하면 이를 소멸 전 작업 메서드라고 판단한다.
+`destroyMehtod = ""`라고 지정하면 메서드 이름 추론을 하지 않는다.
+
+### `@PostConstruct`, `@PreDestroy`, `@EventListener(ApplicationReadyEvent.class)`
+
+빈 메서드에 어노테이션을 붙인다.
+
+```java
+ @PostConstruct
+ public void init() {
+ 	System.out.println("NetworkClient.init");
+ 	connect();
+ 	call("초기화 연결 메시지");
+ }
+ @PreDestroy
+ public void close() {
+ 	System.out.println("NetworkClient.close");
+ 	disConnect();
+ }
+```
+
+`@PostConstruct`는 `@EventListener(ApplicationReadyEvent.class)`로 대체할 수 있다.
+
+```java
+ @EventListener(ApplicationReadyEvent.class)
+ public void init() {
+ 	System.out.println("NetworkClient.init");
+ 	connect();
+ 	call("초기화 연결 메시지");
+ }
+ @PreDestroy
+ public void close() {
+ 	System.out.println("NetworkClient.close");
+ 	disConnect();
+ }
+```
+
+`@PostConstruct`는 빈 생성 및 의존성 해결 후에 호출이 된다.
+`@EventListener(ApplicationReadyEvent.class)`는 모든 빈이 초기화된 이후에 호출된다.
+
+(프록시 빈에서 `@PostConstruct`가 실패할 수 있다고 인터넷에 나오긴 하지만, 간단한 테스트 하에서 검증하지 못했다)
+
+```java
+@SpringBootTest
+class JpashopApplicationTests {
+	@Autowired
+	private MemberRepository repository;
+	@Test
+	void contextLoads() {
+		System.out.println("repository = " + repository.getClass());
+		System.out.println("repository.getData() = " + repository.getData());
+	}
+
+}
+
+@Repository
+@RequiredArgsConstructor
+public class MemberRepository {
+    private final EntityManager em;
+
+    public void save(Member member) {
+        em.persist(member);
+    }
+
+    public Member findOne(Long id) {
+        return em.find(Member.class, id);
+    }
+    public List<Member> findAll() {
+        return em.createQuery("select m from Member m", Member.class)
+                .getResultList();
+    }
+    public List<Member> findByName(String name) {
+        return em.createQuery("select m from Member m where m.name = :name", Member.class)
+                .setParameter("name", name)
+                .getResultList();
+    }
+
+    Integer data;
+
+    public Integer getData() {
+        return data;
+    }
+
+    @PostConstruct
+    public void init() {
+        data = 10;
+        System.out.println("init called, data = " + data);
+    }
+}
+```
+```bash
+repository = class jpabook.jpashop.repository.MemberRepository$$SpringCGLIB$$0
+repository.getData() = 10
+```
