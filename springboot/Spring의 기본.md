@@ -190,7 +190,8 @@ main 클래스 패키지 하에 있는 모든 패키지에서 컴포넌트 클�
 자동 빈 등록 vs 자동 빈 등록: `ConflictBeanDefinitionException` 예외 발생
 수동 빈 등록 vs 자동 빈 등록: 오버라이딩된다고 나와 있는데, 테스트 결과 컴포넌트 스캔에서 제외된 것처럼 보인다.
 
-`@Configuration`의 빈 등록 코드를 작성했을 때 (수동 등록)
+- `@Configuration`의 빈 등록 코드를 작성했을 때 (수동 등록)
+
 ```java
 @Configuration
 public class AppConfig {
@@ -225,7 +226,7 @@ repository from configuration com.example.demo.MemberRepository@5cc5b667
 repository = com.example.demo.MemberRepository@5cc5b667
 ```
 
-`@Configuration`의 빈 등록 코드를 제거했을 때 (자동 등록)
+- `@Configuration`의 빈 등록 코드를 제거했을 때 (자동 등록)
 ```java
 @Configuration
 public class AppConfig {
@@ -358,7 +359,6 @@ public OrderServiceImpl(MemberRepository memberRepository, @MainDiscountPolicy D
 이 때는 컬렉션을 사용한다.
 
 ```java
-
 @Service
 @RequiredArgsConstructor
 class DiscountService {
@@ -442,7 +442,6 @@ public class OrderServiceImpl implements OrderService {
 의존 관계 주입을 생략하거나 null을 넣는 방법도 있다.
 
 ```java
-```
 //호출 안됨
 @Autowired(required = false)
 public void setNoBean1(Member member) {
