@@ -589,3 +589,59 @@ public class MemberRepository {
 repository = class jpabook.jpashop.repository.MemberRepository$$SpringCGLIB$$0
 repository.getData() = 10
 ```
+
+## 빈 스코프
+
+빈의 생명 주기를 설정한다.
+
+세 가지 옵션이 있다.
+
+- 싱글톤: 기본 옵션. 어플리케이션이 종료될 때까지 살아 있다.
+- 프로토타입: `ac.getBean()`할 때마다 새로 생성 및 의존관계주입이 처리된다.
+- 웹: 웹 객체와 생명 주기를 같이 한다.
+  - request: 웹 요청과 생명 주기를 같이 한다.
+  - session: 세션(HttpSession)과 생명 주기를 같이 한다.
+  - websocket: 웹소켓과 생명 주기를 같이 한다.
+  - application: 서블릿컨텍스트와 생명 주기를 같이 한다.
+ 
+### 웹 스코프
+
+웹 객체와 생명 주기를 같이 한다.
+
+웹 스코프(웹 요청에 의해 만들어지는 호출 스택) 안에서 빈 객체는 항상 같은 객체이다.
+
+프록시 모드를 쓰면 의존 관계 주입시 프록시가 주입되고, 메서드 호출할 때 빈이 생성된다.
+
+```java
+@Component
+@Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
+public class MyLogger {
+}
+
+//컨트롤러의 MyLogger 빈은 서비스의 MyLogger 빈과 동일한 객체이다.
+@Controller
+@RequiredArgsConstructor
+public class LogDemoController {
+ private final LogDemoService logDemoService;
+ private final MyLogger myLogger;
+
+ @RequestMapping("log-demo")
+ @ResponseBody
+ public String logDemo(HttpServletRequest request) {
+	 String requestURL = request.getRequestURL().toString();
+	 myLogger.setRequestURL(requestURL);
+	 myLogger.log("controller test");
+	 logDemoService.logic("testId");
+ 	return "OK";
+ }
+}
+
+@Service
+@RequiredArgsConstructor
+public class LogDemoService {
+ private final MyLogger myLogger;
+ public void logic(String id) {
+ 	myLogger.log("service id = " + id);
+ }
+}
+```
