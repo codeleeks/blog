@@ -150,11 +150,150 @@ public class AppInitV3SpringMvc implements WebApplicationInitializer {
 
 ## 스프링 부트
 
-스프링 컨테이너 생성
+톰캣이 라이브러리 형태로 제공되면서, 내장 톰캣을 사용할 수 있게 되었다.
+
+스프링 부트는 내장 톰캣을 사용하고, 내장 톰캣에 디스패처 서블릿을 등록한다.
+
+```java
+//스프링부트 어노테이션.
+//여기선 간단하게 컴포넌트 스캔만 사용하고 있다.
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@ComponentScan
+public @interface MySpringBootApplication {
+}
+
+//스프링부트 메인 클래스
+//스프링부트 어노테이션을 붙이고, 스프링 컨테이너에 메인 클래스를 등록한다.
+@MySpringBootApplication
+public class MySpringBootMain {
+    public static void main(String[] args) {
+        System.out.println("MySpringBootAppMain.main");
+        MySpringApplication.run(MySpringBootMain.class, args);
+    }
+}
+
+//스프링어플리케이션 클래스
+//스프링부트 메인 클래스를 스프링 컨테이너에 등록하여 스프링부트 메인 클래스에 붙인 스프링부트 어노테이션을 적용한다.
+//내부 톰캣을 생성하고 디스패처 서블릿을 등록한 뒤 실행한다.
+public class MySpringApplication {
+    public static void run(Class configClass, String[] args) {
+        System.out.println("MySpringApplication.run args=" + List.of(args));
+
+//       톰캣 설정
+        Tomcat tomcat = new Tomcat();
+        Connector connector = new Connector();
+        connector.setPort(8080);
+        tomcat.setConnector(connector);
+
+        Context context = tomcat.addContext("", "/");
+        File docBaseFile = new File(context.getDocBase());
+        if (!docBaseFile.isAbsolute()) {
+            docBaseFile = new File(((org.apache.catalina.Host)
+                    context.getParent()).getAppBaseFile(), docBaseFile.getPath());
+        }
+        docBaseFile.mkdirs();
+
+        //        스프링 컨테이너 설정
+        AnnotationConfigWebApplicationContext appContext = new AnnotationConfigWebApplicationContext();
+        appContext.register(configClass);
+
+//        서블릿 등록
+        DispatcherServlet dispatcher = new DispatcherServlet(appContext);
+        tomcat.addServlet("", "dispatcher", dispatcher);
+        context.addServletMappingDecoded("/", "dispatcher");
+
+
+        try {
+            tomcat.start();
+        } catch (LifecycleException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+### 실제 스프링 부트 실행 과정
+
+스프링 부트 실행 과정에서 중요한 부분은 두 가지이다.
+
+- 스프링 컨테이너 생성
+- 내부 톰캣 생성
+
+#### 스프링 컨테이너 생성
 
 `SpringApplication.run() > SpringApplication.createApplicationContext() > ServletWebServerApplicationContextFactory.create() > ServletWebServerApplicationContextFactory.createContext()`
 
-톰캣 생성 및 초기화
+![image](https://github.com/user-attachments/assets/59311910-8954-4d29-b44f-6e3d2b3545ce)
+
+
+![image](https://github.com/user-attachments/assets/54d373c5-7394-4373-b3af-cabd2f1ca2fa)
+
+
+![image](https://github.com/user-attachments/assets/f9052ba8-38e2-40af-94cd-5c2721c769b5)
+
+
+#### 톰캣 생성 및 초기화
 
 `SpringApplication.run() > SpringApplication.refreshContext() > ServletWebServerApplicationContext.refresh() > ServletWebServerApplicationContext.createWebServer() > TomcatServletWebServerFactory.getWebServer()`
 
+
+![image](https://github.com/user-attachments/assets/3f0e5464-c5d7-4eef-a62e-f673c59ebd7d)
+
+![image](https://github.com/user-attachments/assets/03266b34-aaed-4403-ad94-cde592dceb5b)
+
+![image](https://github.com/user-attachments/assets/9d31caaa-30f6-445b-84c8-5da0cda60e88)
+
+![image](https://github.com/user-attachments/assets/df4c2915-2ed6-46d1-8622-2540b71b3258)
+
+![image](https://github.com/user-attachments/assets/caf2902e-87ca-420b-96b4-92917ed4fced)
+
+
+### 실제 스프링 부트 배포 파일 구조
+
+자바 표준상 jar는 다른 jar를 포함하지 못하게 되어 있다.
+
+그래서 라이브러리를 쓴 어플리케이션 배포할 때는 라이브러리 jar를 클래스 및 설정파일로 풀어서 포함시켜야 한다.
+이 방식을 FatJar라고 한다.
+
+FatJar는 두 가지 문제를 안고 있다.
+
+- 두 개 이상의 라이브러리에서 이름이 동일한 클래스나 설정 파일이 있다면 하나만 선택된다.
+- 어플리케이션이 어떤 라이브러리를 의존하고 있는지 알기 어렵다.
+
+스프링은 이 문제를 해결하기 위해 표준에 없는 새로운 jar 형식을 만들었다.
+실행 가능 jar(executable jar)라고 한다.
+
+실행 가능 jar의 구조는 
+
+- `BOOT-INF`
+  - `classes`
+  - `lib`
+  - `classpath.idx`
+  - `layers.idx`
+- `META-INF`
+- `org/springframework/boot/loader`
+
+로 되어 있다.
+
+`BOOT-INF`는 `WAR`의 `WEB-INF` 처럼 `classes`와 `lib`으로 구성된다.
+`classes`는 어플리케이션 개발자가 만든 클래스 모음이며, `lib`은 어플리케이션이 의존하는 라이브러리(jar) 모음이다.
+
+`META-INF`에는 jar와 마찬가지로 실행할 main 클래스 정보를 담고 있다.
+```bash
+Manifest-Version: 1.0
+Main-Class: org.springframework.boot.loader.JarLauncher
+Start-Class: hello.boot.BootApplication
+Spring-Boot-Version: 3.0.2
+Spring-Boot-Classes: BOOT-INF/classes/
+Spring-Boot-Lib: BOOT-INF/lib/
+Spring-Boot-Classpath-Index: BOOT-INF/classpath.idx
+Spring-Boot-Layers-Index: BOOT-INF/layers.idx
+Build-Jdk-Spec: 17
+```
+
+`org/springframework/boot/loader`에는 실행 가능 jar의 구조를 이용해 어플리케이션을 실행시킬 수 있는 인프라 코드들이 작성되어 있다.
+`META-INF/MANIFEST.MF` 파일에 실행할 메인클래스로 작성된 `org.springframework.boot.loader.JarLauncher`는 인프라코드 중 하나이다.
+
+`java -jar 스프링부트.jar`를 실행하면 `JarLauncher`의 메인 함수가 호출되고, `org/springframework/boot/loader`의 인프라 코드들이 실행되면서 결과적으로 어플리케이션의 메인클래스(`hello.boot.BootApplication`)의 메인 함수를 호출한다.
