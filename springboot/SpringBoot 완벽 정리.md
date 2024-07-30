@@ -297,3 +297,65 @@ Build-Jdk-Spec: 17
 `META-INF/MANIFEST.MF` 파일에 실행할 메인클래스로 작성된 `org.springframework.boot.loader.JarLauncher`는 인프라코드 중 하나이다.
 
 `java -jar 스프링부트.jar`를 실행하면 `JarLauncher`의 메인 함수가 호출되고, `org/springframework/boot/loader`의 인프라 코드들이 실행되면서 결과적으로 어플리케이션의 메인클래스(`hello.boot.BootApplication`)의 메인 함수를 호출한다.
+
+
+## 라이브러리 관리
+
+스프링 에코시스템에서는 [`io.spring.dependency-management` gradle 플러그인](https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-dependencies/build.gradle)을 통해 스프링의 다양한 기능을 뒷받침하는 다양한 라이브러리의 버전을 관리한다.(BOM, Bill of materials)
+새로운 스프링 버전이 나올 때마다 라이브러리 간의 호환성을 체크하여 stable 버전을 정해놓는다.
+
+어플리케이션 개발자는 스프링 에코시스템에서 정리해놓은 라이브러리 목록을 쓰면 된다. 
+
+<MessageBox title='BOM' level='info'>
+  BOM은 자재명세서라는 뜻으로, 필요한 모든 자재 목록을 말한다.
+  
+  BOM은 다른 BOM을 import할 수 있다.
+  예를 들어, 스프링 BOM은 Jackson 라이브러리 관리를 할 때 Jackson BOM을 import한다.
+  Jackson 자체적으로도 BOM으로 필요한 라이브러리를 관리하고 있기 때문에, 스프링은 이를 그대로 사용하는 것이다.
+  
+  ```gradle
+  library("Jackson Bom", "${jacksonVersion}") {
+		group("com.fasterxml.jackson") {
+			imports = [
+				"jackson-bom"
+			]
+		}
+	}
+  ```
+
+  BOM을 사용하면 각 라이브러리의 버전 정보가 한 눈에 안 들어온다.
+  스프링 에코시스템은 스프링 부트의 의존 라이브러리 및 버전을 (웹 페이지)[(https://docs.spring.io/spring-boot/appendix/dependency-versions/coordinates.html#appendix.dependency-versions.coordinates)
+]로 제공한다. 
+</MessageBox>
+
+스프링 에코시스템이 관리하지 않는 라이브러리를 추가하고 싶을 때는 일반적인 메이븐 라이브러리 추가하는 것처럼 버전 정보까지 적어주면 된다.
+
+```gradle
+implementation 'org.yaml:snakeyaml:1.30'
+```
+
+반대로 스프링 에코시스템이 관리하는 라이브러리인데 버전을 바꾸고 싶을 때는 `ext`를 사용한다.
+[라이브러리에 맞는 적절한 프로퍼티](https://docs.spring.io/spring-boot/appendix/dependency-versions/properties.html#appendix.dependency-versions.properties)를 사용해야 한다. 
+```gradle
+ext['tomcat.version'] = '10.1.4'
+```
+
+### 스프링 부트 스타터
+
+스프링 에코시스템은 더 나아가 유즈케이스에 따라 필요한 라이브러리 목록을 사용할 수 있도록 스타터 라이브러리를 제공한다.
+
+스프링 부트로 웹 어플리케이션을 개발하고 싶다면 `spring-boot-starter-web` 라이브러리를, JPA를 사용하여 데이터베이스에 접근해야 한다면 `spring-boot-starter-data-jpa` 라이브러리를 추가하면 된다.
+
+[스타터 라이브러리 시리즈](https://docs.spring.io/spring-boot/reference/using/build-systems.html#using.build-systems.starters)를 통해 빈번한 유즈케이스에 필요한 라이브러리 목록을 일일이 찾아서 추가하지 않아도 된다.
+
+```
+spring-boot-starter : 핵심 스타터, 자동 구성, 로깅, YAML
+spring-boot-starter-jdbc : JDBC, HikariCP 커넥션풀
+spring-boot-starter-data-jpa : 스프링 데이터 JPA, 하이버네이트
+spring-boot-starter-data-mongodb : 스프링 데이터 몽고
+spring-boot-starter-data-redis : 스프링 데이터 Redis, Lettuce 클라이언트
+spring-boot-starter-thymeleaf : 타임리프 뷰와 웹 MVC
+spring-boot-starter-web : 웹 구축을 위한 스타터, RESTful, 스프링 MVC, 내장 톰캣
+spring-boot-starter-validation : 자바 빈 검증기(하이버네이트 Validator)
+spring-boot-starter-batch : 스프링 배치를 위한 스타터
+```
