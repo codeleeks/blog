@@ -146,3 +146,15 @@ public class AppInitV3SpringMvc implements WebApplicationInitializer {
 
 스프링에서도 실제로 `resources/META-INF/services/jakarta.servlet.ServletContainerInitializer` 경로에 서블릿 컨테이너 초기화 클래스를 등록하고, 어플리케이션 초기화 클래스(WebApplicationInitializer)를 사용해서 스프링 관련 초기화(디스패처 초기화, 스프링 컨테이너 초기화 등)를 진행한다.
 ![image](https://github.com/user-attachments/assets/23971dfb-e2ae-4904-aaea-625a07f1bbbd)
+
+
+## 스프링 부트
+
+스프링 컨테이너 생성
+
+`SpringApplication.run() > SpringApplication.createApplicationContext() > ServletWebServerApplicationContextFactory.create() > ServletWebServerApplicationContextFactory.createContext()`
+
+톰캣 생성 및 초기화
+
+`SpringApplication.run() > SpringApplication.refreshContext() > ServletWebServerApplicationContext.refresh() > ServletWebServerApplicationContext.createWebServer() > TomcatServletWebServerFactory.getWebServer()`
+
