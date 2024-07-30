@@ -324,6 +324,7 @@
 
   @media (max-width: $media-large) {
     nav {
+      position: fixed;
       top: var(--header-height);
       left: 0;
       width: 0;
@@ -376,9 +377,10 @@
   }
   @media (max-width: $media-medium) {
     --post-page__contents-width: 800px;
-    // justify-content: space-around;
     aside {
+      position: fixed;
       top: var(--header-height);
+      bottom: 0;
       right: 0;
       width: 0;
 
@@ -395,7 +397,7 @@
       }
 
       &.toc--open {
-        width: 200px;
+        width: $aside-width;
         .toc__scroll-area {
           border: 1px solid var(--border-color);
           border-bottom: none;
@@ -404,7 +406,7 @@
           transform: translate(0, 0);
         }
         .toc-toggler {
-          right: 200px;
+          right: $aside-width;
         }
         .toc-bg {
           visibility: visible;
