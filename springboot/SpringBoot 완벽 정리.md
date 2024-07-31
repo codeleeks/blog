@@ -362,6 +362,70 @@ spring-boot-starter-batch : 스프링 배치를 위한 스타터
 
 ## Auto Configuration
 
+스프링은 라이브러리를 개발할 때 자동으로 빈을 등록하기 위한 방법을 제공한다.
+`@AutoConfiguration` 어노테이션이다.
+
+`@AutoConfiguration`을 설정 클래스에 붙이고, `META-INF\spring\org.springframework.boot.autoconfigure.AutoConfiguration.imports`에 클래스 패키지 명을 적으면 스프링이 해당 클래스를 설정 클래스로 인식한다.
+
+### `@Conditonal`
+
+스프링은 VM 옵션이나 프로그램 아규먼트, 특정 빈 유무 등 조건에 따라 라이브러리의 빈들을 자동으로 등록할지 말지를 결정할 수 있는 기능도 제공한다.
+
+```java
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Conditional {
+	Class<? extends Condition>[] value();
+}
+
+@FunctionalInterface
+public interface Condition {
+	boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
+}
+```
+
+`@Conditonal` 어노테이션은 `Conditon` 인터페이스를 요구한다.
+`Condition` 인터페이스는 `matches()` 메서드를 통해 조건 만족 여부를 계산한다.
+
+```java
+//Condition을 구현하여 VM 옵션에 특정값이(-Dmemory=on) 셋팅되어 있는지 확인한다.
+public class MemoryCondition implements Condition {
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        String memory = context.getEnvironment().getProperty("memory");
+        System.out.println("memory = " + memory);
+        return "on".equals(memory);
+    }
+}
+
+//설정 클래스에서 @Conditional을 적용한다.
+@Configuration
+@Conditional(MemoryCondition.class)
+public class MemoryConfig {
+
+    @Bean
+    public MemoryController memoryController() {
+        return new MemoryController(memoryFinder());
+    }
+
+    @Bean
+    public MemoryFinder memoryFinder() {
+        return new MemoryFinder();
+    }
+}
+```
+
+`@Condtional`은 스프링 프레임워크에서 제공하는 어노테이션이다.
+
+스프링 부트에서는 구현체를 만들지 않고 어노테이션만으로 사용할 수 있도록 다양한 `@ConditionalOnXXX` 어노테이션을 지원한다.
+
+- `@ConditionalOnProperty(name = "memory", havingValue="on")`: `Environment`의 `Property` 중 name과 havingValue에 해당하는 키와 값이 있는지 확인한다.
+- `@ConditionalOnBean(name = "DbConfig")`: 특정 빈이 있는지 확인한다.
+- `@ConditionalOnMissingBean(name = "DbConfig")`: 특정 빈이 없는지 확인한다.
+
+이 외에도 다양한 조건을 확인하는 [여러 `@ConditionalOnXXX` 시리즈](https://docs.spring.io/spring-boot/reference/features/developing-auto-configuration.html#features.developing-auto-configuration.condition-annotations)가 있다.
+
 
 ### 실제 스프링부트에서 AutoConfiguration 실행 과정
 
@@ -396,3 +460,10 @@ public interface ImportSelector {
 이 클래스들이 `@EnableAutoConfiguration`의 `@Import()`로 그룹핑되어 스프링 컨테이너에 등록된다.
 
 ![image](https://github.com/user-attachments/assets/bfde2965-6895-47e9-add2-faadb6f50ffe)
+
+
+<MessageBox title='AutoConfiguration과 컴포넌트 스캔' level='info'>
+	AutoConfiguration은 컴포넌트 스캔에서 제외된다.
+	![image](https://github.com/user-attachments/assets/991b1099-3391-4a59-b00f-81842ba59206)
+</MessageBox>
+
