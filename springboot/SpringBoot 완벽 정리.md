@@ -359,3 +359,40 @@ spring-boot-starter-web : 웹 구축을 위한 스타터, RESTful, 스프링 MVC
 spring-boot-starter-validation : 자바 빈 검증기(하이버네이트 Validator)
 spring-boot-starter-batch : 스프링 배치를 위한 스타터
 ```
+
+## Auto Configuration
+
+
+### 실제 스프링부트에서 AutoConfiguration 실행 과정
+
+`@SpringBootApplication`은 `@EnableAutoConfiguration`를 포함한다.
+`@EnableAutoConfiguration`은 `@Import(AutoConfigurationImportSelector.class)`로 AutoConfiguration을 적용할 설정 클래스를 동적으로 가져온다.
+
+<MessageBox title='`@Import`' level='info'>
+	`@Import`는 설정 클래스를 그룹핑하는 개념이다.
+
+ 	설정 클래스를 그룹핑하여 어플리케이션에 다 같이 적용한다.
+</MessageBox>
+
+`AutoConfigurationImportSelector`는 `ImportSelector`의 구현체이다.
+
+```java
+package org.springframework.context.annotation;
+public interface ImportSelector {
+	String[] selectImports(AnnotationMetadata importingClassMetadata);
+
+	@Nullable
+	default Predicate<String> getExclusionFilter() {
+		return null;
+	}
+}
+```
+
+`selectImports()`에서 선택할 클래스의 풀 패키지 경로를 반환한다.
+
+`AutoConfigurationImportSelector`는 `selectImports()`를 재정의한다.
+`META-INF\spring\org.springframework.boot.autoconfigure.AutoConfiguration.imports` 파일에 적힌 클래스들을 반환한다.
+
+이 클래스들이 `@EnableAutoConfiguration`의 `@Import()`로 그룹핑되어 스프링 컨테이너에 등록된다.
+
+![image](https://github.com/user-attachments/assets/bfde2965-6895-47e9-add2-faadb6f50ffe)
