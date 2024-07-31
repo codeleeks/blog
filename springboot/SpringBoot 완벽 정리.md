@@ -467,3 +467,129 @@ public interface ImportSelector {
 	![image](https://github.com/user-attachments/assets/991b1099-3391-4a59-b00f-81842ba59206)
 </MessageBox>
 
+## 실행 파일 외부에서 설정값 주입하기
+
+실행 파일 외부에서 설정값을 주입하는 방법은 4가지이다.
+
+- OS 환경 변수
+- 자바 시스템 속성
+- 자바 커맨드 라인
+- 어플리케이션에서 외부 리소스 읽기
+
+### OS 환경 변수
+
+`System.getenv()`를 사용한다.
+
+```java
+@Slf4j
+public class OsEnv {
+	public static void main(String[] args) {
+ 		Map<String, String> envMap = System.getenv();
+ 		for (String key : envMap.keySet()) {
+ 			log.info("env {}={}", key, System.getenv(key));
+ 		}
+ 	}
+}
+```
+
+OS에서 실행되는 다른 어플리케이션과 공유하는 변수이다.
+
+### 자바 시스템 속성
+
+`System.getProperties()`를 사용한다.
+
+```java
+@Slf4j
+public class JavaSystemProperties {
+	public static void main(String[] args) {
+ 		Properties properties = System.getProperties();
+		for (Object key : properties.keySet()) {
+			log.info("prop {}={}", key,
+			System.getProperty(String.valueOf(key)));
+		}
+ 	}
+}
+```
+
+`java -Dmemory=on -jar app.jar`로 어플리케이션을 실행할 때 `-D`에 들어가는 키와 값에 해당한다.
+
+어플리케이션에서만 사용할 수 있는 변수이다.
+다른 어플리케이션과 공유하지 않는다.
+
+### 자바 커맨드 라인
+
+메인메서드의 파라미터인 `args`를 사용한다.
+
+```java
+public class CommandLineV1 {
+ public static void main(String[] args) {
+	 for (String arg : args) {
+	 	log.info("arg {}", arg);
+	 }
+ }
+}
+```
+
+`java -jar app.jar dataA dataB`로 어플리케이션을 실행할 때 `dataA`, `dataB`에 해당한다.
+
+스프링은 `ApplicationArguments` 빈을 제공한다. 
+`ApplicationArguments`는 메인 메서드로 전달되는 `args`를 읽어서 편리하게 키와 값을 뽑을 수 있게 도와준다.
+
+커맨드라인의 인수는 `--key=value` 패턴을 따른다. (`--url=devdb --username=dev_user --password=dev_pw`)
+`getOptionNames()` 메서드는 이러한 패턴의 인수들을 뽑는다.
+이 패턴을 따르지 않는 인수는 `getSourceArgs()` 메서드로 얻을 수 있다.
+
+```java
+@Slf4j
+@Component
+public class CommandLineBean {
+ 	private final ApplicationArguments arguments;
+
+	public CommandLineBean(ApplicationArguments arguments) {
+ 		this.arguments = arguments;
+ 	}
+
+	 @PostConstruct
+	 public void init() {
+		 log.info("source {}", List.of(arguments.getSourceArgs()));
+		 log.info("optionNames {}", arguments.getOptionNames());
+		 Set<String> optionNames = arguments.getOptionNames();
+		 for (String optionName : optionNames) {
+			 log.info("option args {}={}", optionName, arguments.getOptionValues(optionName));
+		 }
+	 }
+}
+```
+
+### 스프링 통합
+
+OS 환경 변수, 자바 시스템 속성, 자바 커맨드 라인 모두 키와 값으로 설정 정보를 제공한다는 점에서 동일하다.
+다만 어디서 이 정보를 뽑느냐가 다르다.
+
+스프링은 이 세 가지 설정 소스들을 `Environment`와 `PropertySource`로 추상화했다.
+또한, `application.properites`라는 외부 파일에 설정 정보를 작성하는 방법도 설정 소스로 볼 수 있기 때문에 추상화에 포함되었다.
+
+![image](https://github.com/user-attachments/assets/fcc28219-1d6a-4535-bdf7-65fb6360f9a6)
+(출처: 김영한의 스프링부트 - 핵심 원리와 활용)
+
+```java
+@Slf4j
+@Component
+public class EnvironmentCheck {
+ private final Environment env;
+ public EnvironmentCheck(Environment env) {
+ 	this.env = env;
+ }
+
+ @PostConstruct
+ public void init() {
+	 String url = env.getProperty("url");
+	 String username = env.getProperty("username");
+	 String password = env.getProperty("password");
+	 log.info("env url={}", url);
+	 log.info("env username={}", username);
+	 log.info("env password={}", password);
+ }
+}
+```
+
