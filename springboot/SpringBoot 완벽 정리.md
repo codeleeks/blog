@@ -604,11 +604,14 @@ public class EnvironmentCheck {
 이 방식은 외부에서 주입해야 하는 설정 정보의 양을 줄일 수 있고, 프로젝트 내에서 설정 파일이 관리되기 때문에 버전 관리도 용이하다.
 
 스프링의 내부 파일은 `application.properties`이다. (`application.yml`도 가능하다.)
+스프링이 권장하는 변수 표기법은 kebab case (`-`를 통한 구분)이다.
 
 ```
+# 케밥 케이스로 적는다.
 url=dev.db.com
 username=dev_user
 password=dev_pw
+max-connection=10
 ```
 
 외부에서는 `spring.profiles.active`을 통해 스프링의 내부 파일 중 어떤 파일을 적용할 것인지를 선택한다.
