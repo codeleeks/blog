@@ -1047,3 +1047,132 @@ public class PayConfig {
  }
 }
 ```
+
+
+## 모니터링 - 액츄에이터
+
+스프링 부트는 어플리케이션에서 중요한 모니터링 지표를 노출한다.
+
+`GET http://localhost:8080/actuator/[지표 이름]`
+
+- `beans`: 스프링 빈 리스트
+- `conditions`: `Condition` 인터페이스를 통해 빈이 등록되거나 등록되지 않은 이유를 설명
+- `configprops`: 설정 정보인 `@ConfigurationProperties` 클래스 리스트.
+- `env`: 어플리케이션에 적용된 설정 정보(`Enviroment`)
+- `health`: 어플리케이션의 헬스 정보. [커스텀 헬스 인디케이터](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.endpoints.health.writing-custom-health-indicators)를 개발할 수 있음.
+- `httpexchanges`: HTTP 요청 및 응답 정보. `HttpExchangeRepository` 구현체를 빈으로 등록해야 한다.
+- `info`: 어플리케이션의 정보(java, os, build 정보, git 이력, info 설정 정보(`application.yml`에 `info.xxx`로 정의한 내용))
+- `loggers`: 각 클래스별 로깅 레벨. POST로 런타임 중 로그 레벨 조정 가능.
+- `metrics`: connection pool, jvm, tomcat 등 어플리케이션 및 인프라 기술의 메트릭 정보
+- `mappings`: `@RequestMapping` 정보 (servlet, servlet filter, controller 등)
+- `threaddump`: 어플리케이션의 스레드 덤프
+- `shutdown`: 어플리케이션을 종료한다.
+
+
+```yml
+management:
+  info:
+    java:
+      enabled: true
+    os:
+      enabled: true
+    env:
+      enabled: true
+# 기본값은 commit id만 보여줌. 더 많은 정보가 필요하면 mode를 full로 설정
+#    git:
+#      mode: "full"
+  endpoint:
+    health:
+      # health를 결정하는 컴포넌트들의 상세 헬스 정보를 켠다.
+      #show-details: always
+      show-components: always
+    shutdown:
+      enabled: true
+  endpoints:
+    web:
+      # 웹에 노출할 엔드포인트를 지정. *은 모든 엔드포인트를 노출. exclude로 제외시킬 수 있음.
+      exposure:
+        include: "*"
+        #exclude: "env,beans"
+      # /actuator 경로 대신에 /manage를 쓴다.
+      #base-path: "/manage"
+  # 노출되는 정보가 보안상 위험하기 때문에 액츄에이터 포트를 서비스 포트와 다르게 가져가는 게 좋다.
+  server:
+    port: 9292
+
+# 외부 설정으로서 작동. info가 최상위로 되어 있어서 /actuator/info 에서 조회 가능.
+info:
+  app:
+    name: hello-actuator
+    company: yh
+
+# 패키지에 로깅 레벨 지정
+logging:
+  level:
+    hello.controller: debug
+```
+
+### `info`
+
+#### build
+
+빌드 정보를 노출하고 싶은 경우 `build.gradle`에 아래 코드를 추가해야 한다.
+
+```gradle
+springBoot {
+    buildInfo()
+}
+```
+
+#### git
+
+깃 정보를 노출하고 싶은 경우 `build.gradle`에 플러그인을 추가해야 한다.
+
+```gradle
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.0.2'
+    id 'io.spring.dependency-management' version '1.1.0'
+    id "com.gorylenko.gradle-git-properties" version "2.4.1" //git info
+}
+```
+
+### `logger`
+
+런타임 중에 특정 클래스나 패키지의 로깅 레벨을 변경할 수 있다.
+
+```
+POST http://localhost:8080/actuator/loggers/[패키지 경로]
+{
+ "configuredLevel": "TRACE"
+}
+```
+
+### `httpexchanges`
+
+```java
+@SpringBootApplication
+public class ActuatorApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ActuatorApplication.class, args);
+    }
+    @Bean
+    public InMemoryHttpExchangeRepository httpExchangeRepository() {
+        InMemoryHttpExchangeRepository repository = new InMemoryHttpExchangeRepository();
+        //저장할 이력 갯수 지정. 기본값은 100. 넘어가면 과거 값을 삭제한다.
+        repository.setCapacity(200);
+        return repository;
+    }
+```
+
+### `shutdown`
+
+POST로 실행해야 한다.
+
+```bash
+POST /actuator/shutdown HTTP/1.1
+Host: localhost
+Content-Type: application/json
+Content-Length: 0
+```
