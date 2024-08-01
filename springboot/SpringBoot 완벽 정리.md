@@ -567,7 +567,7 @@ OS 환경 변수, 자바 시스템 속성, 자바 커맨드 라인 모두 키와
 다만 어디서 이 정보를 뽑느냐가 다르다.
 
 스프링은 이 세 가지 설정 소스들을 `Environment`와 `PropertySource`로 추상화했다.
-또한, `application.properites`라는 외부 파일에 설정 정보를 작성하는 방법도 설정 소스로 볼 수 있기 때문에 추상화에 포함되었다.
+또한, `application.properites`라는 내부 파일에 설정 정보를 작성하는 방법도 설정 소스로 볼 수 있기 때문에 추상화에 포함되었다.
 
 ![image](https://github.com/user-attachments/assets/fcc28219-1d6a-4535-bdf7-65fb6360f9a6)
 (출처: 김영한의 스프링부트 - 핵심 원리와 활용)
@@ -592,4 +592,91 @@ public class EnvironmentCheck {
  }
 }
 ```
+
+### `application.properties`
+
+설정 파일이 내부인지 외부인지 판단하는 기준은 jar이다.
+설정 파일이 jar 안에 포함되어 있으면 내부 파일, jar 밖에 있으면 외부 파일이다.
+
+스프링은 설정 파일을 내부 파일로 관리한다. 
+외부에서 어떤 내부 파일을 읽을지를 명시하면 스프링이 해당 내부 파일을 읽어 설정 정보를 어플리케이션에 적용한다.
+
+이 방식은 외부에서 주입해야 하는 설정 정보의 양을 줄일 수 있고, 프로젝트 내에서 설정 파일이 관리되기 때문에 버전 관리도 용이하다.
+
+스프링의 내부 파일은 `application.properties`이다. (`application.yml`도 가능하다.)
+
+```
+url=dev.db.com
+username=dev_user
+password=dev_pw
+```
+
+외부에서는 `spring.profiles.active`을 통해 스프링의 내부 파일 중 어떤 파일을 적용할 것인지를 선택한다.
+`spring.profiles.active`에 지정한 값을 profile이라고 하며, `application-{profile}.properties` 파일을 선택한다.
+예를 들어, `spring.profiles.active=dev`면 profile이 dev이며, 스프링은 `application-dev.properties` 파일을 읽어서 설정 정보를 어플리케이션에 적용한다.
+
+
+#### `application.properties`의 논리 파일
+
+스프링은 하나의 설정 파일에 여러 개의 논리 설정 파일을 정의할 수 있는 기능을 지원한다.
+
+논리 파일은 `spring.config.activate.on-profile=[profile 이름]`으로 시작하며, `#---`로 구분한다.
+`#---` 위 아래에 주석이 없어야 하고, 같은 줄에 공백이 없어야 한다.
+
+```
+spring.config.activate.on-profile=dev
+url=dev.db.com
+username=dev_user
+password=dev_pw
+#---
+spring.config.activate.on-profile=prod
+url=prod.db.com
+username=prod_user
+password=prod_pw
+```
+
+<MessageBox title='논리 파일의 설정 적용 방법' level='warning'>
+	```
+	url=local.db.com
+	username=local_user
+	password=local_pw
+	#---
+	spring.config.activate.on-profile=dev
+	url=dev.db.com
+	username=dev_user
+	password=dev_pw
+	#---
+	spring.config.activate.on-profile=prod
+	url=prod.db.com
+	username=prod_user
+	password=prod_pw
+	#---
+	url=hello.db.com
+ 	```
+
+ 	profile이 적히지 않으면(spring.config.activate.on-profile 값 정의가 없으면) default profile이다.
+
+   	어떤 profile을 외부에서 명시하든 url은 `hello.db.com`이 된다.
+    	그 이유는 스프링이 설정 파일을 읽는 방법 때문이다.
+     	스프링은 위에서 아래로 설정 정보를 읽는다.
+      	이 때, `spring.config.activate.on-profile`이 있으면 외부에서 명시한 profile과 일치하는지 확인한다.
+       	일치하는 경우 읽기를 계속하며, 겹치는 키는 새로운 값으로 덮어쓴다.
+	일치하지 않으면 `#---`를 만날 때까지 설정 정보를 무시한다.
+
+ 	이런 식으로 외부에서 설정한 profile이 일치하는 경우에만 설정 정보를 적용한다.
+  	그런데 `spring.config.activate.on-profile`을 만날 때 profile 일치 여부를 확인하기 때문에, `spring.config.activate.on-profile`이 없이 설정 정보를 적으면 해당 설정 정보가 적용된다.
+   	따라서 맨 마지막 줄에 적은 `url=hello.db.com` 설정이 가장 마지막으로 적용되어 외부에서 명시한 profile과 무관하게 url의 값이 정해지는 것이다.
+</MessageBox>
+
+### 설정 주입 방법들의 우선 순위
+
+- 자바 커맨드 라인 (높음)
+- 자바 시스템 변수
+- OS 환경 변수
+- 설정 파일 (낮음)
+
+
+설정 파일은 
+- `application-{profile}.properties`  (높음)
+- `application.properties` (낮음)
 
