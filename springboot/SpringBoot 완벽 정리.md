@@ -683,3 +683,367 @@ password=prod_pw
 - `application-{profile}.properties`  (높음)
 - `application.properties` (낮음)
 
+## 외부 설정을 객체로 관리하기
+
+스프링에서 외부 설정은 `Environment`로 추상화하고 있다.
+
+어플리케이션에서 `Environment`를 조회하는 방법은 세 가지이다.
+
+- `Environment` 빈으로 직접 조회
+- `@Value`
+- `@ConfigurationProperties`
+
+### `Environment` 빈으로 직접 조회
+
+`Environment`는 빈으로 등록되어 있기 때문에 설정 클래스에서 주입 받아 사용한다.
+
+```java
+@Slf4j
+@Configuration
+public class MyDataSourceEnvConfig {
+    private final Environment env;
+
+    public MyDataSourceEnvConfig(Environment env) {
+        this.env = env;
+    }
+
+    @Bean
+    public MyDataSource myDataSource() {
+        String url = env.getProperty("my.datasource.url");
+        String username = env.getProperty("my.datasource.username");
+        String password = env.getProperty("my.datasource.passowrd");
+        int maxConnection = env.getProperty("my.datasource.etc.max-connection", Integer.class);
+        Duration timeout = env.getProperty("my.datasource.etc.timeout", Duration.class);
+        List<String> options = env.getProperty("my.datasource.etc.options", List.class);
+
+        return new MyDataSource(url, username, password, maxConnection, timeout, options);
+    }
+}
+```
+
+설정 정보 갯수만큼 `getProperty()`로 가져오는 코드를 작성해야 한다.
+설정 정보가 많아지면 관리하기 힘들다.
+
+### `@Value`
+
+`@Value` 어노테이션을 통해 설정 정보를 지칭해서 변수에 할당한다.
+클래스의 필드나 메서드의 파라미터 변수에 `@Value`를 붙인다.
+
+```java
+@Slf4j
+@Configuration
+public class MyDataSourceValueConfig {
+    @Value("${my.datasource.url}")
+    private String url;
+    @Value("${my.datasource.username}")
+    private String username;
+    @Value("${my.datasource.password}")
+    private String password;
+    @Value("${my.datasource.etc.max-connection:1}")
+    private int maxConnection;
+    @Value("${my.datasource.etc.timeout}")
+    private Duration timeout;
+    private List<String> options;
+
+    @Bean
+    public MyDataSource myDataSource() {
+        return new MyDataSource(url, username, password, maxConnection, timeout, options);
+    }
+
+    @Bean
+    public MyDataSource myDataSource2(
+            @Value("${my.datasource.url}") String url,
+            @Value("${my.datasource.username}") String username,
+            @Value("${my.datasource.password}") String password,
+            @Value("${my.datasource.etc.max-connection}") int maxConnection,
+            @Value("${my.datasource.etc.timeout}") Duration timeout,
+            @Value("${my.datasource.etc.options}") List<String> options
+    ) {
+        return new MyDataSource(url, username, password, maxConnection, timeout, options);
+    }
+}
+```
+
+`Environment`를 직접 조회하는 방법보다는 조금 낫지만 마찬가지로 설정 정보가 많을 때는 문제가 된다.
+설정 정보가 계층적으로 되어 있지 않아서 가독성이 좋지 않기 때문이다.
+
+### `@ConfigurationProperties`
+
+설정 정보를 클래스에 매핑시킨다.
+
+방법은 두 가지이다.
+
+- 자바빈 메서드(세터)를 활용 (기본 설정)
+- 생성자 활용
+
+자바빈 메서드를 활용하는 방법은 클래스의 모든 필드에 세터를 뚫어놔야 하기 때문에 잠재적인 버그 가능성이 있다.
+좀 더 안전한 방법은 생성자를 활용하는 방법이다.
+
+<MessageBox title='자바빈 방법과 생성자 방법' level='warning'>
+	자바빈 방법으로 프로퍼티 클래스를 구성하면 빈으로 직접 등록할 수 있다.
+	```java
+	@Data
+	@Component
+	@ConfigurationProperties("my.datasource")
+	public class MyDataSourcePropertiesV1 {
+	    private String url;
+	    private String username;
+	    private String password;
+	    private Etc etc = new Etc();
+	
+	    @Data
+	    public static class Etc {
+	        private int maxConnection;
+	        private Duration timeout;
+	        private List<String> options = new ArrayList<>();
+	    }
+	}
+	```
+
+ 	반면에 생성자 방식은 빈으로 직접 등록하면 오류가 난다.
+  
+  	```bash
+	MyDataSourcePropertiesV3 is annotated with @ConstructorBinding but it is defined as a regular bean which caused dependency injection to fail.
+    	```
+     
+  	에러의 내용으로 추측컨대 설정 정보를 셋팅해주는 작업은 컴포넌트 스캔에 의한 빈 생성 작업 이후에 수행되기 때문에, 빈 생성 시점에 설정 정보를 넣어야 하는 생성자 방식은 의존성 주입에서 문제가 생기는 것 같다.
+
+   	해결하려면 `@Configuration`과 `@EnableConfigurationProperties` 조합을 사용하거나 `@ConfigurationPropertiesScan`으로 프로퍼티 클래스를 스캔하는 별도의 로직을 실행하게 설정하면 된다.
+</MessageBox>
+
+```yml
+my:
+  datasource:
+    url: local.db.com
+    username: local_user
+    password: local_pw
+    etc:
+      max-connection: 1
+      timeout: 60s
+      options: LOCAL, CACHE
+```
+```java
+@Getter
+@ConfigurationProperties("my.datasource")
+public class MyDataSourcePropertiesV2 {
+    private String url;
+    private String username;
+    private String password;
+    private Etc etc;
+
+    public MyDataSourcePropertiesV2(String url, String username, String password, @DefaultValue Etc etc) {
+        this.url = url;
+        this.username = username;
+        this.password = password;
+        this.etc = etc;
+    }
+
+    @Getter
+    public static class Etc {
+        private int maxConnection;
+        private Duration timeout;
+        private List<String> options;
+
+        public Etc(int maxConnection, Duration timeout, @DefaultValue("DEFAULT") List<String> options) {
+            this.maxConnection = maxConnection;
+            this.timeout = timeout;
+            this.options = options;
+        }
+    }
+}
+
+//설정 클래스 정의
+//@ConfigurationProperties가 적용된 클래스를 활용하여 빈을 만들기 위해 @EnableConfigurationProperties를 사용한다.
+@Slf4j
+@EnableConfigurationProperties(MyDataSourcePropertiesV2.class)
+public class MyDataSourceConfigV2 {
+    private final MyDataSourcePropertiesV2 properties;
+
+    public MyDataSourceConfigV2(MyDataSourcePropertiesV2 properties) {
+        this.properties = properties;
+    }
+
+    @Bean
+    public MyDataSource dataSource() {
+        return new MyDataSource(
+                properties.getUrl(),
+                properties.getUsername(),
+                properties.getPassword(),
+                properties.getEtc().getMaxConnection(),
+                properties.getEtc().getTimeout(),
+                properties.getEtc().getOptions()
+        );
+    }
+}
+```
+
+클래스를 활용하여 설정 정보를 계층적으로 표현할 수 있기 때문에 가독성이 좋다.
+
+또한, 하이버네이트가 제공하는 검증기를 붙여서 어플리케이션 부트 타임에 올바른 설정 정보가 셋팅되어 있는지 검증할 수 있다.
+
+```java
+@Getter
+@ConfigurationProperties("my.datasource")
+@Validated
+public class MyDataSourcePropertiesV3 {
+    @NotEmpty
+    private String url;
+    @NotEmpty
+    private String username;
+    @NotEmpty
+    private String password;
+    private Etc etc;
+
+    public MyDataSourcePropertiesV3(String url, String username, String password, Etc etc) {
+        this.url = url;
+        this.username = username;
+        this.password = password;
+        this.etc = etc;
+    }
+
+    @Getter
+    public static class Etc {
+        @Min(1) @Max(999)
+        private int maxConnection;
+        @DurationMin(seconds = 1) @DurationMax(seconds = 60)
+        private Duration timeout;
+        private List<String> options;
+
+        public Etc(int maxConnection, Duration timeout, List<String> options) {
+            this.maxConnection = maxConnection;
+            this.timeout = timeout;
+            this.options = options;
+        }
+    }
+}
+```
+
+#### `@ConfigurationPropertiesScan` - 프로퍼티 클래스 자동으로 등록하기
+
+컴포넌트 스캔으로 `@Component` 클래스를 빈으로 등록하는 것처럼, 프로퍼티 클래스를 스캔하여 자동으로 등록한다.
+생성자 방식을 사용하여 프로퍼트 클래스를 생성하는 경우, 이 방법으로 편리하게 빈으로 등록할 수 있다.
+
+```java
+@SpringBootApplication
+@ConfigurationPropertiesScan("hello.datasource") //basePackage. 기본값은 현재 패키지.
+public class ExternalReadApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ExternalReadApplication.class, args);
+    }
+}
+
+//프로퍼티 클래스는 별도로 손 볼 것이 없다.
+@Getter
+@Component
+@ConfigurationProperties("my.datasource")
+@Validated
+public class MyDataSourcePropertiesV3 {
+    @NotEmpty
+    private String url;
+    @NotEmpty
+    private String username;
+    @NotEmpty
+    private String password;
+    private Etc etc;
+
+    @ConstructorBinding
+    public MyDataSourcePropertiesV3(String url, String username, String password, Etc etc) {
+        this.url = url;
+        this.username = username;
+        this.password = password;
+        this.etc = etc;
+    }
+
+    @Getter
+    public static class Etc {
+        @Min(1) @Max(999)
+        private int maxConnection;
+        @DurationMin(seconds = 1) @DurationMax(seconds = 60)
+        private Duration timeout;
+        private List<String> options;
+
+        public Etc(int maxConnection, Duration timeout, List<String> options) {
+            this.maxConnection = maxConnection;
+            this.timeout = timeout;
+            this.options = options;
+        }
+    }
+}
+```
+
+#### `@Profile` - Profile에 따른 프로퍼티 클래스 적용하기.
+
+```java
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Conditional(ProfileCondition.class)
+public @interface Profile {
+	String[] value();
+}
+```
+
+Profile로 생성될 설정 정보 빈을 선택한다.
+
+프로퍼티 클래스에 붙일 수 있고, 설정 클래스의 `@Bean`에 붙일 수도 있다.
+
+- 프로퍼티 클래스에 붙이는 방법
+```java
+@Getter
+@Profile("prod")
+@ConfigurationProperties("my.datasource")
+@Validated
+public class MyDataSourcePropertiesV3 {
+    @NotEmpty
+    private String url;
+    @NotEmpty
+    private String username;
+    @NotEmpty
+    private String password;
+    private Etc etc;
+
+    @ConstructorBinding
+    public MyDataSourcePropertiesV3(String url, String username, String password, Etc etc) {
+        this.url = url;
+        this.username = username;
+        this.password = password;
+        this.etc = etc;
+    }
+
+    @Getter
+    public static class Etc {
+        @Min(1) @Max(999)
+        private int maxConnection;
+        @DurationMin(seconds = 1) @DurationMax(seconds = 60)
+        private Duration timeout;
+        private List<String> options;
+
+        public Etc(int maxConnection, Duration timeout, List<String> options) {
+            this.maxConnection = maxConnection;
+            this.timeout = timeout;
+            this.options = options;
+        }
+    }
+}
+```
+
+- 설정 클래스의 `@Bean` 메서드에 붙이는 방법
+```java
+@Slf4j
+@Configuration
+public class PayConfig {
+ @Bean
+ @Profile("default")
+ public LocalPayClient localPayClient() {
+	 log.info("LocalPayClient 빈 등록");
+	 return new LocalPayClient();
+ }
+
+ @Bean
+ @Profile("prod")
+ public ProdPayClient prodPayClient() {
+ 	log.info("ProdPayClient 빈 등록");
+ 	return new ProdPayClient();
+ }
+}
+```
