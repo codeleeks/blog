@@ -596,7 +596,17 @@ public class BeanPostProcessorConfig {
 스프링에서는 프록시 객체를 만드는 빈 후처리기(AnnotationAwareAspectJAutoProxyCreator)를 제공하고 있다.
 우리는 Advisor를 빈으로 등록하기만 하면 된다.
 AnnotationAwareAspectJAutoProxyCreator는 Advisor 안에 있는 포인트컷으로 적용할 빈을 걸러낸다.
-하나의 빈에 여러 개의 advisor가 매칭된다면 하나의 프록시에 여러 개의 advisor가 매핑된다.
+하나의 빈에 여러 개의 advisor가 매칭된다면 하나의 프록시에 여러 개의 advisor가 매핑된다. 
+
+<MessageBox title='하나의 프록시에 여러 개의 Advisor' level='info'>
+	하나의 빈에 여러 개의 advisor가 매칭된다면 하나의 프록시에 여러 개의 advisor가 매핑된다. 
+	프록시가 ProxyFactory를 필드로 들고 있다고 보면 된다. 
+	그래서 프록시는 ProxyFactory가 필드로 갖고 있는 Advisor 리스트에 접근할 수 있다.
+
+ 	등록된 Advisor의 Advice 로직은 등록된 순서대로 호출된다.
+  	`invocation.proceed()` 호출할 때 다음 Advisor가 있으면 다음 Advisor의 Advice 로직이 실행되고, 없으면 타겟 클래스의 실제 메서드가 호출된다.
+</MessageBox>
+
 
 설치하려면
 `implementation 'org.springframework.boot:spring-boot-starter-aop'`
