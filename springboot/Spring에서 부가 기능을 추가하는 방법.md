@@ -463,7 +463,7 @@ public interface MethodInterceptor extends Interceptor {
 
 - `Advice`: 프록시 로직이다.(부가 기능 로직) 스프링 ProxyFactory의 용어로서 proxyFactory 내부적으로 jdk 동적 프록시의 invocationHandler, cglib의 methodInterceptor에서 Advice에 작성한 로직을 실행한다.
 - `Pointcut`: 필터링이다. 프록시 부가 기능을 어떤 클래스에 적용할지를 지정한다. 
-`Advisor`: Advice와 Pointcut을 가지고 있는 것이다. 조언(Advice)를 어디에(Pointcut) 할지 알고 있다. 프록시 팩토리에서 Advisor 지정은 필수다.
+- `Advisor`: Advice와 Pointcut을 가지고 있는 것이다. 조언(Advice)를 어디에(Pointcut) 할지 알고 있다. 프록시 팩토리에서 Advisor 지정은 필수다.
 
 프록시 팩토리는 생성시 타겟 객체를 받는다.
 프록시 팩토리는 하나의 타겟에 여러 Advisor를 넣을 수 있다.
