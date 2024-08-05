@@ -1176,3 +1176,135 @@ Host: localhost
 Content-Type: application/json
 Content-Length: 0
 ```
+
+## 마이크로미터 (micrometer)
+
+모니터링 툴이 요구하는 포맷이 툴마다 다르다.
+모니터링 툴을 바꾸면 포맷도 바뀌기 때문에 어플리케이션의 메트릭을 노출할 때에도 새로운 툴의 포맷에 맞게 변경해야 한다. (즉, 코드가 바뀌어야 한다.)
+
+마이크로미터는 모니터링 포맷을 추상화하고 각 툴이 요구하는 포맷에 따라 구현체를 제공하여 어플리케이션의 코드 변경을 막는다.
+스프링은 내부적으로 마이크로미터를 사용한다.
+스프링 부트에서는 자동 구성 기능을 통해 여러 메트릭에 대한 마이크로미터의 구현체를 등록한다.
+
+```bash
+// /actuator/beans 중에서
+
+...
+"jvmThreadMetrics": {
+  "aliases": [],
+  "scope": "singleton",
+  "type": "io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics",
+  "resource": "class path resource [org/springframework/boot/actuate/autoconfigure/metrics/JvmMetricsAutoConfiguration.class]",
+  "dependencies": [
+    "org.springframework.boot.actuate.autoconfigure.metrics.JvmMetricsAutoConfiguration"
+  ]
+},
+...
+
+```
+
+어플리케이션 개발자는 툴이 변경되면 해당 툴이 요구하는 포맷을 지원하는 마이크로미터 라이브러리를 등록하기만 하면 된다.
+
+![image](https://github.com/user-attachments/assets/47214628-a6c4-448a-a5df-076884b84163)
+(출처: 김영한의 스프링부트 - 핵심 원리와 활용)
+
+### 기본 제공 메트릭
+
+application, jvm, tomcat, hikari 등의 메트릭을 기본으로 제공한다.
+
+
+```json
+// localhost:8080/actuator/metrics/application.ready.time
+{
+  "name": "application.ready.time",
+  "description": "Time taken (ms) for the application to be ready to service requests",
+  "baseUnit": "seconds",
+  "measurements": [
+    {
+      "statistic": "VALUE",
+      "value": 5.924
+    }
+  ],
+  "availableTags": [
+    {
+      "tag": "main.application.class",
+      "values": [
+        "hello.ActuatorApplication"
+      ]
+    }
+  ]
+}
+```
+
+### 프로메테우스 지원
+
+마이크로미터가 지원하는 프로메테우스 라이브러리를 추가한다.
+
+```gradle
+implementation 'io.micrometer:micrometer-registry-prometheus'
+```
+
+스프링 부트에서 이 라이브러리를 추가하면 프로메테우스 구현체를 빈으로 등록하고, 프로메테우스 포맷으로 메트릭을 노출하는 `/actuator/prometheus` 엔드포인트를 오픈한다.
+
+### 커스텀 메트릭
+
+비즈니스 도메인에 맞는 메트릭 모니터링이 필요할 때가 있다.
+
+마이크로미터는 커스텀 메트릭 기능을 지원한다.
+
+```java
+@Configuration
+@Slf4j
+public class OrderConfigV2 {
+    @Bean
+    public OrderService orderService() {
+        return new OrderServiceV2();
+    }
+
+    //카운터 메트릭(증가만 하는 메트릭)
+    @Bean
+    public CountedAspect countedAspect(MeterRegistry registry) {
+        return new CountedAspect(registry);
+    }
+    //타임 메트릭 (카운터 + 소요 시간 관련 메트릭)
+    @Bean
+    public TimedAspect timedAspect(MeterRegistry registry) {
+        return new TimedAspect(registry);
+    }
+    //게이지 메트릭 (증감이 있는 메트릭)
+    @Bean
+    public MeterBinder stockSize(OrderService orderService) {
+        return registry -> Gauge.builder("my.stock", orderService, service -> {
+            log.info("stock gauge call");
+            return service.getStock().get();
+        }).register(registry);
+    }
+}
+
+// AOP 방식의 메트릭 수집 지원
+@Timed("my.order")
+@Slf4j
+public class OrderServiceV2 implements OrderService {
+    private AtomicInteger stock = new AtomicInteger(100);
+
+    @Counted("my.order")
+    @Override
+    public void order() {
+        log.info("주문");
+        stock.decrementAndGet();
+    }
+
+    @Counted("my.order")
+    @Override
+    public void cancel() {
+        log.info("취소");
+        stock.incrementAndGet();
+    }
+
+    @Override
+    public AtomicInteger getStock() {
+        return stock;
+    }
+}
+```
+
