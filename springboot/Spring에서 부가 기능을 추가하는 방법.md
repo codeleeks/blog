@@ -563,6 +563,29 @@ public class PackageLogTraceProxyPostProcessor implements BeanPostProcessor {
         return proxy;
     }
 }
+
+//빈 후처리기 등록
+@Slf4j
+@Configuration
+@Import({AppV1Config.class, AppV2Config.class})
+public class BeanPostProcessorConfig {
+    private final LogTrace logTrace;
+
+    public BeanPostProcessorConfig(LogTrace logTrace) {
+        this.logTrace = logTrace;
+    }
+
+    @Bean
+    public BeanPostProcessor packageLogTraceProxyPostProcessor() {
+        return new PackageLogTraceProxyPostProcessor("hello.proxy.app", getAdvisor());
+    }
+
+    public Advisor getAdvisor() {
+        NameMatchMethodPointcut pointcut = new NameMatchMethodPointcut();
+        pointcut.setMappedNames("request*", "order*", "save*");
+        return new DefaultPointcutAdvisor(pointcut, new LogTraceAdvice(logTrace));
+    }
+}
 ```
 
 빈 후처리기를 사용하면, 스프링 컨테이너가 생성한 빈들을 프록시 객체로 만들 수 있기 때문에
