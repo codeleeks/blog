@@ -862,8 +862,8 @@ public class AspectV5Order {
 어드바이스를 지정하는 어노테이션은 프록시 코드 호출 시점에 따라 여러 가지이다.
 
 - @Around: 모든 경우를 커버한다. ProceedingJoinPoint를 파라미터로 받기 때문에 타겟 메서드의 코드 실행 전후에 부가 기능 로직을 추가할 수 있으며, try-catch-finally를 통한 예외 처리도 가능하다.
-- @Before: 타겟 메서드 호출 전에 호출한다. JoinPoint를 파라미터로 받는다.
-- @AfterReturning: 타겟 메서드 호출 후에 호출한다. JoinPoint를 파라미터로 받기 때문에 proceed()를 호출하지 않아도 이 메서드 종료 이후에 타겟 메서드가 실행된다. `returning`의 이름과 파라미터의 이름이 같아야 한다.
+- @Before: 타겟 메서드 호출 전에 호출한다. JoinPoint를 파라미터로 받는다. JoinPoint를 파라미터로 받기 때문에 proceed()를 호출하지 않아도 이 메서드 종료 이후에 타겟 메서드가 실행된다.
+- @AfterReturning: 타겟 메서드 호출 후에 호출한다. `returning`의 이름과 파라미터의 이름이 같아야 한다.
 - @AfterThrowing: 타겟 메서드가 예외를 발생시키면 호출한다. try-catch-finally에서 catch와 같다. `throwing`의 이름과 파라미터의 이름이 같아야 한다.
 - @After: 타겟 메서드가 정상 종료하거나 예외 발생하거나 관계 없이 호출한다. try-catch-finally에서 finally와 같다. 
 
