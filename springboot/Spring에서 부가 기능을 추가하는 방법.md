@@ -659,7 +659,11 @@ public class AutoProxyConfig {
 ### AOP로 부가 기능 로직에 집중하기
 AnnotationAwareAspectJAutoProxyCreator로 동적 프록시 생성 관련 문제가 해결되었지만, 스프링은 부가 기능 개발자가 부가 기능 로직에만 집중할 수 있도록 AOP(Aspect Oriented Programming)를 지원한다.
 
-AnnotationAwareAspectJAutoProxyCreator는 @Aspect 어노테이션이 붙은 클래스를 보고 Advisor를 자동으로 만들어준다.
+AnnotationAwareAspectJAutoProxyCreator는 @Aspect이 붙은 클래스가 빈으로 등록되면 이를 Advisor를 자동으로 만들어준다.
+
+![image](https://github.com/user-attachments/assets/c8747be2-dce1-48d9-9733-ca98f978e630)
+(출처: 김영한의 스프링 고급)
+
 @Around 안에 적는 것은 포인트컷(aspectJ 표현식)이며, 메소드 내용은 Advice 이다.
 
 ```java
