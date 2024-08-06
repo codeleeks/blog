@@ -917,9 +917,10 @@ public class AspectV6Advice {
 }
 ```
 
-#### AspectJ 포인트컷 표현식
+### AspectJ 포인트컷 표현식
 
 포인트컷 지시자 (pointcut designator, PCD)
+
 - execution: 메서드로 매칭
 - within: 타입(클래스 혹은 인터페이스)으로 매칭. 매칭되면 해당 타입의 모든 메서드가 포인트컷이 된다.
 - args: 타겟 객체의 메서드의 아규먼트로 매칭.
@@ -930,11 +931,12 @@ public class AspectV6Advice {
 - @annotation: 메서드에 붙어 있는 어노테이션으로 매칭
 - bean: 빈 이름으로 매칭
 
-##### execution
+#### execution
 메서드로 매칭.
+
 ?은 생략 가능하다는 뜻이다.
 
-`execution(접근제어자? 반환타입 선언타입?메서드이름(파라미터) 예외?)
+`execution(접근제어자? 반환타입 선언타입?메서드이름(파라미터) 예외?)`
 
 선언 타입에서 클래스는 부모 클래스(인터페이스 포함)로 명시해도 자식 클래스까지 매칭된다.
 
@@ -1032,7 +1034,7 @@ void argsMatchComplex() {
 ```
 파라미터는 갯수도 중요하기 때문에 `..`과 같은 문법도 쓰인다.
 
-##### within
+#### within
 
 타입(클래스 혹은 인터페이스)으로 매칭.
 
@@ -1075,9 +1077,10 @@ void executionSuperTypeTrue() {
 }
 ```
 
-##### args
+#### args
 
 타겟 메서드의 인자로 매칭.
+
 execution의 인자는 부모 타입을 허용하지 않으나, args는 허용한다.
 
 ```java
@@ -1124,7 +1127,7 @@ String은 Object, java.io.Serializable를 상속하고 있다.
 arg는 부모 타입으로 매칭할 수 있기 때문에, Object, java.io.Serializable으로 String 인자를 갖는 메서드를 매칭할 수 있다.
 
 
-##### @target, @within
+#### @target, @within
 명시한 어노테이션이 붙어 있는 클래스를 매칭한다.
 
 `@target(hello.aop.member.annotation.ClassAop)`
@@ -1134,8 +1137,8 @@ arg는 부모 타입으로 매칭할 수 있기 때문에, Object, java.io.Seria
 class Target {}
 ```
 
-@target은 객체 내의 모든 메서드가 포인트컷이다. 부모 클래스의 메서드도 포함된다.
-@within은 객체 내에 있는 메서드만 포인트컷이다. 부모 클래스의 메서드는 포함되지 않는다.
+@target은 객체 내의 모든 메서드가 포인트컷이다. 즉, 부모 클래스의 메서드도 포함된다.
+@within은 객체 내에 있는 메서드만 포인트컷이다. 즉, 부모 클래스의 메서드는 포함되지 않는다.
 
 ```java
 package hello.aop.pointcut;
@@ -1165,7 +1168,7 @@ public class AtTargetAtWithinTest {
     @Test
     void success() {
         log.info("child Proxy={}", child.getClass());
-        child.childMethod(); //부모, 자식 모두 있는 메서드
+        child.childMethod(); //자식 클래스만 있는 메서드
         child.parentMethod(); //부모 클래스만 있는 메서드
     }
 
@@ -1226,13 +1229,20 @@ public class AtTargetAtWithinTest {
 
 <MessageBox title='단독으로 사용하면 안 되는 포인트컷 지시자' level='warning'>
   args, @args, @target는 단독으로 사용하면 안 된다.
-  모든 스프링 빈을 프록시로 만드려고 시도하기 때문이다. (스프링 내부에서 사용되는 빈까지도. 그중에는 final 등의 프록시 처리가 안되는 케이스도 존재한다.)
+  
+  객체를 만들고나서야 포인터컷 적용 여부를 확인가능하기 때문이다.
+  예를 들어, @target은 프록시 객체를 만들고, 이 프록시 객체의 타겟에 어노테이션이 붙어 있는지 확인한다.
+  
+  스프링은 이러한 포인트컷이 단독으로 쓰일 때, 모든 스프링 빈을 프록시로 만드려고 시도한다.
+  문제는 스프링 내부에서 사용되는 빈까지도 프록시로 만드려고 하는데, 그중에는 final 등의 프록시 처리가 안되는 케이스도 존재한다.
+  그래서 보통은 에러가 발생하며 실행이 되지 않는다.
 </MessageBox >
 
 
-##### @annotation
+#### @annotation
 
 annotation이 달린 메서드를 매칭한다.
+
 부모 메서드에 매핑되어 있으면 매칭하지 않는다.
 
 ```java
@@ -1266,7 +1276,7 @@ public class MemberServiceImpl implements MemberService {
     }
 ```
 
-##### this, target
+#### this, target
 
 타입으로 매칭한다.
 부모 타입으로 매칭할 수 있다.
@@ -1287,24 +1297,23 @@ public class MemberServiceImpl implements MemberService {
 </MessageBox>
 
 
-##### 파라미터 전달
+#### 파라미터 전달
 
 매칭 과정에서 사용된 객체(어노테이션, 타겟 객체, 프록시 객체 등)를 어드바이스 로직에서 사용해야 하는 경우도 있다.
 이 때는 포인트컷 표현식에서 명시한 이름과 동일하게 파라미터로 정의하면 된다.
 
 매칭 과정에서 사용된 객체를 가져오려면, 객체 종류에 따라 다른 포인트컷 표현식을 사용한다.
-- `target()`: 타겟 객체
-- `this()`: 프록시 객체
-- `@target()`: 타입에 붙은 어노테이션
-` `@within()`: 타입에 붙은 어노테이션
-- `@annotation()`: 메서드에 붙은 어노테이션
-- `args()`: 타겟 객체의 메서드의 아규먼트 (전체 args를 가져올 때는 args()보다는 joinPoint.getArgs()를 사용한다.)
+- `target(obj)`: 타겟 객체 타입의 obj 파라미터 변수로 전달됨.
+- `this(obj)`: 프록시 객체 타입의 obj 파라미터 변수로 전달됨.
+- `@target(annotation)`: 타입에 붙은 어노테이션 타입의 annotation 파라미터 변수로 전달됨.
+` `@within(annotation)`: 타입에 붙은 어노테이션 타입의 annotation 파라미터 변수로 전달됨.
+- `@annotation(annotation)`: 메서드에 붙은 어노테이션 타입의 annotation 파라미터 변수로 전달됨.
+- `args(arg, ..)`: 타겟 객체의 메서드의 아규먼트 중 첫 번째를 arg 파라미터 변수로 전달됨.  (전체 args를 가져올 때는 args()보다는 joinPoint.getArgs()를 사용한다.)
 
-그리고 파라미터의 타입으로 매칭할 타입을 정한다.
-달리 말해, 포인트컷을 정의한다.
 
 ```java
-package hello.aop.pointcut;
+package hello.aop;
+
 import hello.aop.member.MemberService;
 import hello.aop.member.annotation.ClassAop;
 import hello.aop.member.annotation.MethodAop;
@@ -1319,63 +1328,75 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+
 @Slf4j
 @Import(ParameterTest.ParameterAspect.class)
 @SpringBootTest
 public class ParameterTest {
- @Autowired
- MemberService memberService;
- @Test
- void success() {
- log.info("memberService Proxy={}", memberService.getClass());
- memberService.hello("helloA");
- }
- @Slf4j
- @Aspect
- static class ParameterAspect {
- @Pointcut("execution(* hello.aop.member..*.*(..))")
- private void allMember() {}
- @Around("allMember()")
- public Object logArgs1(ProceedingJoinPoint joinPoint) throws Throwable {
- Object arg1 = joinPoint.getArgs()[0];
- log.info("[logArgs1]{}, arg={}", joinPoint.getSignature(), arg1);
- return joinPoint.proceed();
- }
- @Around("allMember() && args(arg,..)")
- public Object logArgs2(ProceedingJoinPoint joinPoint, Object arg) throws
-Throwable {
- log.info("[logArgs2]{}, arg={}", joinPoint.getSignature(), arg);
- return joinPoint.proceed();
- }
- @Before("allMember() && args(arg,..)")
- public void logArgs3(String arg) {
- log.info("[logArgs3] arg={}", arg);
- }
- @Before("allMember() && this(obj)")
- public void thisArgs(JoinPoint joinPoint, MemberService obj) {
- log.info("[this]{}, obj={}", joinPoint.getSignature(),
-obj.getClass());
- }
- @Before("allMember() && target(obj)")
- public void targetArgs(JoinPoint joinPoint, MemberService obj) {
- log.info("[target]{}, obj={}", joinPoint.getSignature(),
-obj.getClass());
- }
- @Before("allMember() && @target(annotation)")
- public void atTarget(JoinPoint joinPoint, ClassAop annotation) {
- log.info("[@target]{}, obj={}", joinPoint.getSignature(),
-annotation);
- }
- @Before("allMember() && @within(annotation)")
- public void atWithin(JoinPoint joinPoint, ClassAop annotation) {
- log.info("[@within]{}, obj={}", joinPoint.getSignature(),
-annotation);
- }
- @Before("allMember() && @annotation(annotation)")
- public void atAnnotation(JoinPoint joinPoint, MethodAop annotation) {
- log.info("[@annotation]{}, annotationValue={}",
-joinPoint.getSignature(), annotation.value());
- }
- }
+    @Autowired
+    MemberService memberService;
+
+    @Test
+    void success() {
+        log.info("memberService Proxy={}", memberService.getClass());
+        memberService.hello("helloA");
+    }
+
+    @Slf4j
+    @Aspect
+    static class ParameterAspect {
+        @Pointcut("execution(* hello.aop.member..*.*(..))")
+        private void allMember() {
+        }
+
+        @Around("allMember()")
+        public Object logArgs1(ProceedingJoinPoint joinPoint) throws Throwable {
+            Object arg1 = joinPoint.getArgs()[0];
+            log.info("[logArgs1]{}, arg={}", joinPoint.getSignature(), arg1);
+            return joinPoint.proceed();
+        }
+
+        @Around("allMember() && args(arg,..)")
+        public Object logArgs2(ProceedingJoinPoint joinPoint, Object arg) throws
+                Throwable {
+            log.info("[logArgs2]{}, arg={}", joinPoint.getSignature(), arg);
+            return joinPoint.proceed();
+        }
+
+        @Before("allMember() && args(arg,..)")
+        public void logArgs3(String arg) {
+            log.info("[logArgs3] arg={}", arg);
+        }
+
+        @Before("allMember() && this(obj)")
+        public void thisArgs(JoinPoint joinPoint, MemberService obj) {
+            log.info("[this]{}, obj={}", joinPoint.getSignature(),
+                    obj.getClass());
+        }
+
+        @Before("allMember() && target(obj)")
+        public void targetArgs(JoinPoint joinPoint, MemberService obj) {
+            log.info("[target]{}, obj={}", joinPoint.getSignature(),
+                    obj.getClass());
+        }
+
+        @Before("allMember() && @target(annotation)")
+        public void atTarget(JoinPoint joinPoint, ClassAop annotation) {
+            log.info("[@target]{}, obj={}", joinPoint.getSignature(),
+                    annotation);
+        }
+
+        @Before("allMember() && @within(annotation)")
+        public void atWithin(JoinPoint joinPoint, ClassAop annotation) {
+            log.info("[@within]{}, obj={}", joinPoint.getSignature(),
+                    annotation);
+        }
+
+        @Before("allMember() && @annotation(annotation)")
+        public void atAnnotation(JoinPoint joinPoint, MethodAop annotation) {
+            log.info("[@annotation]{}, annotationValue={}",
+                    joinPoint.getSignature(), annotation.value());
+        }
+    }
 }
 ```
