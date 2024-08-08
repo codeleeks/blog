@@ -1940,3 +1940,263 @@ POST my_index/_search
   }
 }
 ```
+
+## Full Text Query
+
+### match
+
+공백을 기준으로 다른 키워드로 인식하여 검색한다. (OR 연산)
+
+```bash
+POST my_index/_search
+{
+  "query": {
+    "match": {
+      "message": "quick dog"
+    }
+  }
+}
+```
+
+AND 연산으로 변경하려면 `operator` 옵션을 써야 한다.
+
+```bash
+POST my_index/_search
+{
+  "query": {
+    "match": {
+      "message": {
+        "query": "quick dog",
+        "operator": "and"
+      }
+    }
+  }
+}
+```
+
+### match_phrase
+
+공백을 포함한 문자열을 키워드로 인식하여 검색한다.
+
+`slop` 옵션은 공백에 들어갈 수 있는 문자열 수를 지정한다.
+예를 들어, lazy dog에 `slop = 1`을 주면 lazy jumping dog와 같은 문장도 검색된다.
+`slop = 2`를 주면 lazy jumping crazy dog와 같은 문장도 검색된다.
+
+```bash
+POST my_index/_search
+{
+  "query": {
+    "match_phrase": {
+      "message": {
+        "query": "lazy dog",
+        "slop": 1
+      }
+    }
+  }
+}
+```
+
+## relevancy 
+
+정확도라고 해석된다. (렐러번시)
+
+검색 결과로 나온 각 도큐먼트가 얼마나 검색어에 부합하는지를 점수로 표현한다.
+
+BM25라는 수학 공식으로 점수를 매긴다.
+
+![image](https://github.com/user-attachments/assets/0bf8b7ba-98d3-4476-81ac-5d717c75e997)
+
+핵심은 세 가지이다.
+
+- TF (Term Frequency): 키워드가 도큐먼트 안에서 많이 나올 수록 가점한다.
+- IDF (Inverse Document Frequency): 키워드가 매핑하는 도큐먼트가 많을 수록 해당 키워드의 도큐먼트는 감점한다. (흔한 키워드는 많이 감점하고, 특별한 키워드는 덜 감점한다)
+- Field Length: 키워드가 발견된 필드의 길이가 작은만큼 가점한다.
+
+## bool 쿼리
+
+복합 쿼리이다.
+
+- `must`: 쿼리를 만족하는 도큐먼트들을 검색한다.
+- `must_not`: 쿼리를 만족하지 않는 도큐먼트들을 검색한다.
+- `should`: 검색 결과 중 이 쿼리를 만족하는 도큐먼트의 점수를 높인다.
+- `filter`: 쿼리를 만족하는 도큐먼트를 검색하지만 점수는 계산하지 않는다.
+
+
+```bash
+//quick과 lazy dog가 모두 포함된 도큐먼트를 찾는다.
+POST my_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "message": "quick"
+          }
+        },
+        {
+          "match_phrase": {
+            "message": "lazy dog"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+`should`와 `match_phrase`를 사용하면 사용자의 검색어에 좀 더 부합하는 도큐먼트를 상위로 올릴 수 있다.
+
+```bash
+POST my_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "message": {
+              "query": "lazy dog"
+            }
+          }
+        }
+      ],
+      "should": [
+        {
+          "match_phrase": {
+            "message": "lazy dog"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+lazy나 dog을 포함하는 도큐먼트들이 검색 결과에 포함되지만, 그 중에서도 "lazy dog"을 정확히 포함하는 도큐먼트가 더 높은 점수를 받게 되어 검색 결과에서 상위에 위치하게 된다.
+
+
+## Exact Value Query
+
+렐러번시를 따지지 않고 오로지 쿼리가 만족하는지 여부만 확인한다.
+
+### filter 쿼리
+
+bool 쿼리 안에 filter 쿼리를 사용하면 쿼리가 추가되었지만 쿼리를 만족하는 도큐먼트를 가점하지 않는다.
+
+검색 결과 랭킹에 영향을 주지 않으면서 불필요한 결과는 제거할 때 사용된다.
+
+```bash
+POST my_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "message": "fox"
+          }
+        }
+      ],
+      "filter": [
+        {
+          "match": {
+            "message": "quick"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+`must_not`을 써서 키워드가 들어간 도큐먼트를 제외하고 싶다면 filter 안에 bool을 또 넣어야 한다.
+
+```bash
+POST my_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "message": "fox"
+          }
+        }
+      ],
+      "filter": [
+        {
+          "bool": {
+            "must_not": [
+              {
+                "match": {
+                  "message": "dog"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+filter 안에 넣은 검색 조건은 캐싱이 되기 때문에 이후 같은 쿼리르 수행하면 쿼리가 조금 더 빨라진다.
+
+그래서 점수 계산이 필요하지 않은 쿼리라면 filter 안에 넣는 것이 좋다.
+
+### keyword 쿼
+
+검색어와 정확하게 일치하는 문자열을 포함하는 도큐먼트를 찾는다.(대소문자, 공백 등도 정확히 일치해야 한다)
+
+```bash
+POST my_index/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "match": {
+            "message.keyword": "Brown fox brown dog"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+### range 쿼리
+
+정수값이나 날짜에 대해 크기비교를 통해 범위에 포함되는 도큐먼트들을 검색한다.
+
+```bash
+POST phones/_search
+{
+  "query": {
+    "range": {
+      "price": {
+        "gte": 700,
+        "lt": 900
+      }
+    }
+  }
+}
+```
+
+```bash
+POST phones/_search
+{
+  "query": {
+    "range": {
+      "date": {
+        "gt": "2016-01-01"
+      }
+    }
+  }
+}
+```
+
+경우에 따라 범위의 경계가 가깝거나 멀수록 점수를 다르게 줘야 하는 경우도 있다.
+이 때는 [function_score 쿼리](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/query-dsl-function-score-query.html) 를 사용한다.
