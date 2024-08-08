@@ -1654,3 +1654,289 @@ POST movie/_search
   }
 }
 ```
+
+### `geo_point`
+
+> Geo Point 는 위도(latitude)와 경도(longitude) 두 개의 실수 값을 가지고 지도 위의 한 점을 나타내는 값
+
+```bash
+//필드 세팅
+PUT my_geo
+{
+  "mappings": {
+    "properties": {
+      "location": {
+        "type": "geo_point"
+      }
+    }
+  }
+}
+
+//도큐먼트 색인
+PUT my_locations/_doc/1
+{
+  "location": {
+    "lat": 41.12,
+    "lon": -71.34
+  }
+}
+```
+
+엘라스틱 서치는 다양한 위치 검색 기능을 제공한다.
+
+#### `geo_bounding_box` 쿼리
+
+> geo_bounding_box 쿼리는 top_left 와 bottom_right 두 개의 옵션에 각각 위치점을 입력하고 이 점들을 토대로 그린 네모 칸 안에 위치하는 도큐먼트들을 불러옵니다.
+
+```bash
+POST my_geo/_search
+{
+  "query": {
+    "geo_bounding_box": {
+      "location": {
+        "bottom_right": {
+          "lat": 37.4899,
+          "lon": 127.0388
+        },
+        "top_left": {
+          "lat": 37.5779,
+          "lon": 126.9617
+        }
+      }
+    }
+  }
+}
+```
+
+![image](https://github.com/user-attachments/assets/c189364f-eb16-4985-866b-b7b851dbb120)
+
+
+#### `geo_distance` 쿼리
+
+> geo_distance 쿼리는 하나의 위치점을 찍고 distance 옵션을 이용해서 입력한 반경의 원 안에 있는 도큐먼트들을 불러옵니다
+
+```bash
+POST my_geo/_search
+{
+  "query": {
+    "geo_distance": {
+      "distance": "5km",
+      "location": {
+        "lat": 37.5358,
+        "lon": 126.9559
+      }
+    }
+  }
+}
+```
+
+![image](https://github.com/user-attachments/assets/ad0a14e9-fdf5-4709-8808-3624c2c14490)
+
+
+### `geo_shape`
+
+`geo_point`는 1차원 점을 의미한다면, `geo_shape`는 차원을 더 확장하는 개념이다.
+점, 선, 면, 여러 점, 여러 선, 여러 면 등의 타입을 지원한다.
+
+`coordinates`는 경도, 위도 순이다.
+
+```bash
+//점
+PUT my_shape/_doc/1
+{
+  "location": {
+    "type": "point",
+    "coordinates": [
+      127.027926,
+      37.497175
+    ]
+  }
+}
+
+//여러 점 
+PUT my_shape/_doc/2
+{
+  "location": {
+    "type": "multipoint",
+    "coordinates": [
+      [ 127.027926, 37.497175 ],
+      [ 126.991806, 37.571607 ],
+      [ 126.924191, 37.521624 ],
+      [ 126.972559, 37.554648 ]
+    ]
+  }
+}
+
+//직선
+PUT my_shape/_doc/3
+{
+  "location": {
+    "type": "linestring",
+    "coordinates": [
+      [ 127.027926, 37.497175 ],
+      [ 126.991806, 37.571607 ]
+    ]
+  }
+}
+
+//여러 직선
+PUT my_shape/_doc/4
+{
+  "location": {
+    "type": "multilinestring",
+    "coordinates": [
+      [
+        [ 127.027926, 37.497175 ],
+        [ 126.991806, 37.571607 ]
+      ],
+      [
+        [ 126.924191, 37.521624 ],
+        [ 126.972559, 37.554648 ]
+      ]
+    ]
+  }
+}
+
+//다각형
+PUT my_shape/_doc/5
+{
+  "location": {
+    "type": "polygon",
+    "coordinates": [
+      [
+        [ 127.027926, 37.497175 ],
+        [ 126.991806, 37.571607 ],
+        [ 126.924191, 37.521624 ],
+        [ 126.972559, 37.554648 ],
+        [ 127.027926, 37.497175 ]
+      ]
+    ]
+  }
+}
+
+//여러 다각형형
+PUT my_shape/_doc/6
+{
+  "location": {
+    "type": "multipolygon",
+    "coordinates": [
+      [
+        [
+          [ 127.027926, 37.497175 ],
+          [ 126.991806, 37.571607 ],
+          [ 126.924191, 37.521624 ],
+          [ 127.004943, 37.504810 ],
+          [ 127.027926, 37.497175 ]
+        ]
+      ],
+      [
+        [
+          [ 126.936893, 37.555134 ],
+          [ 126.967894, 37.529170 ],
+          [ 126.924191, 37.521624 ],
+          [ 126.936893, 37.555134 ]
+        ]
+      ]
+    ]
+  }
+}
+
+//직사각형
+PUT my_shape/_doc/7
+{
+  "location": {
+    "type": "envelope",
+    "coordinates": [
+      [ 126.936893, 37.555134 ],
+      [ 127.004943, 37.50481 ]
+    ]
+  }
+}
+```
+
+#### geo_shape 쿼리
+
+`geo_shape` 필드값을 갖는 도큐먼트를 검색하는 쿼리이다.
+
+검색 대상이 도형이기 때문에 영역 기반으로 검색 기능을 제공한다.(`relation` 옵션)
+
+- `relation`: 다양한 영역 기반 검색 모드 지정
+  - `intersects`: 검색 도형과 필드 도형의 교차 영역이 존재하면 검색된다.
+  - `disjoint`: 검색 도형과 필드 도형의 교차 영역이 없으면 검색된다. (필드 도형의 외부에 검색 도형이 있을 때를 의미)
+  - `within`: 필드 도형이 검색 도형 안에 있으면 검색된다.
+
+![image](https://github.com/user-attachments/assets/a91dd33c-a04c-4d52-a099-e88a84a7ee92)
+
+```bash
+GET my_shape/_search
+{
+  "query": {
+    "geo_shape": {
+      "location": {
+        "shape": {
+          "type": "geo_shape 타입",
+          "coordinates": [
+            [ 126.9687, 37.58 ],
+            [ 126.99, 37.5543 ]
+          ]
+        },
+        "relation": "intersects"
+      }
+    }
+  }
+}
+```
+
+### 멀티 필드
+
+하나의 필드를 여러 개의 역인덱스와 `doc_values`를 만들기 위해 여러 개의 필드를 정의할 수 있다.
+
+여러 개의 역인덱스를 만든다는 뜻은 멀티 필드로 여러 개의 애널라이저를 적용시킬 수 있다는 뜻이기도 하다.
+
+```bash
+PUT my_index
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "nori_analyzer": {
+          "tokenizer": "nori_tokenizer"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "message": {
+        "type": "text",
+        "fields": {
+          "english": {
+            "type": "text",
+            "analyzer": "english"
+          },
+          "nori": {
+            "type": "text",
+            "analyzer": "nori_analyzer"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+![image](https://github.com/user-attachments/assets/01686c57-655b-48a4-800d-ccc3cf4ca133)
+
+
+mappings에서 정의한 이름으로 검색 쿼리시 `.`을 통해 세부 필드를 지정한다.
+
+```
+POST my_index/_search
+{
+  "query": {
+    "match": {
+      "message.nori": "영웅"
+    }
+  }
+}
+```
