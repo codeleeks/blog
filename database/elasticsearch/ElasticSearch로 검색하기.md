@@ -1,5 +1,16 @@
 본 포스팅에서 사용하는 도표 및 그림은 https://esbook.kimjmin.net/ 에서 가져왔음을 밝힙니다.
 
+## 샤드와 레플리카
+
+인덱스는 샤드로 쪼개져서 저장된다.
+
+![image](https://github.com/user-attachments/assets/3f70734a-5a90-4412-90c7-71ad05f6b2ac)
+
+샤드는 레플리카(복제본)를 가지며, 프라이머리 샤드(원본)과 레플리카는 최대한 서로 다른 노드에 배치되려고 한다.
+
+![image](https://github.com/user-attachments/assets/f152cc70-816a-42cd-b3b9-2ba6a2726b7e)
+
+
 ## 역 인덱스 (inverted index)
 
 Term으로 Document를 찾는 구조.
@@ -1159,3 +1170,487 @@ POST 인덱스명/_open
 
 기존 역 인덱스 구조는 변경되지 않고, 이후에 새로 색인되거나 검색할 때 변경된 애널라이저의 규칙이 반영된다.
 기존 역 인덱스 구조를 변경하려면 삭제하고 다시 색인해야 한다.
+
+## settings
+
+모든 인덱스는 settings와 mappings를 갖는다.
+
+settings에는 샤드 갯수, 레플리카 갯수, 애널라이저 등 설정 정보가 들어간다.
+
+```json
+{
+  "settings": {
+    "number_of_shards":  3,
+    "number_of_replicas": 1,
+    "analysis": {
+      "analyzer": {
+        "my_analyzer": {
+          "type": "custom",
+          "char_flter": [ "...", "..." ... ]
+          "tokenizer": "...",
+          "filter": [ "...", "..." ... ]
+        }
+      },
+      "char_filter":{
+        "my_char_filter":{
+          "type": "…"
+        }
+      }
+      "tokenizer": {
+        "my_tokenizer":{
+          "type": "…"
+        }
+      },
+      "filter": {
+        "my_token_filter": {
+          "type": "…"
+        }
+      }
+    }
+  }
+}
+```
+
+샤드는 인덱스 생성 이후에 변경하기 어렵고, 레플리카는 변경 가능하다.
+애널라이저는 인덱스 생성 이후에 변경하기 어렵다.
+
+## mappings
+
+RDB에서 DDL로 테이블의 컬럼 타입을 정의하듯이, 엘라스틱서치에서는 mappings를 통해 필드의 타입을 정의한다.
+
+필드의 타입은 미리 정의할 수도 있고, 첫 도큐먼트에 들어 있는 각 필드의 값에 따라 타입 추론할 수도 있다.(동적 타입)
+
+필드 타입 사전 정의하기.
+```bash
+PUT <인덱스명>
+{
+  "mappings": {
+    "properties": {
+      "<필드명>":{
+        "type": "<필드 타입>"
+        … <필드 설정>
+      }
+      …
+    }
+  }
+}
+```
+
+### `text`
+
+텍스트 타입 필드는 애널라이저를 통해 Term으로 쪼개지는 대상이다.
+
+- `"analyzer" : "<애널라이저명>"`: 색인에 사용할 애널라이저 지정. 기본값은 `standard`
+- `"search_analyzer" : "<애널라이저명>"`: 검색에 사용할 애널라이저 지정. 기본값은 `analyzer`에 지정한 애널라이저. 보통 NGram 방식으로 색인했다 검색은 다른 애널라이저를 쓴다.
+- `"index" : <true | false>`: false이면 필드를 역 인덱스로 만들지 않는다. 검색에서 제외시킨다. (기본값은 true)
+- `"boost" : <숫자 값>`: 값이 1보다 크면 검색시 가산점을 받고, 1보다 작으면 감점을 받는다. 기본값은 1이다.
+
+
+### `keyword`
+
+키워드 타입 필드는 쪼개지지 않고 그대로 Term이 된다.
+
+보통 집계나 정렬에 활용되는 필드를 keyword로 설정한다.
+
+- `index`, `boost` 설정은 `text`와 동일
+- `"doc_values" : <true | false>`: false로 하면 열 기반 저장소(columnar store)를 만들지 않아 집계나 정렬이 불가능해진다. 기본값은 true.
+- `"ignore_above" : <자연수>`: 이 값보다 크면 색인이 되지 않아서 검색이나 집계가 되지 않는다. 디폴트는 `2,147,483,647`
+- `"normalizer" : "<노멀라이저명>"`: keyword는 애널라이저를 적용할 수 없고, 노멀라이저를 적용한다. 노멀라이저는 settings에서 설정하며, 캐릭터 필터와 토큰 필터로 구성된다.
+
+## 숫자 타입
+
+엘라스틱서치는 자바에서 지원하는 숫자 타입과 엘라스틱서치만의 숫자 타입으로 숫자 타입을 지원한다.
+
+- long, integer, short, byte, float, double: 자바의 숫자 타입과 동일
+- `half_float`: 16비트 실수
+- `scaled_float`: long 타입이지만 소수점을 저장. 소수점 자리가 고정인 데이터에 사.
+
+옵션은 아래와 같다.
+
+- `index`, `doc_values`, `boost`는 text, keyword와 동일
+- `"coerce": <true | false>`: 필드의 타입에 맞지 않는 값을 넣을 때 필드의 타입으로 맞출 건지 지정. 예를 들어 integer 필드에 `4.5`를 넣으면 4가 입력됨. 기본값은 true
+- `"null_value" : <숫자값>`: 도큐먼트에 필드가 없거나 값이 null인 경우에 넣을 숫자를 지정.
+- `"ignore_malformed" : <true | false>`: false면 오류가 있는 값을 입력했을 때 에러를 반환. true로 지정하더라도 색인에 포함되지 않아서 집계나 검색이 불가능하다.
+- `"scaling_factor" : <10의 배수>`: `scaled_float` 타입 필드에만 설정 가능한 옵션. 소수점 자리수를 결정한다. 10이면 첫째자리, 100이면 둘째자리까지 표시한다는 의미.
+
+## 날짜
+
+ISO8601 형식을 따른다.
+
+`format` 옵션을 통해 다양한 날짜 형식을 지원하게 설정할 수 있다.
+
+- `"doc_values"`, `"index"`, `"null_value"`, `"ignore_malformed"`는 다른 타입과 동일.
+- `"format" : "<문자열 || 문자열 ...>"`: 입력 가능한 날짜 형식을 `||`로 구분하여 여러 개 적는다. 여기서 작성한 날짜 형식으로 검색 가능하다.
+  - [사용가능한 날짜 형식](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#built-in-date-formats)
+  - ElasticSearch 8 버전에서 테스트 결과 `_search` API시 다른 날짜 형식을 섞어 쓰면 에러가 발생한다. 통일된 날짜 형식을 써야 한다.
+
+
+```bash
+//다양한 날짜 형식 세팅
+PUT my_date
+{
+  "mappings": {
+    "properties": {
+      "date_val": {
+        "type": "date",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy/MM/dd||epoch_millis"
+      }
+    }
+  }
+}
+
+//도큐먼트 색인 (날짜 형식이 검색과 다름)
+PUT my_date/_doc/1
+{
+  "date_val": "2019-09-12 15:01:23"
+}
+
+//범위 검색
+POST my_date/_search
+{
+  "query": {
+    "range": {
+      "date_val": {
+        "gt": "2019/09/10",
+        "lt": "2019/09/14"
+      }
+    }
+  }
+}
+
+//혹은 epoch_millis로 검색
+POST my_date/_search
+{
+  "query": {
+    "range": {
+      "date_val": {
+        "gt": 1468332800000,
+        "lt": 1568332800000
+      }
+    }
+  }
+}
+```
+```json
+{
+  "took" : 1,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 1,
+      "relation" : "eq"
+    },
+    "max_score" : 1.0,
+    "hits" : [
+      {
+        "_index" : "my_date",
+        "_type" : "_doc",
+        "_id" : "1",
+        "_score" : 1.0,
+        "_source" : {
+          "date_val" : "2019-09-12 15:01:23"
+        }
+      }
+    ]
+  }
+}
+```
+
+### boolean
+
+`"type": "boolean"`로 선언한다.
+
+### Object
+
+필드 안에 하위 필드를 갖는 객체형태의 타입이다.
+
+검색할 때는 `.` 연산자로 하위 필드를 지정한다.
+
+```bash
+//필드 타입 세팅
+PUT movie
+{
+  "mappings": {
+    "properties": {
+      "characters": {
+        "properties": {
+          "name": {
+            "type": "text"
+          },
+          "age": {
+            "type": "byte"
+          },
+          "side": {
+            "type": "keyword"
+          }
+        }
+      }
+    }
+  }
+}
+
+//오브젝트 필드 검색
+POST movie/_search
+{
+  "query": {
+    "match": {
+      "characters.name": "Iron Man"
+    }
+  }
+}
+```
+
+도큐먼트의 오브젝트 필드에 여러 개의 값이 들어 있는 경우에 이 값들에서 추출된 Term은 역인덱스에서 하나의 도큐먼트를 가리키게 된다.
+
+그래서 의도치 않은 검색 결과가 나올 수 있다.
+
+```bash
+PUT movie/_doc/2
+{
+  "title": "The Avengers",
+  "characters": [
+    {
+      "name": "Iron Man",
+      "side": "superhero"
+    },
+    {
+      "name": "Loki",
+      "side": "villain"
+    }
+  ]
+}
+
+PUT movie/_doc/3
+{
+  "title": "Avengers: Infinity War",
+  "characters": [
+    {
+      "name": "Loki",
+      "side": "superhero"
+    },
+    {
+      "name": "Thanos",
+      "side": "villain"
+    }
+  ]
+}
+
+POST movie/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "characters.name": "Loki"
+          }
+        },
+        {
+          "match": {
+            "characters.side": "villain"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+```json
+{
+  "took" : 2,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 2,
+      "relation" : "eq"
+    },
+    "max_score" : 1.0611372,
+    "hits" : [
+      {
+        "_index" : "movie",
+        "_type" : "_doc",
+        "_id" : "3",
+        "_score" : 1.0611372,
+        "_source" : {
+          "title" : "Avengers: Infinity War",
+          "characters" : [
+            {
+              "name" : "Loki",
+              "side" : "superhero"
+            },
+            {
+              "name" : "Thanos",
+              "side" : "villain"
+            }
+          ]
+        }
+      },
+      {
+        "_index" : "movie",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_score" : 0.9827781,
+        "_source" : {
+          "title" : "The Avengers",
+          "characters" : [
+            {
+              "name" : "Iron Man",
+              "side" : "superhero"
+            },
+            {
+              "name" : "Loki",
+              "side" : "villain"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+3번 도큐먼트에는 슈퍼히어로인 로키와 빌런인 타노스가 있다.
+2번 도큐먼트와 3번 도큐먼트 모두 side가 빌런인 값이 있고(2번은 로키, 3번은 타노스), 또한 name이 로키인 값도 있기 때문에 2,3번 도큐먼트가 모두 검색된다.
+
+![image](https://github.com/user-attachments/assets/8db88eb3-177b-455e-82cd-6cdadadf38b9)
+
+문제는 오프젝트 필드가 하위 필드의 여러 값들을 하나의 도큐먼트로 퉁 쳐버리기 때문에 발생한다.
+
+### Nested
+
+Object의 문제를 해결하는 타입이 바로 Nested이다.
+
+Nested 필드는 하위 필드를 가상의 다른 도큐먼트로 관리한다.
+하위 필드에 값이 여러 개 입력되어도 각 값이 다른 도큐먼트로 처리된다.
+
+```bash
+//Nested 필드 세팅
+PUT movie
+{
+  "mappings": {
+    "properties": {
+      "characters": {
+        "type": "nested",
+        "properties": {
+          "name": {
+            "type": "text"
+          },
+          "side": {
+            "type": "keyword"
+          }
+        }
+      }
+    }
+  }
+}
+
+//도큐먼트 색인
+PUT movie/_doc/2
+{
+  "title": "The Avengers",
+  "characters": [
+    {
+      "name": "Iron Man",
+      "side": "superhero"
+    },
+    {
+      "name": "Loki",
+      "side": "villain"
+    }
+  ]
+}
+
+//도큐먼트 색인
+PUT movie/_doc/3
+{
+  "title": "Avengers: Infinity War",
+  "characters": [
+    {
+      "name": "Loki",
+      "side": "superhero"
+    },
+    {
+      "name": "Thanos",
+      "side": "villain"
+    }
+  ]
+}
+
+//검색
+POST movie/_search
+{
+  "query": {
+    "nested": {
+      "path": "characters",
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "characters.name": "Loki"
+              }
+            },
+            {
+              "match": {
+                "characters.side": "villain"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+```json
+{
+  "took" : 1,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 1,
+      "relation" : "eq"
+    },
+    "max_score" : 1.4480599,
+    "hits" : [
+      {
+        "_index" : "movie",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_score" : 1.4480599,
+        "_source" : {
+          "title" : "The Avengers",
+          "characters" : [
+            {
+              "name" : "Iron Man",
+              "side" : "superhero"
+            },
+            {
+              "name" : "Loki",
+              "side" : "villain"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
