@@ -1943,7 +1943,11 @@ POST my_index/_search
 
 ## Full Text Query
 
-### match
+### `match_all` 쿼리
+
+조건 없이 모든 도큐먼트를 조회한다.
+
+### match 쿼리
 
 공백을 기준으로 다른 키워드로 인식하여 검색한다. (OR 연산)
 
@@ -1974,7 +1978,7 @@ POST my_index/_search
 }
 ```
 
-### match_phrase
+### `match_phrase` 쿼리
 
 공백을 포함한 문자열을 키워드로 인식하여 검색한다.
 
@@ -1991,6 +1995,57 @@ POST my_index/_search
         "query": "lazy dog",
         "slop": 1
       }
+    }
+  }
+}
+```
+
+### prefix 쿼리
+
+앞글자가 일치하는 Term에 해당하는 도큐먼트를 검색한다.
+
+```bash
+POST autocomplete_test_1/_search
+{
+  "query": {
+    "prefix": {
+      "word": {
+        "value": "추천"
+      }
+    }
+  }
+}
+```
+
+### fuzzy 쿼리
+
+`fuzziness` 값에 따라 검색어를 변경,삭제,추가하면서 일치하는 Term에 해당하는 도큐먼트를 검색한다.
+예를 들어, "스게팀임", "스팀께임", "스게임", "스!팀게임" 등의 검색어도 "스팀게임" Term에 매칭한다.
+
+```bash
+POST autocomplete_test_1/_search
+{
+  "query": {
+    "fuzzy": {
+      "word": {
+        "value": "스!팀게임",  
+        "fuzziness": 1
+      }
+    }
+  }
+}
+```
+
+### `match_phrase_prefix` 쿼리
+
+`match_pharse` 처럼 공백을 포함한 문자열 전체를 키워드로 가져가지만, prefix 쿼리처럼 앞글자 매칭을 한다.
+
+```bash
+POST autocomplete_test_1/_search
+{
+  "query": {
+    "match_phrase_prefix": {
+      "word": "스팀게임 추"
     }
   }
 }
