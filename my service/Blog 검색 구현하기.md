@@ -193,3 +193,32 @@ public class PostDocumentSearchRepositoryImpl implements PostDocumentSearchRepos
     }
 }
 ```
+
+실제로 변환되는 검색 쿼리
+
+```bash
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match_phrase": {
+            "contents": "스프링부트"
+          }
+        },
+        {
+          "match_phrase": {
+            "title": "스프링부트"
+          }
+        }
+      ]
+    }
+  },
+  "highlight": {
+    "fields": {
+      "title": {},
+      "contents": {}
+    }
+  }
+}
+```
