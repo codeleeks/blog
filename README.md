@@ -90,6 +90,17 @@
 ![image](https://github.com/user-attachments/assets/cd5c2e94-6966-408b-96b7-7b7ad2b77e06)
 
 
+## 테스트 환경
+
+### in-memory DB를 통한 단위 테스트
+
+postgresql의 in-memory test는 `testcontainer`가 필요함.
+`testcontainer`는 호스트의 도커가 필요한데, windows 환경에서 hyper-v를 쓰려면 OS 버전이 Pro 이상이어야 함.
+
+h2 in memory db로 대체함.
+
+
+
 ## 배포
 
 배포는 `github pages`를 사용했다.
