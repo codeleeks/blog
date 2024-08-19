@@ -91,7 +91,7 @@
 
 ## API 설계
 
-[https://github.com/codeleeks/blog-api-docs/blob/master/index.html](OPEN API 링크)
+[Swagger Docs](https://codeleeks.github.io/blog-api-docs/)
 
 ## 테스트 환경
 
