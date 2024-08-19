@@ -89,6 +89,10 @@
 ![image](https://github.com/user-attachments/assets/cd5c2e94-6966-408b-96b7-7b7ad2b77e06)
 
 
+## API 설계
+
+[https://github.com/codeleeks/blog-api-docs/blob/master/index.html](OPEN API 링크)
+
 ## 테스트 환경
 
 ### in-memory DB를 통한 단위 테스트
