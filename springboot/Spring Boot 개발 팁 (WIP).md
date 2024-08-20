@@ -20,3 +20,21 @@ web 관련 빈만 등록하기 때문에 service, configuration, repository 등�
 
 이러한 단점 때문에 validation 검증과 exception 핸들링 검증 용도로만 사용한다.
 성공 예제는 `@SpringBootTest`를 통해 검증한다.
+
+<MessageBox title='`@EnableJpaAuditing`' level='warning'>
+  `@WebMvcTest`는 web 관련 컴포넌트만 빈으로 등록한다.
+  그런데 `@CreatedDate`, `@LastModifiedDate`를 사용하기 위해 `@EnableJpaAuditing`를 스프링부트 메인클래스에 걸어놓는데, 이것이 `@WebMvcTest` 테스트 실행시 문제가 된다. (`jpa metamodel must not be empty!`)
+  auditing 관련 빈을 사용하지 못하기 때문이다.
+
+  그래서 `@Configuration` 클래스를 만들고 거기에 `@EnableJpaAuditing`를 걸어놓는다.
+
+  ```java
+  @Configuration
+  @EnableJpaAuditing
+  public class JpaAuditingConfiguration {
+  }
+  ```
+  
+  `@WebMvcTest` 실행시에 `@Configuration`은 무시되기 때문에 auditing 기능이 제외된다. 테스트 과정에서 엔티티를 가져올 일이 없기 때문에 auditing은 필요없다.
+  부트런시에는 스프링부트가 `@Configuration`를 빈으로 만들기 때문에 `@EnableJpaAuditing`이 적용된다.
+</MessageBox>
