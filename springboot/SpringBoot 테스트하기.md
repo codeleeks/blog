@@ -70,3 +70,158 @@ web 관련 빈만 등록하기 때문에 service, configuration, repository 등�
 단위 테스트보다는 통합 테스트에 가깝다.
 
 `@WebMvcTest`보다는 등록하는 빈이 많기 때문에 테스트 수행 속도가 오래 걸린다.
+
+
+```java
+package blog.main.web;
+
+import blog.main.common.CleanUpDb;
+import blog.main.common.PostCrudRepository;
+import blog.main.domain.Category;
+import blog.main.domain.Post;
+import blog.main.web.request.CategoryRequest;
+import blog.main.web.request.PostSaveRequest;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@Transactional
+@AutoConfigureMockMvc
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class PostControllerTest {
+    @Autowired
+    PostCrudRepository postCrudRepository;
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @Test
+    void saveOne() throws Exception {
+        CategoryRequest categoryRequest = new CategoryRequest();
+        categoryRequest.setName("category1");
+
+        PostSaveRequest postSaveRequest = new PostSaveRequest();
+        postSaveRequest.setTitle("post1");
+        postSaveRequest.setContents("안녕하세요 반가워요 재미없나요?");
+        postSaveRequest.setCategory(categoryRequest);
+
+        MvcResult mvcResult = mockMvc.perform(
+                        MockMvcRequestBuilders.post("/posts")
+                                .content(objectMapper.writeValueAsString(postSaveRequest))
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(MockMvcResultMatchers.status().isCreated())
+                .andReturn();
+        Long postId = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Long.class);
+
+
+        Optional<Post> found = postCrudRepository.findById(postId);
+        assertThat(found.isPresent()).isTrue();
+        assertThat(found.get().getTitle()).isEqualTo(postSaveRequest.getTitle());
+        assertThat(found.get().getContents()).isEqualTo(postSaveRequest.getContents());
+        assertThat(found.get().getCategory()).isEqualTo(postSaveRequest.getCategory().toEntity());
+        assertThat(found.get().getCreatedAt()).isNotNull();
+        assertThat(found.get().getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    void saveError() throws Exception {
+        CategoryRequest categoryRequest = new CategoryRequest();
+        categoryRequest.setName("category1");
+
+        //category
+        CategoryRequest categoryError = new CategoryRequest();
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i <100; i++) {
+            stringBuilder.append("a");
+        }
+        categoryError.setName(stringBuilder.toString());
+
+        PostSaveRequest postSaveRequest = new PostSaveRequest();
+        postSaveRequest.setTitle("post1");
+        postSaveRequest.setContents("안녕하세요 반가워요 재미없나요?");
+        postSaveRequest.setCategory(categoryError);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/posts")
+                        .content(objectMapper.writeValueAsString(postSaveRequest))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
+
+        //title
+        postSaveRequest.setTitle("");
+        postSaveRequest.setContents("안녕하세요 반가워요 재미없나요?");
+        postSaveRequest.setCategory(categoryRequest);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/posts")
+                        .content(objectMapper.writeValueAsString(postSaveRequest))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
+
+
+        postSaveRequest.setTitle(stringBuilder.toString());
+        postSaveRequest.setContents("안녕하세요 반가워요 재미없나요?");
+        postSaveRequest.setCategory(categoryRequest);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/posts")
+                        .content(objectMapper.writeValueAsString(postSaveRequest))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
+
+        //contents
+        postSaveRequest.setTitle("post1");
+        postSaveRequest.setContents("");
+        postSaveRequest.setCategory(categoryRequest);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/posts")
+                        .content(objectMapper.writeValueAsString(postSaveRequest))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
+
+    }
+
+    @Test
+    void deletePost() throws Exception {
+        Post saved = postCrudRepository.save(Post.builder()
+                .title("post2")
+                .contents("post2 contents")
+                .category(Category.builder()
+                        .name("category")
+                        .build()
+                )
+                .build()
+        );
+
+        assertThat(postCrudRepository.findById(saved.getId()).isPresent()).isTrue();
+        MvcResult mvcResult = mockMvc.perform(
+                        MockMvcRequestBuilders.delete("/posts/" + saved.getId())
+                ).andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        Long postId = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Long.class);
+        assertThat(postId).isEqualTo(saved.getId());
+        assertThat(postCrudRepository.findById(postId).isEmpty()).isTrue();
+    }
+}
+```
