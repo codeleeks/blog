@@ -225,3 +225,51 @@ class PostControllerTest {
     }
 }
 ```
+
+## `@Transactional` 사용하기
+
+테스트 클래스나 메서드에 `@Transactional`을 붙이면 테스트 메서드 종료 후 자동으로 롤백을 한다.
+
+별도의 디비 초기화 로직을 작성하지 않아도 되어 편리하다.
+
+그러나 몇 가지 주의 사항이 있다.
+
+- `AUTO_INCREMENT`는 롤백되지 않는다.
+
+### `AUTO_INCREMENT`는 롤백되지 않는다
+
+테스트 코드에서 엔티티의 id를 직접 사용하는 것은 좋지 않다.
+
+id 자동 생성 전략을 어떻게 사용하느냐에 따라 달라질 수 있지만, `AUTO_INCREMENT`를 통해 증가된 엔티티 아이디는 롤백되지 않기 때문이다.
+
+```java
+@Test
+void test1() {
+  Long id = 1L;
+  repository.save(entity);
+
+  assertThat(repository.findById(id).isPresent()).isTrue(); //테스트 성공
+}
+
+@Test
+void test2() {
+  Long id = 1L;
+  repository.save(entity);
+  
+  assertThat(repository.findById(id).isPresent()).isTrue(); //테스트 실패
+}
+
+@Test
+void test3() {
+  Long id = 3L;
+  repository.save(entity);
+  
+  assertThat(repository.findById(id).isPresent()).isTrue(); //테스트 성공 (auto_increment로 인해 세 번 save했으므로 아이디는 3임)
+}
+
+@Test
+void test4_bestpractice() {
+  Entity entity = repository.save(entity);
+  assertThat(repository.findById(entity.getId()).isPresent()).isTrue(); //테스트 성공. best practice.
+}
+```
