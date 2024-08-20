@@ -235,6 +235,7 @@ class PostControllerTest {
 그러나 몇 가지 주의 사항이 있다.
 
 - `AUTO_INCREMENT`는 롤백되지 않는다.
+- `@Transactional(propagation = Propagation.REQUIRES_NEW)`를 쓰는 서비스는 롤백되지 않는다.
 
 ### `AUTO_INCREMENT`는 롤백되지 않는다
 
@@ -273,3 +274,7 @@ void test4_bestpractice() {
   assertThat(repository.findById(entity.getId()).isPresent()).isTrue(); //테스트 성공. best practice.
 }
 ```
+
+### `@Transactional(propagation = Propagation.REQUIRES_NEW)`를 쓰는 서비스는 롤백되지 않는다
+
+트랜잭션을 새로 판다면 테스트의 트랜잭션을 벗어나기 때문에 테스트의 트랜잭션의 롤백이 서비스의 롤백으로 적용되지 않는다.
