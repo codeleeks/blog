@@ -185,6 +185,12 @@ Setting xpack.security.transport.ssl.truststore.secure_password already exists. 
 Enter value for xpack.security.transport.ssl.truststore.secure_password:[패스워드 설정]
 ```
 
+## 엘라스틱서치 리부트
+
+```bash
+./bin/elasticsearch.bat
+```
+
 ## 참고
 
 [이 블로그보고 많이 참고해서 성공함!](https://velog.io/@jhchoi94/%ED%81%B4%EB%9F%AC%EC%8A%A4%ED%84%B0-%EA%B5%AC%EC%84%B1-%EB%8B%A8%EC%9D%BC-%EA%B5%AC%EC%84%B1)
