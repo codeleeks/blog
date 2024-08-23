@@ -1,6 +1,6 @@
 ## 문제의 시작
 
-`jackson`을 사용해서 테스트 코드를 짜던 중에 **`.*java.util.LinkedHashMap cannot be cast to XXX` **라는 에러가 떴다.
+`jackson`을 사용해서 테스트 코드를 짜던 중에 `.*java.util.LinkedHashMap cannot be cast to XXX`라는 에러가 떴다.
 
 `List<CategoryResponse> posts = objectMapper.readValue(raw, List.class)`가 문제였다.
 
@@ -19,7 +19,7 @@
 
 ## 문제의 해결
 
-`jackson`에서는 컬렉션의 요소 타입을 지정하는 방법으로 **`TypeReference`**라는 클래스를 제공한다. 
+`jackson`에서는 컬렉션의 요소 타입을 지정하는 방법으로 `TypeReference`라는 클래스를 제공한다. 
 동일한 이름의 클래스가 많으니 패키지명에 주의하자.
 
 ```java
