@@ -156,6 +156,28 @@ Zip file written to C:\Users\leeka\Documents\dev\github\workspace\elasticsearch\
 이렇게 하면 현재 폴더에 `elasticsearch-ssl-http.zip` 압축 파일이 생기고, 들어가면 `http.p12` 파일을 볼 수 있다.
 이것이 엘라스틱서치 서버의 인증서이다.
 
+## elasticsearch 설정 파일 수정
+
+생성된 인증서를 설정 파일에 명시한다.
+
+```yml
+xpack.security.enabled: true
+
+xpack.security.enrollment.enabled: true
+
+# Enable encryption for HTTP API client connections, such as Kibana, Logstash, and Agents
+xpack.security.http.ssl:
+  enabled: true
+  keystore.path: certs/http.p12
+
+# Enable encryption and mutual authentication between cluster nodes
+xpack.security.transport.ssl:
+  enabled: true
+  verification_mode: certificate
+  keystore.path: certs/elastic-certificates.p12
+  truststore.path: certs/elastic-certificates.p12
+```
+
 ## 각 인증서에 대한 비밀번호 설정
 
 http 인증서는 클라이언트와의 보안 연결을 위한 인증서이다.
