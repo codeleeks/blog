@@ -196,3 +196,14 @@ Enter value for xpack.security.transport.ssl.truststore.secure_password:[패스�
 [이 블로그보고 많이 참고해서 성공함!](https://velog.io/@jhchoi94/%ED%81%B4%EB%9F%AC%EC%8A%A4%ED%84%B0-%EA%B5%AC%EC%84%B1-%EB%8B%A8%EC%9D%BC-%EA%B5%AC%EC%84%B1)
 
 https://daram.tistory.com/549
+
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/security-basic-setup-https.html
+
+자바 코드 관련
+
+https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/_encrypted_communication.html
+
+https://www.baeldung.com/spring-boot-security-ssl-bundles
+
+https://spring.io/blog/2023/06/07/securing-spring-boot-applications-with-ssl
