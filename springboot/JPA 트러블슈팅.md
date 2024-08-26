@@ -176,7 +176,7 @@ public class Post extends BaseEntity {
 
     @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "comments")
+    @JoinColumn(name = "post_id")
     private List<Comment> comments = new ArrayList<>();
 }
 ```
