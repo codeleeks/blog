@@ -143,3 +143,40 @@ Hibernate: insert into category (name,parent_id) values (?,?) returning id
 ```bash
 Hibernate: select c1_0.id,c1_0.name,c1_0.parent_id from category c1_0
 ```
+
+## `@OneToMany`와 `@JoinColumn`
+
+일대다 연관 관계로 가져가려면 `@OneToMany`를 사용한다.
+
+이 때, `@JoinColumn`을 적지 않으면 JPA는 연결 테이블을 만든다.
+
+예를 들어, Post가 Comment 리스트를 가질 때 테이블은 POST, COMMENT, POST_COMMENT 이렇게 3개가 생긴다.
+POST_COMMNENT가 연결테이블이다.
+특별한 이유가 없다면 보통 연결테이블은 불필요하다.
+
+`@JoinColumn`을 쓰면 연결테이블 없이 대상 테이블에 외래키가 생성된다.
+
+```java
+@Entity
+@Getter
+@SuperBuilder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Post extends BaseEntity {
+
+    @Column(nullable = false)
+    private String title;
+
+    @Lob
+    private String contents;
+
+    @ManyToOne
+    private Category category;
+
+    private Long likes;
+
+    @Builder.Default
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "comments")
+    private List<Comment> comments = new ArrayList<>();
+}
+```
