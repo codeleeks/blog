@@ -213,6 +213,125 @@ Enter value for xpack.security.transport.ssl.truststore.secure_password:[패스�
 ./bin/elasticsearch.bat
 ```
 
+## Spring Data ElasticSearch와 연동하기
+
+```yml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost/blogmain
+    username: [postgresql 아이디]
+    password: [postgresql 비밀번호]
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    open-in-view: false
+  ssl:
+    bundle:
+      pem:
+        client:
+          truststore:
+            certificate: [pem 파일 경로]
+
+my:
+  elasticsearch:
+    username: [아이디]
+    password: [비밀번호]
+
+logging:
+  level:
+    tracer: trace
+```
+
+```java
+package blog.main;
+
+import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.ssl.NoSuchSslBundleException;
+import org.springframework.boot.ssl.SslBundles;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
+
+import javax.net.ssl.*;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
+@Configuration
+public class ElasticSearchClientConfig extends ElasticsearchConfiguration {
+    private final SSLContext sslContext;
+    private final BasicAuthConfig basicAuthConfig;
+
+
+    public ElasticSearchClientConfig(SslBundles sslBundles, BasicAuthConfig basicAuthConfig) throws NoSuchSslBundleException {
+        this.sslContext = sslBundles.getBundle("client").createSslContext();
+        this.basicAuthConfig = basicAuthConfig;
+    }
+
+    @Override
+    public ClientConfiguration clientConfiguration() {
+        return ClientConfiguration.builder()
+                .connectedTo("localhost:9200")
+                .usingSsl(sslContext, allHostsValid())
+                .withBasicAuth(basicAuthConfig.getUsername(), basicAuthConfig.getPassword())
+                .build();
+    }
+
+   //ssl 무시하는 코드.
+    public static SSLContext disableSslVerification() {
+        try {
+            // ============================================
+            // trust manager 생성(인증서 체크 전부 안함)
+            TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+
+                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                }
+
+                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                }
+            }};
+
+            // trust manager 설치
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            return sc;
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static HostnameVerifier allHostsValid() {
+
+        // ============================================
+        // host name verifier 생성(호스트 네임 체크안함)
+        HostnameVerifier allHostsValid = (hostname, session) -> true;
+
+        // host name verifier 설치
+        HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+        return allHostsValid;
+
+    }
+
+    @ConfigurationProperties("my.elasticsearch")
+    @Configuration
+    @Data
+    public static class BasicAuthConfig {
+        private String username;
+        private String password;
+    }
+}
+```
+
 ## 참고
 
 [이 블로그보고 많이 참고해서 성공함!](https://velog.io/@jhchoi94/%ED%81%B4%EB%9F%AC%EC%8A%A4%ED%84%B0-%EA%B5%AC%EC%84%B1-%EB%8B%A8%EC%9D%BC-%EA%B5%AC%EC%84%B1)
