@@ -276,6 +276,7 @@ public class ElasticSearchClientConfig extends ElasticsearchConfiguration {
     public ClientConfiguration clientConfiguration() {
         return ClientConfiguration.builder()
                 .connectedTo("localhost:9200")
+               //TODO allHostsValid를 인증서에 있는 CN으로 고쳐야 함.
                 .usingSsl(sslContext, allHostsValid())
                 .withBasicAuth(basicAuthConfig.getUsername(), basicAuthConfig.getPassword())
                 .build();
