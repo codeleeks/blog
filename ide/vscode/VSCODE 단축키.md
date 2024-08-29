@@ -1,7 +1,5 @@
 ---
-summary: VSCODE 단축키 모음
 date: 2024-01-19
-title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/vscode/vscode-shortcut/title.png'
 ---
 
 # 단축키
