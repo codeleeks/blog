@@ -131,8 +131,8 @@ li {
     border-bottom: 1px solid var(--border-color);
     img {
       height: calc(var(--card-height) * 0.6);
-      object-fit: cover;
-      object-position: left;
+      object-fit: contain;
+      object-position: center;
       border-radius: var(--main-border-radius);
       box-shadow: 0 0 8px 0 rgb(255, 193, 200, 0.7);
     }
