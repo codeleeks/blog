@@ -29,14 +29,23 @@ async function _fetchRepositoryPosts(owner, repo, branch) {
   const { tree } = await resp.json()
 
   const postTree = tree
-    .filter((tree) => tree.mode === '040000')
+    .filter(
+      (tree) =>
+        tree.mode === '100644' &&
+        tree.path.endsWith('.md') &&
+        tree.path !== 'README.md'
+    )
     .reduce((acc, cur) => {
-      acc[cur.path] = [
-        ...tree.filter(
-          (tree) =>
-            tree.mode === '100644' && tree.path.startsWith(cur.path + '/')
-        ),
-      ]
+      const path = cur.path
+      const last = path.lastIndexOf('/')
+      const categories = path.substring(0, last)
+
+      if (acc[categories] === undefined) {
+        acc[categories] = [cur]
+      } else {
+        acc[categories].push(cur)
+      }
+    
       return acc
     }, {})
 
