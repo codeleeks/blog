@@ -32,7 +32,3 @@ $border-red: rgba(#fff, 0.1);
   background-color: rgba(255, 255, 255, 0.1);
 }
 ```
-
-<TabNavigation items={[{title:'SCSS'}]}>
-  hello
-</TabNavigation>
