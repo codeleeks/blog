@@ -1,7 +1,7 @@
 ---
 summary: react의 기본적인 기술에 대해 정리한다.
 date: 2024-05-08
-title-image: ''
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/react/react%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
 ---
 
 ## 모달 다루기
