@@ -1,7 +1,7 @@
 ---
 summary: react에서 querySelector로 요소를 가져올 수 있는 타이밍을 알아본다.
 date: 2024-05-07
-title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/react/querySelector%EA%B0%80%20%EA%B0%80%EC%A0%B8%EC%98%AC%20%EC%88%98%20%EC%9E%88%EB%8A%94%20%ED%83%80%EC%9D%B4%EB%B0%8D%EC%9D%80/title.png'
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/react/react%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
 ---
 
 - 일반 컴포넌트
