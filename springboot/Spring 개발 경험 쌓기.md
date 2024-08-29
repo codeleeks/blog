@@ -3,6 +3,9 @@
 - web/request
   - request 객체. 
   - controller 메서드의 파라미터로 사용. `toEntity()` 메서드를 통해 entity로 변환하여 서비스 레이어에 전달.
+- service/response
+  - `OSIV = false`일 경우 트랜잭션 종료 시점인 프레젠테이션 영역에서 엔티티를 조회하지 못하기 때문에 서비스에서는 반환용 DTO 객체를 만들어 리턴한다.
+  - 반환용 DTO 클래스를 이 폴더에 정의한다.
 
 ## 읽기 컨트롤러와 쓰기 컨트롤러 분리
 
