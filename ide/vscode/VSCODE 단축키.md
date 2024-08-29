@@ -12,21 +12,28 @@ date: 2024-01-19
 - ctrl + alt + f = 찾은 텍스트 바꾸기
 ```
 <hr />
+
 ```
 - alt + up = 해당 줄이 위로 이동
 - alt + down = 해당 줄이 아래로 이동
 - alt + shift + down = 해당 줄을 아래에 복붙
 - alt + shift + up = 해당 줄을 위에 복붙
 ```
+
 <hr />
+
 ```
 - shift + tab = 내어쓰기
 ```
+
 <hr />
+
 ```
 - ctrl + / = 주석
 ```
+
 <hr />
+
 ```
 - ctrl + \ = 창 분할하여 탭 복제
 - ctrl + shift + [ : 이전 탭으로 이동
