@@ -1,3 +1,6 @@
+---
+date: 2024-08-20
+---
 ## 문제의 시작
 
 `jackson`을 사용해서 테스트 코드를 짜던 중에 `.*java.util.LinkedHashMap cannot be cast to XXX`라는 에러가 떴다.
