@@ -1,7 +1,7 @@
 ---
 summary: CORS에 대해 정리합니다.
 date: 2024-05-25
-title-image: ''
+title-image: 'https://github.com/codeleeks/blog/blob/codeleeks-images/web-terminology/CORS/title.png'
 ---
 
 Cross Origin Resource Sharing. 간단히 말해서, 내 리소스를 받아갈 수 있게 허용할 것이냐? 이다.

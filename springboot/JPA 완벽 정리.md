@@ -1,3 +1,10 @@
+---
+summary: Spring의 JPA 기능을 정리합니다.
+date: 2024-07-01
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/JPA%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
+---
+
+
 ## JPA
 
 자바 ORM 표준

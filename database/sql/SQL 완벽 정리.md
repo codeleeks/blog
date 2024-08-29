@@ -1,3 +1,9 @@
+---
+summary: SQL를 정리합니다.
+date: 2024-08-06
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/database/elasticsearch/ElasticSearch%EB%A1%9C%20%EA%B2%80%EC%83%89%ED%95%98%EA%B8%B0/title.png'
+---
+
 ## 테이블 설계 방법론
 - what kind of thing are we storing?
   - ➡️ we are storing a list of cities

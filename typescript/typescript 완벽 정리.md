@@ -1,7 +1,7 @@
 ---
 summary: 타입스크립트의 기본을 완벽하게 정리합니다.
 date: 2024-05-25
-title-image: ''
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/typescript/typescript%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
 ---
 
 타입스크립트는 자바스크립트로 컴파일되는 언어로서, 컴파일 타임에 타입 체크를 통해 사전에 에러를 잡아보자는 목표를 갖는다.

@@ -1,3 +1,9 @@
+---
+summary: Spring에서 JPA를 사용하면서 트러블슈팅했던 내용을 정리합니다.
+date: 2024-08-25
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/JPA%20%ED%8A%B8%EB%9F%AC%EB%B8%94%EC%8A%88%ED%8C%85/title.png'
+---
+
 ## 엔티티 자기 참조(entity self reference)
 
 ### `@OneToMany` 방식

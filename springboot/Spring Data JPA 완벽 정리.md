@@ -1,3 +1,10 @@
+---
+summary: Spring Data JPA를 정리합니다.
+date: 2024-06-30
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/Spring%20Data%20JPA%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
+---
+
+
 ## 레포지토리 인터페이스
 
 스프링 데이터가 제공하는 루트 인터페이스.

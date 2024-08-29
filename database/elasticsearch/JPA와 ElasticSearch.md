@@ -1,3 +1,9 @@
+---
+summary: Spring Data ElasticSearch에서 주의할 점을 정리합니다.
+date: 2024-08-18
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/database/elasticsearch/JPA%EC%99%80%20ElasticSearch/title.png'
+---
+
 ## Dirty Checking을 지원하지 않는다?
 
 ```java

@@ -1,3 +1,9 @@
+---
+summary: 엘라스틱서치로 자동완성 API를 구현합니다.
+date: 2024-08-22
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/examples/ElasticSearch%EB%A5%BC%20%ED%99%9C%EC%9A%A9%ED%95%98%EC%97%AC%20%EC%9E%90%EB%8F%99%EC%99%84%EC%84%B1%20%EA%B2%80%EC%83%89%20%EA%B8%B0%EB%8A%A5%20%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0/title.png'
+---
+
 ## 요구 사항
 
 - 제목, 카테고리, 내용을 대상으로 한다.

@@ -1,7 +1,7 @@
 ---
 summary: SCSS의 기본을 완벽하게 정리합니다.
 date: 2024-05-30
-title-image: ''
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/scss/SCSS%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
 ---
 
 ## @extend

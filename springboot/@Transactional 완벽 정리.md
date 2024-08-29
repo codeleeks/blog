@@ -1,3 +1,10 @@
+---
+summary: Spring의 @Transactional 기능을 정리합니다.
+date: 2024-07-30
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/%40Transactional%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
+---
+
+
 ## 옵션
 
 - value, transcationManager: 트랜잭션 매니저 클래스를 지정한다.

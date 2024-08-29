@@ -1,3 +1,10 @@
+---
+summary: SpringBoot의 탄생과 활용 방법을 정리합니다.
+date: 2024-07-29
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/SpringBoot%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
+---
+
+
 ## 과거에는 어땠나...? - 서블릿 컨테이너
 
 과거의 개발 방식은 

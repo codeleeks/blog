@@ -1,3 +1,10 @@
+---
+summary: Spring의 ThreadLocal을 정리합니다.
+date: 2024-06-25
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/Spring%20Thread%20Local%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
+---
+
+
 ## 스레드 로컬
 
 스레드 고유의 저장소를 갖는다.

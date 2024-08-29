@@ -1,3 +1,9 @@
+---
+summary: JDBC부터 JPA까지 데이터 접근 기술을 정리합니다.
+date: 2024-06-27
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/Spring%20DB%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
+---
+
 ## JDBC
 
 과거에는 DB마다 Connection 맺는 법, SQL 전달하는 법, 결과를 받는 법이 달랐기 때문에, 어플리케이션에서 DB 벤더에 맞는 로직을 작성해야 했다.

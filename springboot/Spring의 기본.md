@@ -1,3 +1,9 @@
+---
+summary: Spring Container부터 빈 활용 방법 등 Spring 기본 기술을 정리합니다.
+date: 2024-06-17
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/Spring%EC%9D%98%20%EA%B8%B0%EB%B3%B8/title.png'
+---
+
 ## 빈 출력하기
 
 ```java

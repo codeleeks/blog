@@ -1,3 +1,10 @@
+---
+summary: QueryDSL을 정리합니다.
+date: 2024-07-31
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/QueryDSL%20%EB%A0%88%EC%8B%9C%ED%94%BC/title.png'
+---
+
+
 ## 환경 설정
 
 빌드 테스트를 위해 엔티티 생성.

@@ -1,3 +1,9 @@
+---
+summary: Spring MVC를 정리합니다.
+date: 2024-06-23
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/MVC%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
+---
+
 ## 로그인
 
 ### 요구 사항

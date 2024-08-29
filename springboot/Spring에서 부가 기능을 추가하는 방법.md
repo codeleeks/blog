@@ -1,3 +1,10 @@
+---
+summary: Spring의 AOP를 정리합니다.
+date: 2024-06-09
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/Spring%EC%97%90%EC%84%9C%20%EB%B6%80%EA%B0%80%20%EA%B8%B0%EB%8A%A5%EC%9D%84%20%EC%B6%94%EA%B0%80%ED%95%98%EB%8A%94%20%EB%B0%A9%EB%B2%95/title.png'
+---
+
+
 ## 개요
 
 메인 기능은 비즈니스 로직 자체를 말한다.

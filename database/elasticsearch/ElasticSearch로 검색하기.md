@@ -1,3 +1,9 @@
+---
+summary: ElasticSearch를 정리합니다.
+date: 2024-08-06
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/database/elasticsearch/ElasticSearch%EB%A1%9C%20%EA%B2%80%EC%83%89%ED%95%98%EA%B8%B0/title.png'
+---
+
 본 포스팅에서 사용하는 도표 및 그림은 https://esbook.kimjmin.net/ 에서 가져왔음을 밝힙니다.
 
 ## 샤드와 레플리카
