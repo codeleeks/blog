@@ -2,7 +2,7 @@
 
 1. 제목에 쉼표 포함시 띄어쓰기를 꼭 넣는다. (관련 이슈: https://github.com/codeleeks/blog/issues/1)
 2. 줄바꿈을 위한 heading 삽입은 금지한다.
-
+3. 타이틀 이미지 사이즈는 `872x470`으로 고정한다.
 
 ## message-box 작성 규칙
 
