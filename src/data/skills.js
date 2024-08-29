@@ -25,10 +25,6 @@ export const SKILLS = [
     img: springboot,
   },
   {
-    name: 'react',
-    img: react,
-  },
-  {
     name: 'kubernetes',
     img: kubernetes,
   },
@@ -37,12 +33,16 @@ export const SKILLS = [
     img: java,
   },
   {
-    name: 'javascript',
-    img: javascript,
-  },
-  {
     name: 'go',
     img: golang,
+  },
+  {
+    name: 'react',
+    img: react,
+  },
+  {
+    name: 'javascript',
+    img: javascript,
   },
   {
     name: 'scss',
@@ -51,10 +51,6 @@ export const SKILLS = [
   {
     name: 'react-query',
     img: reactQuery,
-  },
-  {
-    name: 'tailwindcss',
-    img: tailwindcss,
   },
   {
     name: 'redux',
