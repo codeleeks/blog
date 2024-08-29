@@ -1,7 +1,7 @@
 ---
 summary: ElasticSearch SSL 적용하기
 date: 2024-08-05
-title-image: ''
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/database/elasticsearch/ElasticSearch%20SSL%20%EC%A0%81%EC%9A%A9%ED%95%98%EA%B8%B0/title.png'
 ---
 
 ## CA 발급
