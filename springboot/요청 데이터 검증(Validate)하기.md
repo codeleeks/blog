@@ -1,3 +1,10 @@
+---
+summary: `spring-validation` 기능을 활용해 요청 데이터를 검증하는 방법을 정리합니다.
+date: 2024-09-01
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/%EC%9A%94%EC%B2%AD%20%EB%8D%B0%EC%9D%B4%ED%84%B0%20%EA%B2%80%EC%A6%9D(Validate)%ED%95%98%EA%B8%B0/title.png'
+---
+
+
 ## 문제
 
 요청 DTO에 대한 밸리데이션은 서비스 레이어에 녹아 있는 경우가 많았다.
