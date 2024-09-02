@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { scrollTo } from '../../../utils/gsap'
-import CodeText from '../Markdown/CodeText'
 
 export default (props) => {
   const { heading } = props
@@ -41,7 +40,7 @@ export default (props) => {
   return (
     <li key={heading.slug} className={`heading-${heading.level}`}>
       <a href={`#${heading.slug}`} onClick={clickHandler}>
-        <CodeText text={heading.text} />
+        {heading.text.replaceAll('`', '')}
       </a>
     </li>
   )
