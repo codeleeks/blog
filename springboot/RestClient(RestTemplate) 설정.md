@@ -190,3 +190,7 @@ Posts body = restClient.get()
         .retrieve()
         .body(Posts.class);
 ```
+
+## 참고
+
+[참고](https://incheol-jung.gitbook.io/docs/q-and-a/spring/resttemplate)
