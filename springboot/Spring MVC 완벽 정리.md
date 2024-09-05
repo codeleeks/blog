@@ -4,6 +4,29 @@ date: 2024-06-23
 title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/MVC%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
 ---
 
+## Spring MVC
+
+### 핸들러 스캐닝
+
+모든 빈에서 핸들러를 리스트업한다.
+핸들러의 조건은 핸들러 매핑마다 다르며, 자주 사용하는 어노테이션 기반 핸들러 매핑은 `@Controller`여야 한다.
+
+![image](https://github.com/user-attachments/assets/d795e722-7f93-4136-9a20-038c45c49353)
+![image](https://github.com/user-attachments/assets/f8d13ac8-e9a7-47aa-9f2b-bdafc124f5ef)
+
+
+
+### `@RestController`
+
+`HandlerMethodReturnValueHandlerComposite` 객체의 `handleReturnValue()` 메서드에서 처리.
+`ModelAndView` 객체는 null로 리턴된다.
+관련 어댑터가 `ModelAndView`를 리턴하기 전에 `ServletServerHttpResponse`를 통해 HTTP 응답을 보낸다.
+이 응답의 바디에는 컨트롤러가 반환한 데이터가 `HttpMessageConverter`에 의해 직렬화되어 담긴다.
+
+![image](https://github.com/user-attachments/assets/a12d7a53-9f87-4ce7-8e77-25f330287b4d)
+
+
+
 ## 로그인
 
 ### 요구 사항
