@@ -168,25 +168,12 @@ public @interface ReSignUpConstraint {
     Class<? extends Payload>[] payload() default { };
 }
 
-@Data
-@ReSignUpConstraint
-public class SignUpRequest {
-    @NotBlank
-    private String name;
-    @NotB를 구현할 수 있다.
-
-
-```java
 @Slf4j
-public class BlackListConstraintValidator implements ConstraintValidator<BlackListConstraint, SignUpRequest> {
-    @Override
-    public void initialize(BlackListConstraint constraintAnnotation) {
-        ConstraintValidator.super.initialize(constraintAnnotation);
-    }
+public class ReSignUpConstraintValidator implements ConstraintValidator<ReSignUpConstraint, SignUpRequest> {
 
     @Override
     public boolean isValid(SignUpRequest value, ConstraintValidatorContext context) {
-        System.out.println("BlackListConstraintValidator.isValid");
+        System.out.println("ReSignUpConstraintValidator.isValid");
         log.info("value - {}", value);
         return false;
     }
@@ -204,30 +191,81 @@ public @interface BlackListConstraint {
     Class<? extends Payload>[] payload() default { };
 }
 
-
 @Slf4j
-public class ReSignUpConstraintValidator implements ConstraintValidator<ReSignUpConstraint, SignUpRequest> {
+public class BlackListConstraintValidator implements ConstraintValidator<BlackListConstraint, SignUpRequest> {
+    @Override
+    public void initialize(BlackListConstraint constraintAnnotation) {
+        ConstraintValidator.super.initialize(constraintAnnotation);
+    }
 
     @Override
     public boolean isValid(SignUpRequest value, ConstraintValidatorContext context) {
-        System.out.println("ReSignUpConstraintValidator.isValid");
+        System.out.println("BlackListConstraintValidator.isValid");
         log.info("value - {}", value);
         return false;
     }
 }
 
+@Data
+@ReSignUpConstraint
+@BlackListConstraint
+public class SignUpRequest {
+    @NotBlank
+    private String name;
+}
+```
+
+#### 해결방법2 컨트롤러의 파라미터에 어노테이션을 붙인다
+
+컨트롤러 클래스에 `@Validated` 어노테이션을 붙이고, 파라미터에 제약 조건 어노테이션을 붙인다.
+그러면 요청 객체에 대한 클래스, 필드 검증을 마친 뒤, 컨트롤러 메서드를 호출하기 직전에 파라미터 밸리데이션이 수행된다.
+즉, 요청 객체의 필드에 붙인 제약 조건을 그대로 사용하면서 여러 필드와 디비 접근이 필요한 검증을 수행할 수 있다.
+
+클래스나 필드에 붙이는 어노테이션은 `invocableMethod`의 `invokeForRequest()`에서 `getMethodArugmentValues()`를 호출할 때 관련된 밸리데이터가 생성되고 호출된다.
+이는 웹 요청을 처리하는 핸들러(컨트롤러)를 찾기 위한 아규먼트 리졸브 단계에 해당한다.
+
+반면, 컨트롤러의 파라미터에 붙은 어노테이션은 `invocableMethod`의 `invokeForRequest()`에서 `doInvoke()`를 호출할 때 관련된 밸리데이터가 생성되고 호출된다.
+이는 웹 요청을 처리할 핸들러를 찾은 후에 핸들러의 메서드를 호출하기 전에 수행된다.
+컨트롤러 클래스에 `@Validated` 어노테이션이 붙으면 프록시로 처리된다.
+이 프록시가 메소드밸리데이터를 호출하기 때문에 메서드 파라미터에 붙인 커스텀 밸리데이터가 호출된다.
+
+![image](https://github.com/user-attachments/assets/eaf6c091-e32c-4123-b43d-bab067f29dbd)
+
+```java
+//파라미터 제약 조건 어노테이션
+//어노테이션 그룹핑 - @BlackListConstraint, @ReSignUpConstraint (위에서부터 순차적으로 실행됨)
 @Documented
-@Constraint(validatedBy = ReSignUpConstraintValidator.class)
+@Constraint(validatedBy = {})
 @Target({TYPE, PARAMETER})
 @Retention(RUNTIME)
-public @interface ReSignUpConstraint {
-    String message() default "signing up again within 1 month is not allowed ";
+@BlackListConstraint
+@ReSignUpConstraint
+public @interface BusinessValidated {
+    String message() default "default";
 
     Class<?>[] groups() default { };
 
     Class<? extends Payload>[] payload() default { };
 }
+
+// 컨트롤러 클래스
+// @Validated를 클래스에 붙이면 메소드 파라미터 밸리데이션이 가능하다
+@RestController
+@Slf4j
+@Validated
+public class SignUpController {
+    @PostMapping("/signup")
+    public void signUp(@RequestBody @Validated @BusinessValidated SignUpRequest signUpRequest) {
+        log.info("validation passed! - {}", signUpRequest);
+    }
+
+    @PutMapping("/signup")
+    public void update(@RequestBody @Validated(UpdateConstraintGroup.class) @BusinessValidated SignUpRequest signUpRequest) {
+        log.info("update validation passed! - {}", signUpRequest);
+    }
+}
 ```
+
 
 ## 메시지
 
