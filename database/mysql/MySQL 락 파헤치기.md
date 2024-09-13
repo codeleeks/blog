@@ -102,4 +102,104 @@ TX1에서 삽입, TX2에서 삽입, TX1에서 수정, TX2에서 수정했다고 
 
 결국 TX1과 TX2는 서로 락이 해제되기를 기다리므로, 데드락이다.
 
+## MySQL은 인덱스에 락을 건다.
 
+기본키나 유니크제약조건은 인덱스로 자동 생성된다.
+이 컬럼들을 가지고 락을 걸어 조회하면 레코드락이 된다.
+
+그런데 이 컬럼들이 아닌 일반 컬럼들## 워크벤치에서 트랜잭션 오토커밋 해제하기
+
+MySQL의 워크벤치는 쿼리탭에 쿼리를 적고 실행하면 자동으로 커밋한다.
+
+동시성 동작을 확인하려면 오토커밋 기능을 꺼야 한다.
+
+![image](https://github.com/user-attachments/assets/0a9af211-8a20-471a-9f0b-6d49f9b3c343)
+
+## 워크벤치에서 트랜잭션 분리하기
+
+MySQL 워크벤치는 '연결' 단위로 트랜잭션이 분리된다.
+
+같은 연결에서 쿼리탭을 분리한다고 해서 트랜잭션이 분리되지 않는다. 각 쿼리탭에서 수행되는 쿼리는 같은 트랜잭션을 공유한다.
+
+현재 연결을 복제하여 새 연결을 생성하려면 `ctrl + shift + t`를 누르면 된다.
+
+## 락 상태 확인하기 - innodb status
+
+MySQL(innodb)의 락 상태를 확인하려면 글로벌 변수 설정이 필요하다. 
+
+```sql
+SET GLOBAL innodb_status_output=ON;
+SET GLOBAL innodb_status_output_locks=ON;
+```
+
+그리고 innodb의 status를 확인한다.
+
+```sql
+show engine innodb status
+```
+
+그러면 아래와 같이 어떤 테이블 어떤 필드에 대한 어떤 종류의 락이 걸려 있는지 확인할 수 있다.
+
+![image](https://github.com/user-attachments/assets/7c09de3f-242e-4351-8562-38ae01f72815)
+
+참고
+- https://dev.mysql.com/doc/refman/5.7/en/innodb-enabling-monitors.html
+
+## 락 상태 확인하기 - performance_schema
+
+MySQL 8부터는 performance_schema.data_locks 테이블을 통해 락 정보를 보다 쉽게 확인할 수 있다.
+
+```sql
+SELECT * FROM performance_schema.data_locks
+```
+
+![image](https://github.com/user-attachments/assets/6b6ad006-3788-4bbe-97b6-291483bdd113)
+
+
+## 외래키 제약 조건은 S락을 건다.
+
+두 개의 트랜잭션에서 아래와 같은 쿼리를 실행하면 데드락이 발생한다.
+
+```sql
+-- TX1
+begin;
+insert into child values (1, 'child', 1);
+update parent set updated_at = now() where id = 1;
+
+-- TX2
+begin;
+insert into child values (2, 'child', 1);
+update parent set updated_at = now() where id = 1;
+```
+
+child 테이블에 레코드를 삽입하는 쿼리는 parent에는 S락을 child에는 X락을 건다.
+parent 테이블의 레코드를 수정하는 쿼리는 parent에 X락을 건다.
+
+TX1에서 삽입, TX2에서 삽입, TX1에서 수정, TX2에서 수정했다고 하자.
+
+1. TX1의 삽입: parent 테이블에 대한 S락, child 테이블에 대한 X락 -> 모두 획득
+2. TX2의 삽입: parent 테이블에 대한 S락, child 테이블에 대한 X락 -> 모두 획득
+3. TX1의 수정: parent 테이블에 대한 X락 -> X락 대기(TX2 S락의 해제를 기다림)
+4. TX2의 수정: parent 테이블에 대한 X락 -> X락 대기(TX1 S락의 해제를 기다림)
+
+결국 TX1과 TX2는 서로 락이 해제되기를 기다리므로, 데드락이다.
+
+## MySQL은 인덱스에 락을 건다.
+
+기본키나 유니크제약조건은 인덱스로 자동 생성된다.
+이 컬럼들을 가지고 락을 걸어 조회하면 레코드락이 된다.
+
+```sql
+select * from parent where id = 1 for share;
+```
+
+![image](https://github.com/user-attachments/assets/8e169f33-09d4-4f73-8470-9452c7570e06)
+
+
+그런데 기본키나 유니크제약이 걸리지 않은 컬럼으로 락을 걸어 조회하면 모든 레코드에 락이 걸린다.(모든 레코드에 레코드락이 걸림)
+
+```sql
+select * from parent where name = 'parent_1' for share;
+```
+
+![image](https://github.com/user-attachments/assets/fe39258c-582d-4313-af42-4fc263a76768)
