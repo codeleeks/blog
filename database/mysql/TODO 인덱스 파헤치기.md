@@ -81,3 +81,7 @@ explain select *, concat(e.first_name, lpad(e.emp_no, 10, '0')) as `cursor` from
 ## 어센딩 인덱스와 디센딩 인덱스
 
 https://tech.kakao.com/posts/351
+
+## 인덱스가 안 타는 경우 (or 등)
+
+https://jaehoney.tistory.com/139
