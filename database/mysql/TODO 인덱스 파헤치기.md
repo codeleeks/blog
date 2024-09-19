@@ -76,3 +76,8 @@ explain select *, concat(e.first_name, lpad(e.emp_no, 10, '0')) as `cursor` from
 ```
 
 ![image](https://github.com/user-attachments/assets/f70c3652-6e67-4611-84c5-a2107dcd68d8)
+
+
+## 어센딩 인덱스와 디센딩 인덱스
+
+https://tech.kakao.com/posts/351
