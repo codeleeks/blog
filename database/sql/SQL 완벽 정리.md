@@ -230,9 +230,13 @@ group BY comments.photo_id;
 
 ### having
 
-그룹을 필터링한다.
+derived table을 필터링한다.
+having은 최종 결과물을 다 만들어서 클라이언트에게 보내기 직전에 필터링하는 작업이라 생각하면 좋다.
+derived table이란 테이블 그대로 조회한 것이 아니라 무언가 연산을 통해 얻어진 테이블이다.
+컬럼이 추가됐을 수도 있고, 아예 다른 테이블처럼 보일 수도 있다.
 
-`group by`로 그룹핑한 뒤에 `having` 절 조건으로 그룹을 필터링한다.
+대표적인 것이 grouping이다. `group by` 키워드로 테이블의 특정 컬럼으로 그룹핑할 수 있다.
+이렇게 만들어지는 derived table을 필터링하려면 `having`을 사용한다.
 
 `having`절 조건은 aggregates 함수가 사용될 수 있다.
 
