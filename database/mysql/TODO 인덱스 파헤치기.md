@@ -2,6 +2,8 @@
 
 ## 실행 계획 파헤치기
 
+https://cheese10yun.github.io/mysql-explian/
+
 ## 인덱스를 언제 타는가?
 
 - 인덱스와 동일한 정렬의 쿼리이면 -> 인덱스 탄다.
