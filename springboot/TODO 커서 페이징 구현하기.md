@@ -30,12 +30,21 @@ select * from products as p where p.id > 20 limit 10;
 
 ## 멀티 컬럼 커서 페이징
 
-결국 or 연산 필요.
-https://velog.io/@minsangk/%EC%BB%A4%EC%84%9C-%EA%B8%B0%EB%B0%98-%ED%8E%98%EC%9D%B4%EC%A7%80%EB%84%A4%EC%9D%B4%EC%85%98-Cursor-based-Pagination-%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0#%EC%BC%80%EC%9D%B4%EC%8A%A4-price-desc-id-desc-%EC%BB%A4%EC%8A%A4%ED%85%80-cursor-%EC%83%9D%EC%84%B1
+멀티 컬럼 커서 페이징은 기본적으로 OR를 활용한다.
 
-https://stackoverflow.com/questions/38017054/mysql-cursor-based-pagination-with-multiple-columns
+컬럼의 정렬 우선순위가 가장 높은 컬럼을 기준으로 정렬하고, 이 컬럼값이 같으면 다음 우선순위의 컬럼을 기준으로 정렬한다.
+이는 OR 연산으로 표현할 수 있다.
 
-https://velog.io/@znftm97/%EC%BB%A4%EC%84%9C-%EA%B8%B0%EB%B0%98-%ED%8E%98%EC%9D%B4%EC%A7%80%EB%84%A4%EC%9D%B4%EC%85%98Cursor-based-Pagination%EC%9D%B4%EB%9E%80-Querydsl%EB%A1%9C-%EA%B5%AC%ED%98%84%EA%B9%8C%EC%A7%80-so3v8mi2
+```sql
+-- first_name이 같으면 emp_no를 비교한다. (정렬 우선순위가 결국 커서값 비교 우선순위에 해당한다)
+select * from employees as e where (e.first_name > 'Aamer' or (e.first_name = 'Aamer' and e.emp_no < '491629')) order by e.first_name, e.emp_no desc limit 10;
+```
+
+OR 연산의 단점은 인덱스를 타지 않을 수 있다는 점이다.
+
+해결법은 제한적이다.
+요구사항에서 모든 컬럼의 정렬 방향이 동일하다는 제약이 있어야 한다.
+이 제약이 받아들여진다면, [커스텀 커서 방식](#커스텀-커서로-구현하기)을 고려해볼 수 있다.
 
 ## 인덱스와 커서 페이징
 
@@ -227,6 +236,8 @@ public interface EmployeeRepositoryV1 extends PagingAndSortingRepository<Employe
 
 ### 멀티 컬럼일 경우 (sorting은 동적으로)
 
+#### `OR`로 구현하기
+
 ```java
 public class EmployeeEmpNoAndFirstNameCursorPagingRepositoryImpl implements EmployeeEmpNoAndFirstNameCursorPagingRepository {
     private final JPAQueryFactory queryFactory;
@@ -320,3 +331,20 @@ public void pagingMultipleColumns() throws Exception {
 }
 
 ```
+
+#### 커스텀 커서로 구현하기
+
+이 구현은 모든 컬럼의 정렬 방향이 동일하다는 제약이 필요하다.
+
+그렇지 않으면 인덱스를 타게 만들기 어렵다(정렬 방향의 경우의 수마다 인덱스를 만들어야 한다)
+
+
+
+
+## 참고
+
+https://velog.io/@minsangk/%EC%BB%A4%EC%84%9C-%EA%B8%B0%EB%B0%98-%ED%8E%98%EC%9D%B4%EC%A7%80%EB%84%A4%EC%9D%B4%EC%85%98-Cursor-based-Pagination-%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0#%EC%BC%80%EC%9D%B4%EC%8A%A4-price-desc-id-desc-%EC%BB%A4%EC%8A%A4%ED%85%80-cursor-%EC%83%9D%EC%84%B1
+
+https://stackoverflow.com/questions/38017054/mysql-cursor-based-pagination-with-multiple-columns
+
+https://velog.io/@znftm97/%EC%BB%A4%EC%84%9C-%EA%B8%B0%EB%B0%98-%ED%8E%98%EC%9D%B4%EC%A7%80%EB%84%A4%EC%9D%B4%EC%85%98Cursor-based-Pagination%EC%9D%B4%EB%9E%80-Querydsl%EB%A1%9C-%EA%B5%AC%ED%98%84%EA%B9%8C%EC%A7%80-so3v8mi2
