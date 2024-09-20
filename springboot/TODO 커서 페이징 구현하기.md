@@ -63,4 +63,260 @@ select *, concat(e.first_name, lpad(pow(10, 10) - e.emp_no, 10, '0')) as `cursor
 
 인덱스를 잘 탄다.
 
+## Spring Data에서 커서 페이징 구현하기
 
+### 싱글 컬럼일 경우 (sorting은 동적으로)
+
+QueryDSL을 사용하여 where와 order by에 들어가는 표현식을 동적으로 처리한다.
+
+QueryDSL의 ComparablePath를 이용하면 여러 타입의 컬럼을 커버할 수 있다.
+(cursor를 반환해야 하는데, QueryDSL에서 이를 동적으로 표현하는 방법을 못 찾았다. 그래서 완벽한 커버는 아니다.)
+
+```java
+public class EmployeeEmpNoCursorPagingRepositoryImpl implements EmployeeEmpNoCursorPagingRepository {
+    private final JPAQueryFactory queryFactory;
+
+    public EmployeeEmpNoCursorPagingRepositoryImpl(EntityManager em) {
+        this.queryFactory = new JPAQueryFactory(em);
+    }
+
+    @Override
+    public <T extends Comparable<T>> Page<EmployeeResponse> findAll(Pageable pageable, String cursorColumn, T cursorValue, Class<T> cursorType) {
+
+        Sort.Order orderFor = pageable.getSort().getOrderFor(cursorColumn);
+        PathBuilder<? extends Employee> pathBuilder = new PathBuilder<>(employee.getType(), employee.getMetadata());
+
+        ComparablePath<T> comparable = pathBuilder.getComparable(cursorColumn, cursorType);
+
+        OrderSpecifier<T> order = Optional.ofNullable(orderFor)
+                .filter(o -> !o.isDescending())
+                .map(o -> comparable.asc())
+                .orElse(comparable.desc());
+
+        BooleanExpression cursorCond = Optional.ofNullable(orderFor)
+                .map(o -> {
+                    if (o.isDescending()) {
+                        return comparable.lt(cursorValue);
+                    } else {
+                        return comparable.gt(cursorValue);
+                    }
+                })
+                .orElse(null);
+
+        List<EmployeeResponse> fetch = queryFactory
+                .select(employee)
+                .from(employee)
+                .where(cursorCond)
+                .orderBy(order)
+                .limit(pageable.getPageSize())
+                .fetch()
+                .stream()
+                .map(e -> EmployeeResponse.fromWithCursor(e, cursorColumn))
+                .toList();
+
+        return new PageImpl<>(fetch);
+    }
+
+
+    public <T extends LocalDate> Page<EmployeeResponse> findAll(Pageable pageable, String cursorColumn, T cursorValue, Class<T> cursorType) {
+        Sort.Order orderFor = pageable.getSort().getOrderFor(cursorColumn);
+        PathBuilder<? extends Employee> pathBuilder = new PathBuilder<>(employee.getType(), employee.getMetadata());
+
+        DatePath<T> comparable = pathBuilder.getDate(cursorColumn, cursorType);
+
+        OrderSpecifier<T> order = Optional.ofNullable(orderFor)
+                .filter(o -> !o.isDescending())
+                .map(o -> comparable.asc())
+                .orElse(comparable.desc());
+
+        BooleanExpression cursorCond = Optional.ofNullable(orderFor)
+                .map(o -> {
+                    if (o.isDescending()) {
+                        return comparable.lt(cursorValue);
+                    } else {
+                        return comparable.gt(cursorValue);
+                    }
+                })
+                .orElse(null);
+
+        List<EmployeeResponse> fetch = queryFactory
+                .select(employee)
+                .from(employee)
+                .where(cursorCond)
+                .orderBy(order)
+                .limit(pageable.getPageSize())
+                .fetch()
+                .stream()
+                .map(e -> EmployeeResponse.fromWithCursor(e, cursorColumn))
+                .toList();
+
+
+        return new PageImpl<>(fetch);
+    }
+}
+
+
+
+//응답 객체(DTO)
+@Builder
+@ToString
+@EqualsAndHashCode(of = "empNo")
+public class EmployeeResponse {
+    private Integer empNo;
+    private LocalDate birthDate;
+    private String firstName;
+    private String lastName;
+
+    private Gender gender;
+    private LocalDate hireDate;
+
+    private String cursor;
+
+    public static EmployeeResponse from(Employee employee) {
+        return EmployeeResponse.builder()
+                .empNo(employee.getEmpNo())
+                .birthDate(employee.getBirthDate())
+                .firstName(employee.getFirstName())
+                .lastName(employee.getLastName())
+                .gender(employee.getGender())
+                .hireDate(employee.getHireDate())
+                .build();
+    }
+
+    public static EmployeeResponse fromWithCursor(Employee employee, String cursorColumn) {
+        EmployeeResponseBuilder builder = fill(employee);
+        switch (cursorColumn) {
+            case "empNo" -> builder.cursor(employee.getEmpNo().toString());
+            case "hireDate" -> builder.cursor(employee.getHireDate().toString());
+        }
+
+        return builder.build();
+    }
+
+    private static EmployeeResponse.EmployeeResponseBuilder fill(Employee employee) {
+        return EmployeeResponse.builder()
+                .empNo(employee.getEmpNo())
+                .birthDate(employee.getBirthDate())
+                .firstName(employee.getFirstName())
+                .lastName(employee.getLastName())
+                .gender(employee.getGender())
+                .hireDate(employee.getHireDate());
+    }
+}
+
+```
+
+다른 백엔드 프레임워크는 몰라도 스프링 환경에서는 커서 페이징으로 다양한 타입의 컬럼을 커버하기가 어렵다.
+QueryDSL로 동적 쿼리를 작성할 수 있지만, 결국 **컬럼의 타입**이 문제가 된다.
+
+- LocalDate는 Comparable하지 않기 때문에 Comparable을 지원하는 Integer, Long, String 등의 타입을 처리하는 메서드와 LocalDate 타입을 처리하는 메서드를 분리했다.
+- cursor 값을 반환하기 위해서 `EmployeeResponse` 객체를 생성할 때 `switch-case`로 컬럼 이름에 따라 커서에 들어가는 값을 달리 해줬다.
+
+그러나 offset paging을 사용하면 타입에 상관없어진다.
+
+```java
+public interface EmployeeRepositoryV1 extends PagingAndSortingRepository<Employee, Integer> {
+}
+```
+
+간단한 인터페이스 하나면 충분하다. 
+
+커서 페이징처럼 컬럼을 보는 게 아니라 그냥 레코드 오프셋만 따지기 때문에 컬림이 필요가 없다.
+그래서 컬럼 타입에 대해 신경쓰지 않아도 된다.
+정렬도 `PageRequest` 객체를 만들 때 `Sort` 객체로 넣어주면 된다.
+
+### 멀티 컬럼일 경우 (sorting은 동적으로)
+
+```java
+public class EmployeeEmpNoAndFirstNameCursorPagingRepositoryImpl implements EmployeeEmpNoAndFirstNameCursorPagingRepository {
+    private final JPAQueryFactory queryFactory;
+
+    public EmployeeEmpNoAndFirstNameCursorPagingRepositoryImpl(EntityManager em) {
+        this.queryFactory = new JPAQueryFactory(em);
+    }
+
+    @Override
+    public Page<EmployeeResponse> findAll(Pageable pageable, Integer empNo, String firstName) {
+        boolean isEmpNoDescending = Optional.ofNullable(pageable.getSort().getOrderFor("empNo"))
+                .map(Sort.Order::isDescending)
+                .orElse(true);
+
+
+        boolean isFirstNameDescending = Optional.ofNullable(pageable.getSort().getOrderFor("firstName"))
+                .map(Sort.Order::isDescending)
+                .orElse(false);
+
+
+        List<EmployeeResponse> fetch = queryFactory.selectFrom(employee)
+                .where(
+                        orCursor(empNo, firstName, isEmpNoDescending, isFirstNameDescending)
+                )
+                .orderBy(isFirstNameDescending ? employee.firstName.desc() : employee.firstName.asc())
+                .orderBy(isEmpNoDescending ? employee.empNo.desc() : employee.empNo.asc())
+                .limit(pageable.getPageSize())
+                .fetch()
+                .stream()
+                .map(EmployeeResponse::from)
+                .toList();
+
+        return new PageImpl<>(fetch);
+    }
+
+    private BooleanExpression orCursor(Integer empNo, String firstName, boolean isEmpNoDescending, boolean isFirstNameDescending) {
+        if (empNo == null && firstName == null) {
+            return null;
+        }
+
+        BooleanExpression expression = null;
+
+        if (isFirstNameDescending) {
+            expression = employee.firstName.lt(firstName);
+        } else {
+            expression = employee.firstName.gt(firstName);
+        }
+
+        if (isEmpNoDescending) {
+            expression = expression.or(
+                    employee.firstName.eq(firstName)
+                            .and(
+                                    employee.empNo.lt(empNo)
+                            )
+            );
+        } else {
+            expression = expression.or(
+                    employee.firstName.eq(firstName)
+                            .and(
+                                    employee.empNo.gt(empNo)
+                            )
+            );
+        }
+
+
+        return expression;
+    }
+}
+
+//테스트
+@Test
+public void pagingMultipleColumns() throws Exception {
+    List<EmployeeResponse> content = serviceV3.findPageContents(PageRequest.of(2, 10), null, null)
+            .getContent();
+    content.forEach(e -> log.info(e.toString()));
+
+    List<EmployeeResponse> content2 = serviceV3.findPageContents(PageRequest.of(2, 10), 491629, "Aamer")
+            .getContent();
+    content2.forEach(e -> log.info(e.toString()));
+
+    List<EmployeeResponse> content3 = serviceV3.findPageContents(PageRequest.of(2, 10, Sort.by("empNo").ascending().and(Sort.by("firstName").descending())), null, null)
+            .getContent();
+
+    content3.forEach(e -> log.info(e.toString()));
+
+    List<EmployeeResponse> content4 = serviceV3.findPageContents(PageRequest.of(1500, 10, Sort.by("empNo").ascending().and(Sort.by("firstName").descending())), 241525, "Yechezkel")
+            .getContent();
+
+    content4.forEach(e -> log.info(e.toString()));
+
+}
+
+```
