@@ -102,7 +102,9 @@ https://cheese10yun.github.io/mysql-explian/
 explain select *, concat(e.first_name, lpad(e.emp_no, 10, '0')) as `cursor` from employees as e order by e.first_name, e.emp_no limit 10;
 explain select *, concat(e.first_name, lpad(e.emp_no, 10, '0')) as `cursor` from employees as e order by e.first_name DESC, e.emp_no DESC limit 10;
 ```
+
 인덱스를 탄다.
+
 ![image](https://github.com/user-attachments/assets/ec0d08a2-e5c0-46d3-a56f-8b9d7806f1c7)
 
 
@@ -111,7 +113,9 @@ explain select *, concat(e.first_name, lpad(e.emp_no, 10, '0')) as `cursor` from
 explain select *, concat(e.first_name, lpad(e.emp_no, 10, '0')) as `cursor` from employees as e order by e.first_name, e.emp_no desc limit 10;
 explain select *, concat(e.first_name, lpad(e.emp_no, 10, '0')) as `cursor` from employees as e order by e.emp_no desc, e.first_name limit 10;
 ```
+
 인덱스를 타지 않는다.
+
 ![image](https://github.com/user-attachments/assets/4eb5dcf9-3c0d-4f5e-95cc-a1c1fb46f063)
 
 
@@ -146,6 +150,7 @@ explain select *, concat(e.first_name, lpad(e.emp_no, 10, '0')) as `cursor` from
 ```sql
 explain select *, concat(e.first_name, lpad(e.emp_no, 10, '0')) as `cursor` from employees as e order by e.emp_no desc, e.first_name limit 10;
 ```
+
 ![image](https://github.com/user-attachments/assets/06c2204e-780e-41d9-b397-f4b29fa6ef99)
 
 - 컬럼의 정렬 기준을 바꾸는 경우
