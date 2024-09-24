@@ -80,7 +80,84 @@ emp_no에 따라 먼저 정렬되기 때문에 dept_no는 B-Tree 상에서 여�
 
 ## 실행 계획 파헤치기
 
+실행 계획은 SQL문의 최적화 정도를 파악하기 위해 사용한다.
+인덱스를 만들어두었다면 SQL문이 인덱스를 잘 타는지 등을 볼 수 있다.
+
+`explain` 키워드로 SQL 실행 계획을 살펴볼 수 있다.
+
+```sql
+explain select *, concat(e.first_name, lpad(e.emp_no, 10, '0')) as `cursor` from employees as e where concat(e.first_name, lpad(e.emp_no, 10, '0')) > 'Aamer9999508371' order by e.first_name, e.emp_no limit 10;
+```
+
+![image](https://github.com/user-attachments/assets/175d2d4f-b063-4b93-8231-3554c38fe0f1)
+
+
+- id: `select`에 붙은 번호이다. join의 경우 하나의 select에 포함되므로 같은 id를 갖는다. 반대로 union이나 서브 쿼리 등은 select를 또 쓰기 때문에 다른 id를 갖는다.
+- select_type: 대개 SIMPLE로 표시된다. union이나 서브쿼리가 있다면 다른 값으로 표시된다.
+- table: 어떤 테이블에 접근하고 있는지를 표시한다. 사용자가 정의한 alias로 표시된다.
+- partitions: 파티셔닝이 되어 있는 테이블이 있는 경우 표시된다.
+- type: 접근 방식을 의미한다. 접근 방식은 레코드를 어떻게 가져올지에 대한 내용이다. **인덱스를 타는지 안타는지를 알 수 있기 때문에 최적화 정도를 파악하는 중요 지표이다.**
+
+|type|설명|최적화 필요 유무|
+|---|---|---|
+|const|단건 조회. PK나 UNIQUE 컬럼을 이용하는 WHERE 조건절을 가지며, 반드시 1건을 반환하는 쿼리 처리 방식을 의미한다.|최적화 필요X|
+|eq_ref|조인되는 상황에서 표시. 조인에서 처음 읽은 테이블의 컬럼값을 두 번째 테이블의 PK나 UNIQUE 컬럼의 검색 조건으로 사용함을 의미한다.|최적화 필요X|
+|ref|eq_ref와 달리 조인의 순서와 관계없으며 PK나 UNIQUE 제약도 없다. 인덱스의 종류와 관계없이 동등 조건으로 검색함을 의미한다.|최적화 필요X|
+|fulltext|MYSQL 서버의 전문 검색 인덱스를 사용해 인덱스를 읽는 접근 방법을 의미한다.|확인 필요|
+|ref_or_null|ref와 같은 비교 방법이면서 NULL 비교만 추가된 형태|나쁘지 않음|
+|unique_subquery|WHERE 조건절에서 사용될 수 있는 IN 형태의 서브쿼리를 의미한다. 서브쿼리는 유니크한 값만 반환한다.|나쁘지 않음|
+|index_subquery|IN 사용시 중복된 값을 인덱스를 통해 제거할 수 있을 때 index subquery 방법이 사용된다.|나쁘지 않음|
+|range|인덱스 레인지 스캔|나쁘지 않음|
+|index_merge|2개 이상의 인덱스를 이용해 각 결과를 만들고, 그 결과들을 병합하여 처리한다.|효율적이지 않음|
+|index|인덱스 풀 스캔. 테이블의 특정 인덱스의 전체 엔트리에 접근한다|효율적이지 않음|
+|ALL|전체 행 스캔. 전체 레코드에 접근한다|제일 느림|
+
+
+```sql
+-- eq_ref
+explain select * from dept_emp de, employees e where e.emp_no = de.emp_no and de.dept_no = 'd005'; 
+```
+
+![image](https://github.com/user-attachments/assets/9d265370-1864-498b-b26b-9e45dc963676)
+
+
+- key: 쿼리 수행에 사용된 인덱스를 의미한다. 인덱스를 사용하지 않았다면 NULL로 표시된다.
+- key_len: 다중 컬럼 인덱스에서 몇 개의 컬럼까지 사용했는지를 알려준다.
+- ref: 접근 방법이 ref인 경우 참조 조건(동등 비교 조건)으로 어떤 값이 제공됐는지를 보여준다. 상수면 const, 다른 테이블 컬럼값이면 테이블명과 컬럼명이 표시된다.
+- rows: 옵티마이저가 예측하는 레코드 체크 갯수. 옵티마이저의 비용 산정 지표가 된다.
+- filtered: 필터링되고 남은 레코드의 비율. 옵티마이저가 이 비율이 적은(남은 레코드수가 적은) 테이블을 드라이빙 테이블로 선정한다.
+- extra: 쿼리의 실행 계획에서 성능 관련 내용이 자주 표시된다.
+
+|extra|설명|
+|---|---|
+|const row not found|const로 접근했지만 실제 레코드는 0인 상황.|
+|Deleting all rows|테이블의 모든 레코드를 삭제하는 기능을 제공하는 스토리지 엔진 테이블인 경우 제공|
+|Distinct|테이블 조인시 특정 컬럼값을 중복없이 가져오는 경우|
+|FirstMatch|세미조인 최적화 중 FirstMatch 전략이 사용되는 경우|
+|Full sacn on NULL key|`col1 in (select co2 from ...)` 상황에서 `col1`이 NULL이면 서브쿼리에서 테이블 풀 스캔이 발생. col1 is not null과 같은 제약 조건이나 조건절로 최적화 가능하다.|
+|Impossible HAVING|HAVING절을 만족하는 레코드가 없을 때 표시된다.|
+|Impossible WHERE|WHERE절을 만족하는 레코드가 없을 때 표시된다.|
+|LooseScan|세미조인 최적화 중에서 LooseScan 최적화 전략이 사용될 때 표시된다.|
+|No mathcing min/max row|`min()`, `max()`가 포함된 쿼리에서 조건절을 만족하는 레코드가 없을 경우 표시된다.|
+|no matching row in const table|조인에서 const 방법으로 접근할 때 일치하는 레코드가 없으면 표시된다.|
+|No matching rows after partition pruning|파티션된 테이블에 대한 UPDATE 또는 DELETE 수행시 대상 파티션이 없을 경우 표시된다.|
+|No table used|FROM 절이 없거나 FROM DURAL 형태의 쿼리가 사용될 때 표시된다.|
+|Not exists|아우터 조인을 이용해 안티조인을 수행하는 쿼리에서 표시된다.|
+|Start / End Temporary|중복 제거(Duplicated Weed-out) 세미조인 최적화를 사용할 때 표시된다.|
+|Using Filesort|ORDER BY를 처리하기 위해 인덱스를 이용할 수 있지만 적절한 인덱스를 찾지 못할 때는 MYSQL 서버가 재정렬해야 한다. 이 때 표시된다. 서버의 재정렬은 많은 부하를 일으키므로 가능하면 쿼리를 튜닝해야 한다.|
+|Using index|커버링 인덱스. 데이터 파일을 전혀 읽지 않고 인덱스만 읽어서 쿼리를 모두 처리할 수 있을 때 표시된다.|
+|Using index conditions|인덱스 푸시 다운 최적화를 사용할 때 표시된다.|
+|Using index for group-by|GROUP BY 처리를 위해 MySQL 서버는 그루핑 기준 컬럼을 정렬하고 결과를 그루핑한다. 이러한 작업은 많은 부하를 일으키므로 그루핑 기준 컬럼을 인덱스로 사용하는 방법을 고려해볼 수 있다.(루스 인덱스 스캔) 이 경우에 해당 문구가 표시된다.|
+|Using index for skip scan|옵티마이저가 인덱스 스킵 스캔 최적화를 사용하면 해당 문구가 표시된다.|
+|Using join buffer|조인시 드리븐 테이블에 설정된 컬럼에 인덱스가 없는 경우 블록 네스티드 루프 조인, 해시 조인 등을 사용하는데 이 때 
+ 해당 문구가 표시된다.|
+ |Using MRR|MRR 최적화가 사용될 때 표시된다.|
+ |Using where|MySQL 엔진에서 스토리지 엔진으로부터 받은 레코드를 필터링해서 처리함을 의미한다. 보통 인덱스에 포함되지 않는 컬럼을 조건문으로 사용할 때 표시된다.|
+
+
 https://cheese10yun.github.io/mysql-explian/
+
+https://velog.io/@ddongh1122/MySQL-%EC%8B%A4%ED%96%89%EA%B3%84%ED%9A%8D2-EXPLAIN
 
 ## 인덱스를 언제 타는가?
 
