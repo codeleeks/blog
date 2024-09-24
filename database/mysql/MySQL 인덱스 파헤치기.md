@@ -28,6 +28,9 @@
   - 선두 컬럼의 카디널리티가 높으면 효율적이지 않다. 
 - 인덱스 레인지 스캔 디센딩: 맨 뒤쪽부터 앞쪽으로 스캔. 내림차순으로 정렬된 결과를 얻는다.
   - `max()`를 처리할 때 맨 뒤 값을 읽고 끝낸다.
+- 루스 인덱스 스캔: 인덱스 스캔시 필요 없는 곳은 스킵한다.
+  - 멀티 컬럼 인덱스에서 선두 컬럼의 정렬 덕분에 다음 컬럼에 대한 탐색이 최소화될 수 있다.(스킵 발생)
+  - index(dept_no, emp_no)인 상황에서 `SELECT dept_no, MIN(emp_no) FROM dept_emp WHERE dept_no BETWEEN 'D002' AND 'D004' GROUP BY dept_no;`와 같은 쿼리 실행시.
 
 ## 어떤 컬럼이 인덱스가 되면 좋은가?
 
@@ -51,6 +54,16 @@ MySQL은 레코드가 아니라 인덱스에 락을 건다.
 
 [관련 포스팅](https://codeleeks.github.io/blog/posts/database/mysql/MySQL%20%EB%9D%BD%20%ED%8C%8C%ED%97%A4%EC%B9%98%EA%B8%B0.md)
 
+인덱스 컬럼값이 중복이 많다면 그 중복 레코드만큼 락을 건다.
+
+```sql
+-- 300건의 레코드가 잠긴다.
+
+update employees set updated_at = now()
+where first_name = 'Amily' -- 300건
+and
+last_name = 'Swift'; -- 1건
+```
 
 ## 클러스터 인덱스와 논클러스터 인덱스
 
