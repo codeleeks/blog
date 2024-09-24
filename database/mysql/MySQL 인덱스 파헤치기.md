@@ -102,6 +102,34 @@ dept_no로 그루핑된 부분에서 첫 번째 emp_no를 뽑으면 된다.
 emp_no에 따라 먼저 정렬되기 때문에 dept_no는 B-Tree 상에서 여러 노드에 걸쳐 있을 수 있다.
 이를 group by와 between 연산으로 묶기 위해 여러 노드에 분산된 dept_no를 찾아야 할 수도 있다.
 
+인덱스를 타는 케이스는 선두 컬럼이 사용될 때, 그리고 모든 컬럼이 사용될 때이다.
+그러나 MySQL 8.0부터 인덱스 스킵 스캔이 들어오면서 선두 컬럼이 사용되지 않아도 인덱스를 타는 것이 가능해졌다.
+
+```sql
+-- index - (first_name, last_name)인 경우
+-- first_name은 선두 컬럼이므로 인덱스를 탄다.
+select first_name, last_name from employees where first_name = 'Amily';
+
+-- last_name만 사용하면 선두 컬럼이 사용되지 않았으므로 인덱스를 타지 않는다. (인덱스 스킵 스캔이 없는 경우)
+-- 인덱스 스킵 스캔이 있으면 인덱스를 탄다.
+select last_name from employees where last_name = 'swift';
+```
+
+
+## 다중 컬럼 인덱스 vs 인덱스 여러 개
+
+다중 컬럼 인덱스는 인덱스 하나이며, 키는 다중 컬럼을 포함하는 객체라고 이해해도 될 것 같다.
+
+![image](https://github.com/user-attachments/assets/fdba3991-f903-4d39-9d64-ba6e2d7ec417)
+
+
+반대로 컬럼별로 인덱스를 만드는 방식이 있을 수 있다.
+이 방식은 쿼리에 컬럼이 사용될 때 각 컬럼의 인덱스를 타는 방식이다.
+
+https://velog.io/@iamtaehoon/%EB%A9%80%ED%8B%B0-%EC%BB%AC%EB%9F%BC-%EC%9D%B8%EB%8D%B1%EC%8A%A4
+
+뭐가 더 좋을까??
+
 
 ## 실행 계획 파헤치기
 
