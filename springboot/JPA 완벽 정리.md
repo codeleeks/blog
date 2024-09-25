@@ -1732,11 +1732,14 @@ select m.username from Team t join t.members m
 
 ### fetch join
 
-JPQL만의 특별한 기능. (SQL에는 fetch join이 없다)
+JPQL만의 특별한 기능이며, 연관된 필드를 SQL 한 번에 조회하는 기능이다.
 
-연관된 필드를 SQL 한 번에 조회하는 기능이다.
+조인시 드라이브, 드리븐 테이블에 있는 모든 레코드를 한 번에 가져오는 기능으로 이해하는 게 좋다.
+JPA가 fetch join으로 가져온 레코드가 실제 데이터베이스에 있는 모든 레코드로 인식한다.
+그래서 `on`이나 `where` 같은 조건절을 사용해서 가져오면 `flush`시 필터링으로 걸러진 레코드가 데이터베이스에서 사라질 수 있다.
 
 단일 값 필드, 컬렉션 필드 모두 한 번에 가져와 성능 최적화를 꾀한다.
+
 
 ```java
 String jpql = "select t from Team t join fetch t.members";
@@ -1767,7 +1770,6 @@ INNER JOIN MEMBER M ON T.ID=M.TEAM_ID
   - `on`으로 페치 조인 대상에 대해 필터링하면 부트 타임 오류(`Fetch join has a 'with' clause (use a filter instead)`)가 발생한다.
   - 페치 조인 대상, 즉 컬렉션의 요소를 삭제하다가 전체 컬렉션이 삭제되는 경우가 발생할 수 있다.
   - `where`로 해결할 수 있지만, `xToMany` 관계에서는 여전히 문제가 된다.
-  - `outer join`을 쓰면 `xToOne`도 문제가 생길 수 있다???
 - 한 엔티티의 여러 개의 컬렉션 필드를 한 번에 페치 조인하면 안 된다.
   - 일대다대다의 상황으로 레코드가 폭증할 수 있다.
 - 일대다 연관 관계일 때 페이징 API가 동작하지 않는다.(어플리케이션 메모리에서 페이징한다)
