@@ -40,6 +40,27 @@ level에 따라 `padding-left`를 다르게 적용한다.
 
 `align-items: flex-start`로 height를 컨텐츠만큼 줄여준다.
 
+#### TOC 컴포넌트의 scroll spy 기능 관련 이슈 해결
+
+포스트 컴포넌트: 포스트 내용(markdown) -> html로 컴파일
+
+TOC 컴포넌트: 포스트 html -> heading 태그 추출 -> intersecion observer에 등록.
+
+이슈: intersection observer가 정상적으로 동작하지 않음
+
+원인: 포스트 컴포넌트와 TOC 컴포넌트의 의존성 문제 때문. (TOC 컴포넌트는 포스트 컴포넌트의 렌더링이 필요. 마크다운 -> html로 변환 후 html heading element가 필요)
+
+해결1: 포스트 컴포넌트(정확히 말하면 하위의 markdown 컴포넌트)에서 useEffect 안에 querySelector()로 heading element 리스트 조회 후 TOC 컴포넌트에 넘긴다.
+
+해결1의 문제: querySelector()는 DOM 트리 구조에 종속적이기 때문에 좀 더 유연한 방법을 찾으면 좋을 것 같다.
+
+해결2: markdown 컴포넌트의 부모컴포넌트(ArticleContents)에서 MarkdownnView 컴포넌트를 div로 wrapping하고, 이 div를 useRef로 연결한다. 그리고 ArticleContents에서 callback 함수를 정의하고, 이 콜백함수에서 ref를 활용하여 childNodex를 얻고, heading만 필터링한 뒤 intersection observer에 등록한다. MarkdownView 컴포넌트가 마크다운 컨텐츠를 컴파일하면 ArticleContents의 callback 함수를 호출한다.
+
+useRef로 querySelector()를 통한 html 구조에 종속적인 코드를 제거할 수 있었다.
+
+[관련 커밋](192f480)
+
+
 ### 메시지 박스 만들기
 
 메시지 박스는 Notice나 주의 사항을 표시하는 안내문을 말한다.
