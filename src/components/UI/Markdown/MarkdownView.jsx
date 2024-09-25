@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import * as runtime from 'react/jsx-runtime'
 import { evaluate } from '@mdx-js/mdx'
 import rehypeHighlight from 'rehype-highlight'
@@ -39,7 +39,7 @@ export async function evaluateMarkdown(text) {
   return module
 }
 export default (props) => {
-  const { text, tocObserver } = props
+  const { text, observeHeadings } = props
   const [mdxModule, setMdxModule] = useState()
   const [error, setError] = useState({ msg: undefined })
 
@@ -56,11 +56,8 @@ export default (props) => {
     })()
   }, [text])
 
-  useLayoutEffect(() => {
-    const contentsHeadingEls = document
-      .querySelector('.article-page .article .contents')
-      .querySelectorAll('h1,h2,h3,h4,h5,h6')
-    tocObserver.start(contentsHeadingEls)
+  useEffect(() => {
+    observeHeadings()
   }, [mdxModule])
 
   let Content = Fragment
