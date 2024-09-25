@@ -1,0 +1,136 @@
+## 시맨틱 태그
+
+시맨틱은 '의미론적'이라는 뜻으로 의미를 담은 태그를 말한다.
+
+대표적으로 `<main>, <article>, <aside>` 등이 있다.
+
+## window 와 document
+
+window는 전역 객체로서 코드 어디서나 사용 가능하다.
+
+window는 프로퍼티로 document를 갖고 있으며, 이 외에도 history, location, console, alert 등이 있다.
+
+서버사이드 렌더링시 브라우저에서 렌더링하는 것이 아니기 때문에 window 객체가 존재하지 않는다.
+
+window의 프로퍼티는 window를 생략해서 사용할 수 있다. (예를 들어, `console`, `parseInt` 등)
+
+window.height는 현재 보이는 화면의 높이이며, document.height는 스크롤에 의해 가려진 부분도 포함한 전체 문서의 높이이다.
+
+## String을 Number로, Number를 String으로
+
+String => Number는 몇 가지 방법이 있다.
+
+```javascript
+var str = "1234"
+
+//방법1
+var n = +str
+
+//방법2
+var n2 = parseInt(str)
+
+//방법3
+var n3 = Number(str)
+```
+
+Number => String의 경우, 특히 쉼표 표시를 해야 하는 경우에는 아래의 방법을 사용한다.
+
+```javascript
+var n = 25500
+var price = n.toLocaleString('en-us', {minimumFractionDigits: 2})
+```
+
+String이 Number 포맷인지 확인하는 방법은 NaN인지 체크하는 것이다.
+
+```javascript
+var str = "!234!"
+isNaN(str)
+```
+
+NaN은 Number로 바꿀 수 없는 String값을 명시적형변환을(Number(str)) 적용할 때 발생하기도 한다.
+
+## virtual dom 개념(diffing, reconciliation)
+
+자바스크립트 메모리에 DOM 트리를 만들고 변경된 부분만 한 번에 업데이트한다. 
+
+변경된 부분을 파악하기 위해 Virtual DOM의 스냅샷을 관리한다.
+이전 DOM과 변경 DOM을 비교하는 것이다.
+
+![image](https://github.com/user-attachments/assets/44650666-e7ac-4043-91e4-58edc5923e08)
+
+출처: https://positiveko-til.vercel.app/til/react/virtual-dom.html#virtual-dom%E1%84%8B%E1%85%B4-%E1%84%83%E1%85%A9%E1%86%BC%E1%84%8C%E1%85%A1%E1%86%A8-%E1%84%8B%E1%85%AF%E1%86%AB%E1%84%85%E1%85%B5
+
+React의 사상은 데이터가 변경되면 UI을 다시 다 그려버리는 것이다.
+다른 말로 말하면, 개발자 입장에선 데이터의 상태만 관리하고 싶었던 것이다. 상태 관리와 상태를 DOM에 반영하는 로직을 분리하는 것이다.
+Virtual DOM에게 상태를 DOM에 반영하는 로직을 맡기고, 개발자는 Virtual DOM의 상태만 관리한다.
+
+출처: https://velog.io/@woohm402/virtual-dom-and-react
+
+## useContext를 사용하여 상태를 공유할 때 장점과 주의 사항
+
+context API는 props drilling 문제 때문에 사용한다.
+props drilling의 문제는 유지보수가 어려워지는 코드가 만들어진다는 점이다.
+
+context API의 아이디어는 컴포넌트 간의 불필요 정보를 props에 정의하지 않고, 전역에 정의된 데이터를 필요한 컴포넌트가 가져가자는 것이다.
+context API에서 제공하는 데이터의 상태가 변경되면 `useContext`로 데이터를 사용하는 컴포넌트가 모두 리랜더링된다.
+
+참고: https://velog.io/@velopert/react-context-tutorial#%EC%A0%84%EC%97%AD-%EC%83%81%ED%83%9C-%EA%B4%80%EB%A6%AC-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC%EB%8A%94-%EC%96%B8%EC%A0%9C-%EC%8D%A8%EC%95%BC-%ED%95%A0%EA%B9%8C
+
+### 주의할점
+
+그래서 하나의 컨텍스트에 빈번하게 업데이트되는 상태와 그렇지 않은 상태가 섞여 있다면 불필요한 컴포넌트 렌더링이 발생할 수 있다.
+그래서 상태 관리하는 컨텍스트를 분리하는 게 좋다.
+
+또한, 상태를 가져가는 컴포넌트와 상태를 변경하는 컴포넌트로 분리하여 개발한 경우, 상태를 변경만 하는 컴포넌트가 상태를 변경했다고 해서 리렌더링될 필요는 없다.
+그렇지만 하나의 컨텍스트를 사용하면 변경하는 컴포넌트도 리렌더링된다.
+그래서 상태를 가져가는 컴포넌트와 상태를 변경하는 컴포넌트도 별도의 컨텍스트로 분리하면 좋다.
+
+이러한 상태가 많아지면 사실 전역상태관리 라이브러리를 고려해보는 것도 한 가지 옵션이다.
+TODO `redux` 동작
+
+## React에서 key는 무엇인가요? / 배열의 index를 key 값으로 하면 안 되는 이유? / callback과 이벤트루프 구조 설명 (call stack, background, event queue, event loop)
+
+ - React에서 key는 무엇인가요?
+ 
+ 엘리먼트를 식별하는 값이다.
+ DOM 트리에서 엘리먼트의 위치가 변경될 때 엘리먼트를 추적하기 위한 식별값이다. 
+
+ key가 변경된다면 이전 키를 갖는 엘리먼트는 삭제되고, 새 key의 엘리먼트는 추가된다. 
+
+- 배열의 index를 key 값으로 하면 안 되는 이유?
+
+불필요한 렌더링을 유발하기 때문이다.
+
+배열의 앞쪽에 데이터를 넣으면 앞쪽부터 시작해서 끝까지 모두 리렌더링된다.
+데이터가 앞쪽에 들어오면서 기존 데이터들이 순서가 뒤로 밀린다.
+기존 데이터들의 순서가 뒤로 밀리면서 이전 스냅샷과 비교하면 모든 데이터가 변경된 것으로 인식된다.
+
+배열에서 요소를 삭제할 때도 마찬가지다. 요소를 삭제하면 삭제된 이후의 데이터는 앞쪽으로 당겨진다.
+기존의 데이터들의 순서가 앞쪽으로 당겨지면서 이전 스냅샷과 비교하면 삭제된 요소 이후의 모든 데이터가 변경된 것으로 인식된다.
+
+참고: https://velog.io/@yeonbot/React%EC%97%90%EC%84%9C-key%EC%9D%98-%EC%97%AD%ED%95%A0-%EC%BB%B4%ED%8F%AC%EB%84%8C%ED%8A%B8%EB%A5%BC-%EB%8B%A4%EC%8B%9C%EA%B7%B8%EB%A6%AC%EB%8A%94-%EA%B3%BC%EC%A0%95
+
+- callback과 이벤트루프 구조 설명 (call stack, background, event queue, event loop)
+
+콜스택: 함수 호출 관련 정보를 저장하는 단위(LIFO)
+이벤트루프: 자바스크립트의 함수의 실행 순서를 관리한다.
+이벤트큐: 완료된 비동기 함수의 콜백 스택을 저장한다.(FIFO)
+
+자바스크립트 엔진은 싱글스레드로 동작한다.
+비동기 함수가 호출되면 브라우저 레벨의 별도 스레드풀에서 실행된다.
+반면 동기 함수는 자바스크립트 엔진에서 실행된다.
+
+동기 함수를 모두 처리하여 콜스택이 비어 있다면 이벤트루프가 그걸 감지해서 이벤트큐에 있는 콜백 함수를 넣는다.
+콜스택에 들어간 콜백 함수는 자바스크립트 엔진에서 실행된다.
+
+이벤트큐는 비동기 함수가 완료된 순서대로 콜백 함수가 추가되며, 먼저 들어간 콜백 함수부터 콜스택에 옮겨진다.
+
+![image](https://github.com/user-attachments/assets/dd456475-3479-412d-8174-dbc70fb53fef)
+
+출처: https://www.inflearn.com/community/questions/1181763/nodejs-%EC%9D%98-single-thread-%EC%99%80-event-loop-%EC%97%90-%EB%8C%80%ED%95%B4-%EC%9E%90%EC%84%B8%ED%95%98%EA%B2%8C-%EC%95%8C%EC%95%84-%EB%B4%A4%EB%8A%94%EB%8D%B0-%EC%A0%9C%EA%B0%80-%EC%9D%B4%ED%95%B4%ED%95%9C-%EA%B2%83%EC%9D%B4-%EB%A7%9E%EB%8A%94%EC%A7%80-%ED%99%95%EC%9D%B8%ED%95%98%EA%B3%A0-%EC%8B%B6%EC%96%B4%EC%84%9C-%EC%A7%88%EB%AC%B8%EB%93%9C%EB%A0%B8?srsltid=AfmBOoo_k6STECXGBhAU_hLD3nZw9KNyvKRIDWtoFABVIjkxg0TZ_pP9
+
+이벤트큐에는 비동기 함수의 종류별로 여러 가지 종류의 큐가 있다.
+
+- task queue: setTimeout 등
+- microtask queue: promise, async 함수
+- animation frames: requestAnimationFrame 
