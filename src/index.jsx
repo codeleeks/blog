@@ -1,4 +1,5 @@
-import App from './App'
+// import App from './App'
+import Prologue from './Prologue'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './styles/index.scss'
@@ -6,6 +7,6 @@ import './styles/index.scss'
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
   <React.StrictMode>
-    <App />
+    <Prologue />
   </React.StrictMode>
 )

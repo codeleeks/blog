@@ -18,6 +18,10 @@ ul {
   padding: 0;
   list-style-type: none;
 }
+figure,
+p {
+  margin: 0;
+}
 
 @mixin media_large_style {
   @media (max-width: 1600px) {
@@ -91,6 +95,7 @@ ul {
   flex-shrink: 0;
 }
 
+// post
 .post {
   --post-area-width: var(--app-max-width);
   --post-nav-width: calc(var(--post-area-width) * 0.2);
@@ -215,4 +220,99 @@ ul {
   &.toggled {
     z-index: 1;
   }
+}
+
+// prologue
+
+.hero {
+  margin-top: 100px;
+  margin-bottom: 100px;
+
+  background-color: orange;
+
+  display: flex;
+  position: relative;
+
+  @include media_small_style {
+    flex-direction: column;
+  }
+
+  &-img {
+    display: block;
+    width: calc(var(--app-max-width) * 0.6);
+    object-fit: cover;
+
+    @include media_small_style {
+      width: var(--app-max-width);
+    }
+  }
+
+  $c: '#{&}-caption';
+
+  #{$c} {
+    position: relative;
+    width: calc(var(--app-max-width) * 0.4);
+    padding-left: 10px;
+
+    @include media_small_style {
+      width: var(--app-max-width);
+      padding-left: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #{$c}__title {
+      height: 50%;
+      position: relative;
+      @include media_small_style {
+        height: 80px;
+      }
+    }
+    #{$c}__title-text {
+      position: absolute;
+      top: -48px;
+      left: -48px;
+      line-height: 1;
+      font-size: calc(var(--app-max-width) * 0.1);
+      margin: 0;
+
+      @include media_medium_style {
+        top: -24px;
+        left: -24px;
+      }
+      @include media_small_style {
+        top: -36px;
+        left: 0;
+        font-size: 60px;
+      }
+    }
+    #{$c}__article {
+      height: 50%;
+      position: relative;
+      @include media_small_style {
+        margin-top: 20px;
+        height: 50px;
+      }
+    }
+    #{$c}__description {
+      position: absolute;
+      bottom: 0;
+      font-size: calc(var(--app-max-width) * 0.02);
+
+      @include media_small_style {
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+.posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+
+  &-card {
+    min-height: 300px;
+  }
+  background-color: red;
 }
