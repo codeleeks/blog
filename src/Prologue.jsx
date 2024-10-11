@@ -1,3 +1,5 @@
+
+import { NavLink } from 'react-router-dom'
 import AvatarImg from './assets/avatar.png'
 
 const Prologue = () => {
@@ -20,8 +22,12 @@ const Prologue = () => {
             </div>
           </div>
           <ul className='header-right__links'>
-            <li className='header-right__links-posts'>posts</li>
-            <li className='header-right__links-snippets'>snippets</li>
+            <li className='header-right__links-posts'>
+              <NavLink to=''>posts</NavLink>
+            </li>
+            <li className='header-right__links-snippets'>
+              <NavLink to='snippets'>snippets</NavLink>
+            </li>
           </ul>
         </div>
       </header>
