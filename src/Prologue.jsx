@@ -1,7 +1,18 @@
+import AvatarImg from './assets/avatar.png'
+
 const Prologue = () => {
   return (
     <>
-      <header className='header'></header>
+      <header className='header'>
+        <div className='header-left'>
+          <img className='header-left__avatar' src={AvatarImg} alt='avatar image'/>
+          <h1 className='header-left__title'>silverbullet</h1>
+        </div>
+        <ul className='header-right'>
+          <li className="header-right__posts-link">posts</li>
+          <li className='header-right__snippets-link'>snippets</li>
+        </ul>
+      </header>
       <main className='main'>
         <figure className='hero'>
           <img

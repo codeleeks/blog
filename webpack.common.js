@@ -9,6 +9,7 @@ module.exports = {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
     clean: true,
+    assetModuleFilename: '[name][ext]',
   },
   resolve: {
     extensions: ['.js', '.jsx'],
@@ -30,6 +31,10 @@ module.exports = {
         test: /\.scss$/,
         use: ['style-loader', 'css-loader', 'sass-loader'],
         exclude: /node_modules/,
+      },
+      {
+        test: /\.png/,
+        type: 'asset/resource',
       },
     ],
   },

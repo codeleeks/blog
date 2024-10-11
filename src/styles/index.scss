@@ -316,3 +316,40 @@ p {
   }
   background-color: red;
 }
+
+// header
+.header {
+  display: flex;
+  justify-content: space-between;
+
+  $l: "#{&}-left";
+  #{$l} {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 10px;
+    height: 100%;
+    #{$l}__avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: blue;
+    }
+    #{$l}__title {
+      font-size: 32px;
+      font-weight: 700;
+    }
+  }
+
+  $r: "#{&}-right";
+  #{$r} {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    
+    li {
+      margin-left: 5px;
+      margin-right: 5px;
+    }
+  }
+}
