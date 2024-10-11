@@ -22,6 +22,13 @@ figure,
 p {
   margin: 0;
 }
+.clickable {
+  cursor: pointer;
+  opacity: 0.4;
+  &:hover {
+    opacity: 1;
+  }
+}
 
 @mixin media_large_style {
   @media (max-width: 1600px) {
@@ -313,43 +320,115 @@ p {
 
   &-card {
     min-height: 300px;
+
+    &__image {
+      width: 100%;
+      object-fit: contain;
+      border: 1px solid gray; 
+    }
+    &__title {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+      margin-top: 0;
+      margin-bottom: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    &__date {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    
+      border-bottom: 1px solid gray;
+      margin-bottom: 24px;
+    }
   }
-  background-color: red;
 }
 
 // header
 .header {
+  $h: &;
   display: flex;
   justify-content: space-between;
 
-  $l: "#{&}-left";
-  #{$l} {
+  &-left {
     display: flex;
     align-items: center;
     gap: 10px;
     padding-left: 10px;
     height: 100%;
-    #{$l}__avatar {
+    &__avatar {
       width: 50px;
       height: 50px;
       border-radius: 50%;
       background-color: blue;
     }
-    #{$l}__title {
+    &__title {
       font-size: 32px;
       font-weight: 700;
     }
   }
 
-  $r: "#{&}-right";
-  #{$r} {
+  &-right {
     height: 100%;
-    display: flex;
-    align-items: center;
-    
-    li {
-      margin-left: 5px;
+    &__menu-bg {
+      #{$h}.toggled & {
+        @debug '#{&}';
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background-color: black;
+      }
+    }
+
+    &__links {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      gap: 10px;
+
+      #{$h}.toggled & {
+        display: flex;
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        flex-direction: column;
+        width: 100vw;
+
+        li {
+          width: 100%;
+          text-align: center;
+          border-bottom: 1px solid gray;
+          padding-top: 10px;
+          padding-bottom: 10px;
+          margin-left: 0;
+          margin-right: 0;
+        }
+      }
+
+      li {
+        margin-left: 5px;
+        margin-right: 5px;
+      }
+
+      @include media_small_style {
+        display: none;
+      }
+    }
+
+    &__menu-toggler {
+      display: none;
+      height: 100%;
       margin-right: 5px;
+
+      @include media_small_style {
+        display: flex;
+        align-items: center;
+      }
     }
   }
 }

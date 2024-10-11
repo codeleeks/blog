@@ -5,13 +5,25 @@ const Prologue = () => {
     <>
       <header className='header'>
         <div className='header-left'>
-          <img className='header-left__avatar' src={AvatarImg} alt='avatar image'/>
+          <img
+            className='header-left__avatar'
+            src={AvatarImg}
+            alt='avatar image'
+          />
           <h1 className='header-left__title'>silverbullet</h1>
         </div>
-        <ul className='header-right'>
-          <li className="header-right__posts-link">posts</li>
-          <li className='header-right__snippets-link'>snippets</li>
-        </ul>
+        <div className='header-right'>
+          <div className='header-right__menu-bg'></div>
+          <div className='header-right__menu-toggler'>
+            <div className='header-right__menu-toggler__icon material-icons'>
+              menu
+            </div>
+          </div>
+          <ul className='header-right__links'>
+            <li className='header-right__links-posts'>posts</li>
+            <li className='header-right__links-snippets'>snippets</li>
+          </ul>
+        </div>
       </header>
       <main className='main'>
         <figure className='hero'>
@@ -35,7 +47,21 @@ const Prologue = () => {
           </figcaption>
         </figure>
         <ul className='posts'>
-          <li className='posts-card'>hello</li>
+          <li className='posts-card'>
+            <img
+              className='posts-card__image'
+              src='https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/database/%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98%20%EA%B2%A9%EB%A6%AC%20%EC%88%98%EC%A4%80/title.png'
+              alt=''
+            />
+            <h4 className='posts-card__title'>ElasticSearch SSL 적용하기</h4>
+            <div className='posts-card__date'>
+              <div className='posts-card__date__icon material-icons'>alarm</div>
+              <p className='posts-card__date__text'>Aug 5, 2024</p>
+            </div>
+            <p className='posts-card__summary'>
+              Spring Data ElasticSearch에서 SSL를 적용합니다.
+            </p>
+          </li>
           <li className='posts-card'>hello</li>
           <li className='posts-card'>hello</li>
           <li className='posts-card'>hello</li>
