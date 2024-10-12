@@ -7,7 +7,7 @@ module.exports = merge(common, {
   devServer: {
     historyApiFallback: true,
     port: 3000,
-    hot: true,
+    hot: true
   },
   stats: {
     loggingDebug: ['sass-loader'],

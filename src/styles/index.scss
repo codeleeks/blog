@@ -1,17 +1,21 @@
 html {
-  --app-max-width: 1600px;
+  --app-max-width: 1200px;
   --header-height: 120px;
-  width: 100%;
+  --highlight-color: #9acd32;
+  --main-text-color: #fffffdcc;
+  --background-color: #121212;
+  --view-port-width: 100vw;
 
-  &.toggled {
-    overflow-y: hidden;
-  }
+  width: 100%;
+  font-family: 'Roboto Slab', 'Nanum Gothic', sans-serif;
 }
 body {
   margin: 0;
   width: 100%;
-
-  --view-port-width: 100vw;
+  background-color: var(--background-color);
+  &.toggled {
+    overflow-y: hidden;
+  }
 }
 ul {
   margin: 0;
@@ -26,29 +30,22 @@ a {
   color: white;
   text-decoration: none;
 }
-.clickable {
-  cursor: pointer;
-  opacity: 0.4;
-  &:hover {
-    opacity: 1;
-  }
-}
 
 @mixin media_large_style {
-  @media (max-width: 1600px) {
-    --app-max-width: 1200px;
+  @media (max-width: 1200px) {
+    --app-max-width: 800px;
     @content;
   }
 }
 @mixin media_medium_style {
-  @media (max-width: 1200px) {
-    --app-max-width: calc(var(--view-port-width) - 20px);
+  @media (max-width: 800px) {
+    --app-max-width: calc(var(--view-port-width) * 0.88 - 20px);
     @content;
   }
 }
 @mixin media_small_style {
   @media (max-width: 400px) {
-    --app-max-width: var(--view-port-width);
+    --app-max-width: calc(var(--view-port-width) * 0.88);
     @content;
   }
 }
@@ -65,6 +62,13 @@ a {
   }
   @if $right != skip {
     right: $right;
+  }
+}
+@mixin brightenOnHover($dark: 0.8) {
+  cursor: pointer;
+  opacity: $dark;
+  &:hover {
+    opacity: 1;
   }
 }
 
@@ -92,11 +96,13 @@ a {
   top: 0;
   z-index: 9;
 
-  background-color: royalblue;
+  text-transform: capitalize;
+  background-color: #121212;
 }
 
 .main {
   flex-grow: 1;
+  background-color: white;
 }
 
 .footer {
@@ -106,24 +112,24 @@ a {
   flex-shrink: 0;
 }
 
-// post
-.post {
-  --post-area-width: var(--app-max-width);
-  --post-nav-width: calc(var(--post-area-width) * 0.2);
-  --post-article-width: calc(var(--post-area-width) * 0.6);
-  --post-aside-width: calc(var(--post-area-width) * 0.2);
+// article
+.article {
+  --article-area-width: var(--app-max-width);
+  --article-nav-width: calc(var(--article-area-width) * 0.2);
+  --article-article-width: calc(var(--article-area-width) * 0.6);
+  --article-aside-width: calc(var(--article-area-width) * 0.2);
 
   display: flex;
 
   &-article {
-    width: var(--post-article-width);
+    width: var(--article-article-width);
     background-color: green;
     flex-grow: 1;
   }
 }
 
-.post-nav,
-.post-aside {
+.article-nav,
+.article-aside {
   position: relative;
   flex-shrink: 0;
 
@@ -161,9 +167,9 @@ a {
   }
 }
 
-.post-nav {
+.article-nav {
   $n: &;
-  width: var(--post-nav-width);
+  width: var(--article-nav-width);
   background-color: blue;
 
   &__bg {
@@ -174,11 +180,11 @@ a {
   }
 
   &__menu {
-    width: var(--post-nav-width);
+    width: var(--article-nav-width);
     background-color: aquamarine;
 
     @include media_medium_style {
-      width: calc(var(--post-area-width) * 0.5);
+      width: calc(var(--article-area-width) * 0.5);
       transform: translate(-100%);
 
       #{$n}.toggled & {
@@ -197,9 +203,9 @@ a {
   }
 }
 
-.post-aside {
+.article-aside {
   $a: &;
-  width: var(--post-aside-width);
+  width: var(--article-aside-width);
   background-color: orange;
 
   &__bg {
@@ -210,15 +216,15 @@ a {
   }
 
   &__menu {
-    width: var(--post-aside-width);
+    width: var(--article-aside-width);
     background-color: pink;
 
     @include media_medium_style {
-      width: calc(var(--post-area-width) * 0.5);
-      transform: translate(var(--post-aside-width));
+      width: calc(var(--article-area-width) * 0.5);
+      transform: translate(var(--article-aside-width));
 
       #{$a}.toggled & {
-        transform: translate(calc(var(--post-aside-width) - 100%));
+        transform: translate(calc(var(--article-aside-width) - 100%));
       }
     }
   }
@@ -239,12 +245,10 @@ a {
   margin-top: 100px;
   margin-bottom: 100px;
 
-  background-color: orange;
-
   display: flex;
   position: relative;
 
-  @include media_small_style {
+  @include media_medium_style {
     flex-direction: column;
   }
 
@@ -253,7 +257,7 @@ a {
     width: calc(var(--app-max-width) * 0.6);
     object-fit: cover;
 
-    @include media_small_style {
+    @include media_medium_style {
       width: var(--app-max-width);
     }
   }
@@ -265,7 +269,7 @@ a {
     width: calc(var(--app-max-width) * 0.4);
     padding-left: 10px;
 
-    @include media_small_style {
+    @include media_medium_style {
       width: var(--app-max-width);
       padding-left: 0;
       display: flex;
@@ -275,23 +279,27 @@ a {
     #{$c}__title {
       height: 50%;
       position: relative;
-      @include media_small_style {
+      @include media_medium_style {
         height: 80px;
       }
     }
     #{$c}__title-text {
       position: absolute;
-      top: -48px;
-      left: -48px;
+      top: -64px;
+      left: -96px;
       line-height: 1;
       font-size: calc(var(--app-max-width) * 0.1);
+      color: var(--highlight-color);
+      font-family: 'Roboto Slab';
+      font-weight: 700;
+      text-transform: uppercase;
       margin: 0;
 
-      @include media_medium_style {
-        top: -24px;
-        left: -24px;
+      span {
+        display: block;
+        text-indent: 0.6em;
       }
-      @include media_small_style {
+      @include media_medium_style {
         top: -36px;
         left: 0;
         font-size: 60px;
@@ -300,18 +308,20 @@ a {
     #{$c}__article {
       height: 50%;
       position: relative;
-      @include media_small_style {
+      @include media_medium_style {
         margin-top: 20px;
         height: 50px;
       }
     }
     #{$c}__description {
       position: absolute;
-      bottom: 0;
+      top: 0;
       font-size: calc(var(--app-max-width) * 0.02);
+      color: var(--main-text-color);
+      line-height: 1.4;
 
-      @include media_small_style {
-        font-size: 12px;
+      @include media_medium_style {
+        font-size: 16px;
       }
     }
   }
@@ -319,16 +329,21 @@ a {
 
 .posts {
   display: grid;
+  max-width: var(--app-max-width);
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
 
   &-card {
-    min-height: 300px;
+    min-height: 400px;
+    @include brightenOnHover(0.7);
 
     &__image {
+      display: block;
       width: 100%;
       object-fit: contain;
-      border: 1px solid gray; 
+      border: 1px solid gray;
+      box-sizing: border-box;
+      margin-bottom: 12px;
     }
     &__title {
       font-size: 24px;
@@ -344,9 +359,18 @@ a {
       display: flex;
       align-items: center;
       gap: 5px;
-    
+
       border-bottom: 1px solid gray;
-      margin-bottom: 24px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+    }
+    &__summary {
+      width: 100%;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
     }
   }
 }
@@ -356,6 +380,7 @@ a {
   $h: &;
   display: flex;
   justify-content: space-between;
+  color: var(--main-text-color);
 
   &-left {
     display: flex;
@@ -363,29 +388,47 @@ a {
     gap: 10px;
     padding-left: 10px;
     height: 100%;
+    @include brightenOnHover(0.9);
+
     &__avatar {
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background-color: blue;
+      background-color: royalblue;
+      opacity: 0.8;
+      @include media_small_style {
+        width: 25px;
+        height: 25px;
+      }
     }
     &__title {
       font-size: 32px;
       font-weight: 700;
+
+      @include media_small_style {
+        font-size: 24px;
+      }
     }
   }
 
   &-right {
     height: 100%;
     &__menu-bg {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      right: 0;
+
+      height: 0;
+      opacity: 0;
+      visibility: hidden;
+      background-color: var(--background-color);
+
+      transition: 0.4s;
       #{$h}.toggled & {
-        @debug '#{&}';
-        position: fixed;
-        top: var(--header-height);
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background-color: black;
+        height: 100%;
+        opacity: 1;
+        visibility: visible;
       }
     }
 
@@ -417,6 +460,15 @@ a {
       li {
         margin-left: 5px;
         margin-right: 5px;
+
+        a {
+          opacity: 0.6;
+          cursor: pointer;
+          &.active {
+            opacity: 1;
+            text-decoration: underline;
+          }
+        }
       }
 
       @include media_small_style {

@@ -1,0 +1,88 @@
+import { useState, useRef } from 'react'
+
+import { Outlet, RouterProvider, useNavigate } from 'react-router'
+import { createBrowserRouter, NavLink } from 'react-router-dom'
+import Prologue from './Prologue'
+import AvatarImg from './assets/avatar.png'
+import Article from './components/Article'
+import { postContentsLoader, postsLoader } from './fetch'
+
+const Root = () => {
+  const ref = useRef(null)
+  const [toggled, setToggled] = useState(false)
+  const navigate = useNavigate()
+
+  const toggler = () => {
+    ref.current.classList.toggle('toggled')
+    document.body.classList.toggle('toggled')
+    setToggled((prev) => !prev)
+  }
+
+  const backToHome = () => {
+    navigate('/', {replace: true})
+  }
+
+  return (
+    <>
+      <header className='header' ref={ref}>
+        <div className='header-left'>
+          <img
+            className='header-left__avatar'
+            src={AvatarImg}
+            alt='avatar image'
+          />
+          <h1 className='header-left__title' onClick={backToHome}>silverbullet</h1>
+        </div>
+        <div className='header-right'>
+          <div className='header-right__menu-bg'></div>
+          <div className='header-right__menu-toggler'>
+            <div
+              className='header-right__menu-toggler__icon material-icons'
+              onClick={toggler}
+            >
+              {toggled ? 'close' : 'menu'}
+            </div>
+          </div>
+          <ul className='header-right__links'>
+            <li className='header-right__links-posts'>
+              <NavLink to=''>posts</NavLink>
+            </li>
+            <li className='header-right__links-snippets'>
+              <NavLink to='snippets'>snippets</NavLink>
+            </li>
+          </ul>
+        </div>
+      </header>
+      <main className='main'>
+        <Outlet />
+      </main>
+      <footer className='footer'>designed by codeleeks</footer>
+    </>
+  )
+}
+
+const routes = [
+  {
+    path: '/',
+    element: <Root />,
+    children: [
+      {
+        index: true,
+        element: <Prologue />,
+        loader: postsLoader,
+      },
+      {
+        path: 'posts/*',
+        element: <Article />,
+        loader: postContentsLoader,
+      },
+      ,
+    ],
+  },
+]
+
+const router = createBrowserRouter(routes)
+
+export default function BlogRouterProvider() {
+  return <RouterProvider router={router} />
+}
