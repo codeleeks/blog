@@ -4,6 +4,7 @@ import { gsap } from 'gsap'
 import ScrollToPlugin from 'gsap/ScrollToPlugin'
 import { NavLink } from 'react-router-dom'
 import Markdown from './Markdown'
+import { postEditBaseUrl } from '../fetch'
 
 gsap.registerPlugin(ScrollToPlugin)
 function scrollTo(target, config) {
@@ -60,7 +61,7 @@ const TocItem = (props) => {
 }
 
 const Article = (props) => {
-  const { loaderData: data, headingObserver } = props
+  const { editBaseUrl, loaderData: data, headingObserver } = props
   const contentsRef = useRef(null)
   const tocRef = useRef(null)
   const navRef = useRef(null)
@@ -138,7 +139,7 @@ const Article = (props) => {
                               key={article.path}
                             >
                               <NavLink
-                                to={`/posts/${article.path}`}
+                                to={`${article.path}`}
                                 onClick={(e) => closer(e, navRef)}
                               >
                                 {article.title}
@@ -167,24 +168,38 @@ const Article = (props) => {
         <article className='article-article'>
           <AsyncBlock resolve={data.contents}>
             {(fetched) => {
-              const { title, titleImage, date, contentsWithoutHeader } = fetched
+              console.log(fetched)
+              const { title, titleImage, date, contentsWithoutHeader, path } =
+                fetched
               return (
                 <>
                   <h2 className='article-article__title'>{title}</h2>
                   <div className='article-article__bar'>
-                    <div className='article-article__bar__date'>
-                      <div className='article-article__bar__date__icon material-icons'>
-                        alarm
+                    {date && (
+                      <div className='article-article__bar__date'>
+                        <div className='article-article__bar__date__icon material-icons'>
+                          alarm
+                        </div>
+                        <p className='article-article__bar__date__text'>
+                          {date}
+                        </p>
                       </div>
-                      <p className='article-article__bar__date__text'>{date}</p>
-                    </div>
-                    <div className='article-article__bar__edit'>수정하기</div>
+                    )}
+                    <a
+                      href={`${editBaseUrl}${path}`}
+                      target='_blank'
+                      className='article-article__bar__edit'
+                    >
+                      수정하기
+                    </a>
                   </div>
-                  <img
-                    className='article-article__title-image'
-                    src={titleImage}
-                    alt={title}
-                  />
+                  {titleImage && (
+                    <img
+                      className='article-article__title-image'
+                      src={titleImage}
+                      alt={title}
+                    />
+                  )}
                   <div className='article-article__contents' ref={contentsRef}>
                     <Markdown
                       text={contentsWithoutHeader}

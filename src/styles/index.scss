@@ -143,7 +143,7 @@ img {
 .article {
   --article-area-width: var(--app-max-width);
   --article-nav-width: calc(var(--article-area-width) * 0.2);
-  --article-article-width: calc(var(--article-area-width) * 0.6);
+  --article-article-width: calc(var(--article-area-width) * 0.6 * 0.95);
   --article-aside-width: calc(var(--article-area-width) * 0.2);
 
   display: flex;
@@ -188,8 +188,6 @@ img {
     }
 
     &__contents {
-      width: 95%;
-      margin: 0 auto;
       @mixin margin-y($v: 16px) {
         margin-top: $v;
         margin-bottom: $v;
@@ -355,13 +353,17 @@ img {
 
 .article-nav,
 .article-aside {
-  position: sticky;
+  position: fixed;
   flex-shrink: 0;
-  height: calc(100vh - var(--header-height));
+  $height: calc(100vh - var(--header-height) - var(--footer-margin-top));
+  height: $height;
   @include media_medium_style {
     position: fixed;
   }
   top: var(--header-height);
+  &.toggled {
+    height: calc(100vh - var(--header-height));
+  }
 
   &__bg {
     position: fixed;
@@ -385,7 +387,7 @@ img {
   }
   &__scroll {
     overflow-y: auto;
-    height: calc(100vh - var(--header-height));
+    height: $height;
     border-top: 1px solid #494949;
 
     @include media_medium_style {
@@ -431,6 +433,7 @@ img {
   &__scroll {
     @include media_medium_style {
       #{$n}.toggled & {
+        height: calc(100vh - var(--header-height));
         opacity: 1;
         visibility: visible;
       }
@@ -464,7 +467,7 @@ img {
 .article-aside {
   $a: &;
   width: var(--article-aside-width);
-  right: 0;
+  right: calc((100vw - var(--app-max-width)) / 2);
 
   &__bg {
     #{$a}.toggled & {
@@ -495,6 +498,7 @@ img {
     padding-left: 1em;
     @include media_medium_style {
       #{$a}.toggled & {
+        height: calc(100vh - var(--header-height));
         opacity: 1;
         visibility: visible;
       }
@@ -816,4 +820,8 @@ img {
       }
     }
   }
+}
+
+// snippet
+.snippet {
 }

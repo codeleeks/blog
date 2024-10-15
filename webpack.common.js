@@ -18,7 +18,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.jsx/,
+        test: /\.(jsx|js)/,
         loader: 'babel-loader',
         options: {
           presets: [
@@ -43,7 +43,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './public/index.html',
     }),
-    new Dotenv({ path: '.env'})
+    new Dotenv({ path: '.env' }),
   ],
   devtool: 'inline-source-map',
   devServer: {

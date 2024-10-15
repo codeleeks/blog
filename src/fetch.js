@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { defer } from 'react-router'
 
 const config = {
@@ -7,6 +8,12 @@ const config = {
   postsBranch: 'codeleeks-posts',
   snippetsBranch: 'codeleeks-snippets',
 }
+
+export const postEditBaseUrl =
+  'https://github.com/codeleeks/blog/blob/codeleeks-posts/'
+
+export const snippetEditBaseUrl =
+  'https://github.com/codeleeks/blog/blob/codeleeks-snippets/'
 
 export function extractHeader(key, contents) {
   let matched = /(?<=---)(.*?)(?=---)/gs.exec(contents)
@@ -93,6 +100,7 @@ async function fetchArticle(path, branch) {
   )
 
   return {
+    path,
     contentsWithoutHeader: removeHeaderFromContents(contents),
     title: extractTitle(path),
     category: extractCategory(path),
@@ -147,6 +155,7 @@ async function fetchArticles(branch) {
         },
       }
 
+      console.log(post)
       return post
     })
 

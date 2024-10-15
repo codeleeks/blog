@@ -3,10 +3,16 @@ import { useRef, useState } from 'react'
 import { Outlet, RouterProvider, useNavigate } from 'react-router'
 import { createBrowserRouter, NavLink } from 'react-router-dom'
 import AvatarImg from './assets/avatar.png'
-import Post from './components/Post'
-import { postContentsLoader, postsLoader, snippetsLoader } from './fetch'
+import Post from './pages/Post'
+import {
+  postContentsLoader,
+  postsLoader,
+  snippetContentsLoader,
+  snippetsLoader,
+} from './fetch'
 import Prologue from './pages/Prologue'
 import Snippets from './pages/Snippets'
+import Snippet from './pages/Snippet'
 
 const Root = () => {
   const ref = useRef(null)
@@ -83,9 +89,18 @@ const routes = [
       },
       {
         path: 'snippets',
-        exact: true,
-        element: <Snippets />,
-        loader: snippetsLoader,
+        children: [
+          {
+            index: true,
+            element: <Snippets />,
+            loader: snippetsLoader,
+          },
+          {
+            path: 'snippets/*',
+            element: <Snippet />,
+            loader: snippetContentsLoader,
+          },
+        ],
       },
     ],
   },
@@ -93,6 +108,6 @@ const routes = [
 
 const router = createBrowserRouter(routes)
 
-export default function BlogRouterProvider() {
+export default function BlogRouterProvider({ children }) {
   return <RouterProvider router={router} />
 }

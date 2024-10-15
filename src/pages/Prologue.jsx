@@ -2,6 +2,8 @@ import { useLoaderData } from 'react-router'
 import AsyncBlock from '../components/AsyncBlock'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { postsQueryConfig } from '../fetch'
 
 const PostCard = (props) => {
   const { post: fetched } = props
