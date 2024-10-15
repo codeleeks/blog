@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
 
 import { Outlet, RouterProvider, useNavigate } from 'react-router'
 import { createBrowserRouter, NavLink } from 'react-router-dom'
 import Prologue from './Prologue'
 import AvatarImg from './assets/avatar.png'
-import Article from './components/Article'
+import Post from './components/Post'
 import { postContentsLoader, postsLoader } from './fetch'
 
 const Root = () => {
@@ -19,7 +19,9 @@ const Root = () => {
   }
 
   const backToHome = () => {
-    navigate('/', {replace: true})
+    ref.current.classList.remove('toggled')
+    document.body.classList.remove('toggled')
+    navigate('/', { replace: true })
   }
 
   return (
@@ -31,7 +33,9 @@ const Root = () => {
             src={AvatarImg}
             alt='avatar image'
           />
-          <h1 className='header-left__title' onClick={backToHome}>silverbullet</h1>
+          <h1 className='header-left__title' onClick={backToHome}>
+            silverbullet
+          </h1>
         </div>
         <div className='header-right'>
           <div className='header-right__menu-bg'></div>
@@ -73,7 +77,7 @@ const routes = [
       },
       {
         path: 'posts/*',
-        element: <Article />,
+        element: <Post />,
         loader: postContentsLoader,
       },
       ,

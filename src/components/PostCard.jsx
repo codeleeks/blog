@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const PostCard = (props) => {
   const { post: fetched } = props
   const [post, setPost] = useState(fetched)
+  // const navigate = useNavigate()
   useEffect(() => {
     fetched.fetchContents((fetchedPost) => {
       setPost((prev) => {
@@ -11,6 +12,12 @@ const PostCard = (props) => {
       })
     })
   }, [fetched])
+
+  // const navigator = () => {
+  //   const { title, date,  titleImage } = post
+  //   const cloned = { title, date,  titleImage }
+  //   navigate(`posts/${post.path}`, { state: { post: cloned } })
+  // }
 
   return (
     <Link to={`posts/${post.path}`}>

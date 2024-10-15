@@ -514,7 +514,38 @@ export function extractHeader(key, contents) {
   return value
 }
 
-export async function fetchPostContents(path) {
+function extractCategory(path) {
+  const last = path.lastIndexOf('/')
+  const category = path.substring(0, last)
+  return category
+}
+
+function extractTitle(path) {
+  const last = path.lastIndexOf('/')
+  const ext = path.lastIndexOf('.md')
+  const title = path.substring(last + 1, ext)
+  return title
+}
+
+export function removeHeaderFromContents(contents) {
+  const regex = /-{3}\n(.*?)-{3}\n/gs
+  const matched = regex.exec(contents)
+  if (!matched) return contents
+
+  const removed = contents.replace(regex, '')
+  let removedLineFeed = removed
+  for (let index = 0; index < removed.length; index++) {
+    const element = removed[index]
+    if (element !== '\n') {
+      removedLineFeed = removedLineFeed.slice(index)
+      break
+    }
+  }
+
+  return removedLineFeed
+}
+
+export async function fetchPost(path) {
   const { owner, repo, token, postsBranch } = config
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${postsBranch}`
 
@@ -531,7 +562,18 @@ export async function fetchPostContents(path) {
     throw new Error(`could not fetch contents ${path}`)
   }
 
-  return new TextDecoder().decode(new Uint8Array(await resp.arrayBuffer()))
+  const contents = new TextDecoder().decode(
+    new Uint8Array(await resp.arrayBuffer())
+  )
+
+  return {
+    contentsWithoutHeader: removeHeaderFromContents(contents),
+    title: extractTitle(path),
+    category: extractCategory(path),
+    summary: extractHeader('summary', contents),
+    date: extractHeader('date', contents),
+    titleImage: extractHeader('title-image', contents),
+  }
 }
 
 export async function fetchPosts() {
@@ -558,19 +600,16 @@ export async function fetchPosts() {
           t.path !== 'README.md'
       )
       .map((cur) => {
-        const last = cur.path.lastIndexOf('/')
-        const category = cur.path.substring(0, last)
-        const title = cur.path.substring(last + 1)
-
         const post = {
           ...cur,
-          category,
-          title,
+          title: extractTitle(cur.path),
+          category: extractCategory(cur.path),
           fetchContents(callback) {
-            fetchPostContents(cur.path).then((contents) => {
-              this.summary = extractHeader('summary', contents)
-              this.date = extractHeader('date', contents)
-              this.titleImage = extractHeader('title-image', contents)
+            fetchPost(cur.path).then((post) => {
+              const { summary, date, titleImage } = post
+              this.summary = summary
+              this.date = date
+              this.titleImage = titleImage
 
               callback(this)
             })
@@ -589,5 +628,8 @@ export function postsLoader() {
 }
 
 export function postContentsLoader({ params }) {
-  return defer({ articleContents: fetchPostContents(params['*']) })
+  return defer({
+    contents: fetchPost(params['*']),
+    articles: fetchPosts(),
+  })
 }
