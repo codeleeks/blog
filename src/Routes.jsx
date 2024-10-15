@@ -2,10 +2,11 @@ import { useRef, useState } from 'react'
 
 import { Outlet, RouterProvider, useNavigate } from 'react-router'
 import { createBrowserRouter, NavLink } from 'react-router-dom'
-import Prologue from './Prologue'
 import AvatarImg from './assets/avatar.png'
 import Post from './components/Post'
-import { postContentsLoader, postsLoader } from './fetch'
+import { postContentsLoader, postsLoader, snippetsLoader } from './fetch'
+import Prologue from './pages/Prologue'
+import Snippets from './pages/Snippets'
 
 const Root = () => {
   const ref = useRef(null)
@@ -80,7 +81,12 @@ const routes = [
         element: <Post />,
         loader: postContentsLoader,
       },
-      ,
+      {
+        path: 'snippets',
+        exact: true,
+        element: <Snippets />,
+        loader: snippetsLoader,
+      },
     ],
   },
 ]
