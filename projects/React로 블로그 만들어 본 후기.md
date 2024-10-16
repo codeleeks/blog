@@ -1,3 +1,9 @@
+---
+summary: 리액트로 블로그를 만들어 봤습니다. 후기 남깁니다.
+date: 2024-10-16
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/refs/heads/codeleeks-images/projects/React%EB%A1%9C%20%EB%B8%94%EB%A1%9C%EA%B7%B8%20%EB%A7%8C%EB%93%A4%EC%96%B4%20%EB%B3%B8%20%ED%9B%84%EA%B8%B0/title.png'
+---
+
 ## 블로그를 만들자!
 
 기술을 익히기에 가장 좋은 방법은 프로젝트를 해보는 것이라 생각했습니다.
