@@ -1,7 +1,13 @@
 import { useRef, useState } from 'react'
 
-import { Outlet, RouterProvider, useNavigate } from 'react-router'
-import { createBrowserRouter, NavLink } from 'react-router-dom'
+import {
+  isRouteErrorResponse,
+  Navigate,
+  Outlet,
+  RouterProvider,
+  useNavigate,
+} from 'react-router'
+import { createBrowserRouter, Link, NavLink } from 'react-router-dom'
 import AvatarImg from './assets/avatar.png'
 import Post from './pages/Post'
 import {
@@ -13,6 +19,7 @@ import {
 import Prologue from './pages/Prologue'
 import Snippets from './pages/Snippets'
 import Snippet from './pages/Snippet'
+import ErrorBlock from './components/ErrorBlock'
 
 const Root = () => {
   const ref = useRef(null)
@@ -56,7 +63,7 @@ const Root = () => {
           </div>
           <ul className='header-right__links'>
             <li className='header-right__links-posts'>
-              <NavLink to=''>posts</NavLink>
+              <NavLink to='posts'>posts</NavLink>
             </li>
             <li className='header-right__links-snippets'>
               <NavLink to='snippets'>snippets</NavLink>
@@ -72,20 +79,58 @@ const Root = () => {
   )
 }
 
+const NotFoundPage = (props) => {
+  const title = 'Not found!'
+  const message = 'Could not find resource or page.'
+
+  return (
+    <>
+      <ErrorBlock title={title} message={message} />
+      <Link to={process.env.BLOG_BASE_URL}>홈으로 돌아가기</Link>
+    </>
+  )
+}
+
+const ErrorPage = (props) => {
+  const error = useRouteError()
+  let title = 'Error occurred!'
+  let message = 'something went wrong'
+
+  if (isRouteErrorResponse(error) && error.status === 500) {
+    message = error.data.message
+  }
+  return <ErrorBlock title={title} message={message} />
+}
+
 const routes = [
   {
     path: '/',
+    element: <Navigate to={process.env.BLOG_BASE_URL} />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: process.env.BLOG_BASE_URL,
     element: <Root />,
+    errorElement: <ErrorPage />,
     children: [
       {
         index: true,
-        element: <Prologue />,
-        loader: postsLoader,
+        element: <Navigate to='posts' />,
       },
       {
-        path: 'posts/*',
-        element: <Post />,
-        loader: postContentsLoader,
+        path: 'posts',
+        children: [
+          {
+            index: true,
+            element: <Prologue />,
+            loader: postsLoader,
+          },
+          {
+            path: 'posts/*',
+            element: <Post />,
+            loader: postContentsLoader,
+          },
+        ],
       },
       {
         path: 'snippets',
@@ -108,6 +153,6 @@ const routes = [
 
 const router = createBrowserRouter(routes)
 
-export default function BlogRouterProvider({ children }) {
+export default function BlogRouterProvider() {
   return <RouterProvider router={router} />
 }

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "build": "webpack --config webpack.prod.js",
-    "dev": "webpack serve --config webpack.dev.js --open --hot"
+    "dev": "webpack serve --config webpack.dev.js --open --hot",
+    "prodRun": "webpack serve --config webpack.prod.js --open --hot"
   },
   "keywords": [],
   "author": "",

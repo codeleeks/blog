@@ -154,8 +154,6 @@ async function fetchArticles(branch) {
           })
         },
       }
-
-      console.log(post)
       return post
     })
 

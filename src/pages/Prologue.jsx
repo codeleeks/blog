@@ -1,9 +1,8 @@
-import { useLoaderData } from 'react-router'
-import AsyncBlock from '../components/AsyncBlock'
 import { useEffect, useState } from 'react'
+import { useLoaderData } from 'react-router'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { postsQueryConfig } from '../fetch'
+import AsyncBlock from '../components/AsyncBlock'
+import HappyMeImg from '../assets/행복한나.jpg'
 
 const PostCard = (props) => {
   const { post: fetched } = props
@@ -38,6 +37,7 @@ const PostCard = (props) => {
 
 const Prologue = () => {
   const data = useLoaderData()
+  console.log(data)
 
   return (
     <AsyncBlock resolve={data.posts}>
@@ -49,10 +49,7 @@ const Prologue = () => {
         return (
           <>
             <figure className='hero'>
-              <img
-                className='hero-img'
-                src='https://codeleeks.github.io/blog/assets/%ED%96%89%EB%B3%B5%ED%95%9C%EB%82%98--1EVvs8x.jpg'
-              />
+              <img className='hero-img' src={HappyMeImg} alt='happy me' />
               <figcaption className='hero-caption'>
                 <div className='hero-caption__title'>
                   <h1 className='hero-caption__title-text'>
