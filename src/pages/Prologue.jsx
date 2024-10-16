@@ -17,7 +17,7 @@ const PostCard = (props) => {
   }, [fetched])
 
   return (
-    <Link to={`posts/${post.path}`}>
+    <Link to={`${post.path}`}>
       <li className='posts-card' key={post.path}>
         <img
           className='posts-card__image'
@@ -37,7 +37,6 @@ const PostCard = (props) => {
 
 const Prologue = () => {
   const data = useLoaderData()
-  console.log(data)
 
   return (
     <AsyncBlock resolve={data.posts}>

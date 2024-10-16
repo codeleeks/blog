@@ -41,6 +41,7 @@ jobs:
         run: npm run build
         env:
           VITE_GITHUB_ACCESS_TOKEN: ${{ secrets.VITE_GITHUB_ACCESS_TOKEN }}
+          BLOG_BASE_URL: '/blog'
       - name: Copy index.html to 404.html
         run: cp ./dist/index.html ./dist/404.html
       - name: Setup Pages

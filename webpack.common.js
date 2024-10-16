@@ -1,7 +1,5 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const Dotenv = require('dotenv-webpack')
-const { runtime } = require('webpack')
 
 module.exports = {
   mode: 'development',
@@ -11,6 +9,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     clean: true,
     assetModuleFilename: '[name][ext]',
+    publicPath: '/blog/',
   },
   resolve: {
     extensions: ['.js', '.jsx'],
@@ -43,7 +42,6 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './public/index.html',
     }),
-    new Dotenv({ path: '.env' }),
   ],
   devtool: 'inline-source-map',
   devServer: {

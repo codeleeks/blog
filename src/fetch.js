@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { defer } from 'react-router'
 
 const config = {
@@ -181,6 +180,7 @@ export function postsLoader() {
 }
 
 export function postContentsLoader({ params }) {
+  console.log(params)
   return defer({
     contents: fetchPost(params['*']),
     articles: fetchPosts(),

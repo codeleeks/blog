@@ -126,7 +126,7 @@ const routes = [
             loader: postsLoader,
           },
           {
-            path: 'posts/*',
+            path: '*',
             element: <Post />,
             loader: postContentsLoader,
           },
@@ -141,7 +141,7 @@ const routes = [
             loader: snippetsLoader,
           },
           {
-            path: 'snippets/*',
+            path: '*',
             element: <Snippet />,
             loader: snippetContentsLoader,
           },
