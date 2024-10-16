@@ -1,0 +1,23 @@
+# name: E2E Scheduled Tests
+
+# on:
+#   schedule:
+#     - cron: '0 0 * * *'
+#   workflow_dispatch:
+
+# jobs:
+#   cypress-run:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+#       - name: Cypress run with local env
+#         uses: cypress-io/github-action@v6
+#         env:
+#           BASE_URL: 'https://codeleeks.github.io/blog/'
+#       - name: Upload screenshots
+#         uses: actions/upload-artifact@v3
+#         if: failure()
+#         with:
+#           name: cypress-screenshots
+#           path: cypress/screenshots
