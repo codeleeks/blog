@@ -180,7 +180,6 @@ export function postsLoader() {
 }
 
 export function postContentsLoader({ params }) {
-  console.log(params)
   return defer({
     contents: fetchPost(params['*']),
     articles: fetchPosts(),

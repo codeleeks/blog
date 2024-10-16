@@ -168,7 +168,6 @@ const Article = (props) => {
         <article className='article-article'>
           <AsyncBlock resolve={data.contents}>
             {(fetched) => {
-              console.log(fetched)
               const { title, titleImage, date, contentsWithoutHeader, path } =
                 fetched
               return (
