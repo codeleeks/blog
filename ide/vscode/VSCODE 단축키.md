@@ -46,3 +46,9 @@ date: 2024-01-19
 - ctrl + h: 파일 내 문자열 변경하기(replace)
 - ctrl + shift + h: 프로젝트 내 모든 파일에서 문자열 변경하기
 ```
+
+<hr />
+
+```
+shift + alt + o: vscode unused import 제거하기
+```
