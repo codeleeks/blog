@@ -1,6 +1,7 @@
 ---
 summary: 프로젝트 생성 도구 없이 웹팩만으로 리액트 프로젝트를 구성해본다.
 date: 2024-10-02
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/react/react%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
 ---
 ## 동기
 
