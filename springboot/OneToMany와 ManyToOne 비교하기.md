@@ -1,3 +1,9 @@
+---
+summary: OneToMany와 ManyToOne을 비교합니다.
+date: 2024-09-17
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/springboot/JPA%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
+---
+
 ## 삭제하기
 
 포스트와 코멘트 관계를 보자.
