@@ -1,3 +1,9 @@
+---
+summary: MySQL 인덱스에 대해서 정리합니다.
+date: 2024-09-26
+title-image: 
+---
+
 ## 인덱스
 
 - B+ Tree 구조
