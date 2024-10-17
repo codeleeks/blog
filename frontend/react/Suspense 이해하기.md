@@ -1,3 +1,9 @@
+---
+summary: Suspense를 코드로 이해해봅니다.
+date: 2024-10-17
+title-image: 'https://raw.githubusercontent.com/codeleeks/blog/codeleeks-images/react/react%20%EC%99%84%EB%B2%BD%20%EC%A0%95%EB%A6%AC/title.png'
+---
+
 ## Suspense란?
 
 Suspense는 하위 컴포넌트가 비동기 데이터를 기다리느라 화면을 그리지 못하는 경우 fallback UI를 그려주는 컴포넌트이다.
