@@ -1,3 +1,8 @@
+---
+summary: MySQL 락에 대해 정리합니다.
+date: 2024-09-19
+title-image: https://github.com/user-attachments/assets/252a80ee-5b6d-4be3-b1a2-62e873b4a98e
+---
 ## MySQL의 락
 
 공유락과 배타락이 있다.
