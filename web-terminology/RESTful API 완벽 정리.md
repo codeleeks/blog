@@ -1,3 +1,9 @@
+---
+summary: RESTful API에 대해 정리합니다.
+date: 2024-09-11
+title-image: 'https://github.com/user-attachments/assets/965f9e27-e930-4068-a2ce-5174a8ecd213'
+---
+
 ## 철학
 
 결국 유지보수의 용이성을 목적으로 한다.
