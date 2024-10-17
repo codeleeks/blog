@@ -39,3 +39,10 @@ date: 2024-01-19
 - ctrl + shift + [ : 이전 탭으로 이동
 - ctrl + shift + ] : 다음 탭으로 이동
 ```
+
+<hr />
+
+```
+- ctrl + h: 파일 내 문자열 변경하기(replace)
+- ctrl + shift + h: 프로젝트 내 모든 파일에서 문자열 변경하기
+```
