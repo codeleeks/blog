@@ -1,8 +1,9 @@
 ---
 summary: babel에 대해 정리합니다.
 date: 2024-10-01
-title-image: https://github.com/user-attachments/assets/6eb85d4f-a97a-4058-8e80-099fd8b70117
+title-image: 'https://github.com/user-attachments/assets/6eb85d4f-a97a-4058-8e80-099fd8b70117'
 ---
+
 ## Babel 이란?
 
 babel은 javascript 컴파일러이다. 트랜스파일링이라고 한다.
