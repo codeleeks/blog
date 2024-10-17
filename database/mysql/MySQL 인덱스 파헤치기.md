@@ -1,7 +1,8 @@
 ---
 summary: MySQL 인덱스에 대해서 정리합니다.
 date: 2024-09-26
-title-image: 
+title-image: 'https://github.com/user-attachments/assets/53f119aa-323d-4945-bd2a-e9e0cece3068'
+
 ---
 
 ## 인덱스
