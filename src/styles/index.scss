@@ -799,6 +799,7 @@ img {
   &-card {
     min-height: 400px;
     @include brightenOnHover(0.7);
+    cursor: text;
 
     &__title {
       display: flex;
@@ -822,8 +823,4 @@ img {
       }
     }
   }
-}
-
-// snippet
-.snippet {
 }

@@ -25,14 +25,14 @@ const SnippetCard = (props: SnippetCardProps) => {
   }, [fetchedSnippet])
 
   return (
-    <Link to={`${snippet.path}`}>
-      <li key={snippet.path} className='snippets-card'>
+    <li key={snippet.path} className='snippets-card'>
+      <Link to={`${snippet.path}`}>
         <h3 className='snippets-card__title'>{snippet.title}</h3>
-        <article className='snippets-card__preview'>
-          <Markdown text={snippet.contentsWithoutHeader} />
-        </article>
-      </li>
-    </Link>
+      </Link>
+      <article className='snippets-card__preview'>
+        <Markdown text={snippet.contentsWithoutHeader} />
+      </article>
+    </li>
   )
 }
 
