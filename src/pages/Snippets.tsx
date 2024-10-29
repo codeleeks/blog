@@ -3,7 +3,6 @@ import AsyncBlock from '../components/AsyncBlock'
 import { useEffect, useState } from 'react'
 import Markdown from '../components/Markdown'
 import { Link } from 'react-router-dom'
-import { Article } from '../types'
 import { SnippetsLoader } from '../fetch'
 
 interface SnippetCardProps {

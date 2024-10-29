@@ -7,7 +7,6 @@ import {
 import { Link } from 'react-router-dom'
 import AsyncBlock from '../components/AsyncBlock'
 import HappyMeImg from '../assets/행복한나.jpg'
-import { Article } from '../types'
 
 interface PostCardProps {
   post: Article

@@ -5,7 +5,6 @@ import ScrollToPlugin from 'gsap/ScrollToPlugin'
 import { NavLink } from 'react-router-dom'
 import Markdown from './Markdown'
 import { HeadingObserver, TableOfContents } from '../utils/headingObserver'
-import { Article } from '../types'
 
 gsap.registerPlugin(ScrollToPlugin)
 

@@ -1,4 +1,9 @@
-export type Article = {
+declare module '*.png'
+declare module '*.svg'
+declare module '*.jpeg'
+declare module '*.jpg'
+
+type Article = {
   mode: string
   path: string
   sha: string

@@ -1,6 +1,5 @@
 import { defer } from 'react-router'
 import { makeLoader } from 'react-router-typesafe'
-import { Article } from './types'
 
 const config = {
   token: process.env.VITE_GITHUB_ACCESS_TOKEN,

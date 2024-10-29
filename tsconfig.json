@@ -11,6 +11,7 @@
     "paths": {
       "react": ["./node_modules/@types/react"]
     },
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": ["node_modules/@type", "src/types"]
   }
 }
