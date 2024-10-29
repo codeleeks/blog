@@ -5,8 +5,9 @@ import rehypeHighlight from 'rehype-highlight'
 import rehypeSlug from 'rehype-slug'
 import remarkGfm from 'remark-gfm'
 import ErrorBlock from './ErrorBlock'
+import { MDXModule } from 'mdx/types'
 
-const MessageBox = (props) => {
+const MessageBox = (props: any) => {
   const { title, level, children } = props
   return (
     <div className={`article-article__contents__message-box ${level}`}>
@@ -21,11 +22,11 @@ const MessageBox = (props) => {
 }
 
 export const components = {
-  MessageBox(props) {
+  MessageBox(props: any) {
     const { children, ...rest } = props
     return <MessageBox {...rest}>{children}</MessageBox>
   },
-  code({ className, ...properties }) {
+  code({ className, ...properties }: any) {
     const match = /language-(\w+)/.exec(className || '')
     return (
       <code
@@ -34,7 +35,7 @@ export const components = {
       />
     )
   },
-  a({ children, ...rest }) {
+  a({ children, ...rest }: any) {
     return (
       <a {...rest} target='_blank'>
         {children}
@@ -43,7 +44,7 @@ export const components = {
   },
 }
 
-export async function evaluateMarkdown(text) {
+export async function evaluateMarkdown(text: string) {
   const module = await evaluate(text, {
     ...runtime,
     baseUrl: import.meta.url,
@@ -53,9 +54,14 @@ export async function evaluateMarkdown(text) {
   return module
 }
 
-const Markdown = (props) => {
+interface MarkdownProps {
+  text: string
+  startHeadingObserver?: (contents: string) => void
+}
+
+const Markdown = (props: MarkdownProps) => {
   const { text, startHeadingObserver } = props
-  const [mdxModule, setMdxModule] = useState(null)
+  const [mdxModule, setMdxModule] = useState<MDXModule>(null)
   const [error, setError] = useState({ msg: undefined })
 
   useEffect(() => {
@@ -79,12 +85,10 @@ const Markdown = (props) => {
 
   let Content = Fragment
   if (error.msg) {
-    Content = <ErrorBlock title='An Error Occurred!' message={error.msg} />
-    return Content
+    return <ErrorBlock title='An Error Occurred!' message={error.msg} />
   }
   if (mdxModule) {
-    Content = mdxModule.default
-    return <Content components={components} />
+    return <mdxModule.default components={components} />
   }
 
   return <Content />

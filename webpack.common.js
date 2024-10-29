@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
   mode: 'development',
-  entry: './src/index.jsx',
+  entry: './src/index.tsx',
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
@@ -12,19 +12,32 @@ module.exports = {
     publicPath: '/blog/',
   },
   resolve: {
-    extensions: ['.js', '.jsx'],
+    extensions: ['.tsx', '.ts', '...'],
   },
   module: {
     rules: [
       {
-        test: /\.(jsx|js)/,
+        test: /\.(tsx|ts)/,
         loader: 'babel-loader',
         options: {
           presets: [
             ['@babel/preset-react', { runtime: 'automatic' }],
-            '@babel/preset-env',
+            [
+              '@babel/preset-env',
+              {
+                targets: {
+                  esmodules: true, // 추가한 부분
+                },
+              },
+            ],
+            ['@babel/preset-typescript', { isTSX: true, allExtensions: true }],
           ],
         },
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
         exclude: /node_modules/,
       },
       {

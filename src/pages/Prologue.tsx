@@ -1,16 +1,25 @@
 import { useEffect, useState } from 'react'
-import { useLoaderData } from 'react-router'
+import {
+  AwaitResolveRenderFunction,
+  LoaderFunction,
+  useLoaderData,
+} from 'react-router-typesafe'
 import { Link } from 'react-router-dom'
 import AsyncBlock from '../components/AsyncBlock'
 import HappyMeImg from '../assets/행복한나.jpg'
+import { Article } from '../types'
 
-const PostCard = (props) => {
+interface PostCardProps {
+  post: Article
+}
+
+const PostCard = (props: PostCardProps) => {
   const { post: fetched } = props
   const [post, setPost] = useState(fetched)
 
   useEffect(() => {
-    fetched.fetchContents((fetchedPost) => {
-      setPost((prev) => {
+    fetched.fetchContents((fetchedPost: Article) => {
+      setPost((prev: Article) => {
         return { ...prev, ...fetchedPost }
       })
     })
@@ -36,17 +45,17 @@ const PostCard = (props) => {
 }
 
 const Prologue = () => {
-  const data = useLoaderData()
+  const data: { posts: Article[] } = useLoaderData() as { posts: Article[] }
 
   return (
     <AsyncBlock resolve={data.posts}>
-      {(fetched) => {
-        const posts = fetched.map((p) => {
+      {(fetched: Article[]) => {
+        const posts = fetched.map((p: Article) => {
           return <PostCard key={p.path} post={p} />
         })
 
         return (
-          <>
+          <div>
             <figure className='hero'>
               <img className='hero-img' src={HappyMeImg} alt='happy me' />
               <figcaption className='hero-caption'>
@@ -66,7 +75,7 @@ const Prologue = () => {
               </figcaption>
             </figure>
             <ul className='posts'>{posts}</ul>
-          </>
+          </div>
         )
       }}
     </AsyncBlock>

@@ -1,4 +1,6 @@
 import { defer } from 'react-router'
+import { makeLoader } from 'react-router-typesafe'
+import { Article } from './types'
 
 const config = {
   token: process.env.VITE_GITHUB_ACCESS_TOKEN,
@@ -14,7 +16,23 @@ export const postEditBaseUrl =
 export const snippetEditBaseUrl =
   'https://github.com/codeleeks/blog/blob/codeleeks-snippets/'
 
-export function extractHeader(key, contents) {
+type Tree = {
+  mode: string
+  path: string
+  size: number
+  sha: string
+  type: string
+  url: string
+}
+
+type Trees = {
+  sha: string
+  tree: Tree[]
+  truncated: boolean
+  url: string
+}
+
+export function extractHeader(key: string, contents: string) {
   let matched = /(?<=---)(.*?)(?=---)/gs.exec(contents)
   if (!matched) return undefined
   let header = matched[1]
@@ -46,20 +64,20 @@ export function extractHeader(key, contents) {
   return value
 }
 
-function extractCategory(path) {
+function extractCategory(path: string) {
   const last = path.lastIndexOf('/')
   const category = path.substring(0, last)
   return category
 }
 
-function extractTitle(path) {
+function extractTitle(path: string) {
   const last = path.lastIndexOf('/')
   const ext = path.lastIndexOf('.md')
   const title = path.substring(last + 1, ext)
   return title
 }
 
-export function removeHeaderFromContents(contents) {
+export function removeHeaderFromContents(contents: string) {
   const regex = /-{3}\n(.*?)-{3}\n/gs
   const matched = regex.exec(contents)
   if (!matched) return contents
@@ -77,7 +95,7 @@ export function removeHeaderFromContents(contents) {
   return removedLineFeed
 }
 
-async function fetchArticle(path, branch) {
+async function fetchArticle(path: string, branch: string) {
   const { owner, repo, token } = config
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`
 
@@ -109,7 +127,7 @@ async function fetchArticle(path, branch) {
   }
 }
 
-async function fetchArticles(branch) {
+async function fetchArticles(branch: string) {
   const { owner, repo, token } = config
 
   const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=true`
@@ -127,19 +145,22 @@ async function fetchArticles(branch) {
     throw new Error(`could not fetch articles ${branch}`)
   }
 
-  const json = await resp.json()
+  const json: Trees = await resp.json()
   const { tree } = json
-  const posts = tree
+  const posts: Article[] = tree
     .filter(
-      (t) =>
+      (t: Tree) =>
         t.mode === '100644' && t.path.endsWith('.md') && t.path !== 'README.md'
     )
-    .map((cur) => {
-      const post = {
+    .map((cur: Tree) => {
+      const post: Article = {
         ...cur,
         title: extractTitle(cur.path),
         category: extractCategory(cur.path),
-        fetchContents(callback, includeContents = false) {
+        fetchContents(
+          callback: (article: Article) => void,
+          includeContents = false
+        ) {
           fetchArticle(cur.path, branch).then((article) => {
             const { summary, date, titleImage, contentsWithoutHeader } = article
             this.summary = summary
@@ -159,7 +180,7 @@ async function fetchArticles(branch) {
   return posts
 }
 
-export async function fetchPost(path) {
+export async function fetchPost(path: string) {
   return fetchArticle(path, config.postsBranch)
 }
 
@@ -167,7 +188,7 @@ export async function fetchPosts() {
   return fetchArticles(config.postsBranch)
 }
 
-export async function fetchSnippet(path) {
+export async function fetchSnippet(path: string) {
   return fetchArticle(path, config.snippetsBranch)
 }
 
@@ -179,7 +200,7 @@ export function postsLoader() {
   return defer({ posts: fetchPosts() })
 }
 
-export function postContentsLoader({ params }) {
+export function postContentsLoader({ params }: any) {
   return defer({
     contents: fetchPost(params['*']),
     articles: fetchPosts(),
@@ -190,7 +211,11 @@ export function snippetsLoader() {
   return defer({ snippets: fetchSnippets() })
 }
 
-export function snippetContentsLoader({ params }) {
+export const SnippetsLoader = makeLoader(() => ({
+  snippets: fetchSnippets(),
+}))
+
+export function snippetContentsLoader({ params }: any) {
   return defer({
     contents: fetchSnippet(params['*']),
     articles: fetchSnippets(),

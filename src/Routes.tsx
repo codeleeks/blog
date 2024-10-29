@@ -6,6 +6,7 @@ import {
   Outlet,
   RouterProvider,
   useNavigate,
+  useRouteError,
 } from 'react-router'
 import { createBrowserRouter, Link, NavLink } from 'react-router-dom'
 import AvatarImg from './assets/avatar.png'
@@ -79,7 +80,7 @@ const Root = () => {
   )
 }
 
-const NotFoundPage = (props) => {
+const NotFoundPage = () => {
   const title = 'Not found!'
   const message = 'Could not find resource or page.'
 
@@ -91,7 +92,7 @@ const NotFoundPage = (props) => {
   )
 }
 
-const ErrorPage = (props) => {
+const ErrorPage = () => {
   const error = useRouteError()
   let title = 'Error occurred!'
   let message = 'something went wrong'

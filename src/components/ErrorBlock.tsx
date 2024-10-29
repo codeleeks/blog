@@ -1,7 +1,14 @@
 import { decode } from 'html-entities'
+import { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
-export default (props) => {
+interface ErrorBlockProps {
+  title: string
+  message: string
+  // children: ReactNode
+}
+
+const errorBlock = (props: ErrorBlockProps) => {
   const { title, message } = props
 
   return (
@@ -14,3 +21,5 @@ export default (props) => {
     </section>
   )
 }
+
+export default errorBlock

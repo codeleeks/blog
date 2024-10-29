@@ -1,17 +1,23 @@
-import { useLoaderData } from 'react-router'
+import { useLoaderData } from 'react-router-typesafe'
 import AsyncBlock from '../components/AsyncBlock'
 import { useEffect, useState } from 'react'
 import Markdown from '../components/Markdown'
 import { Link } from 'react-router-dom'
+import { Article } from '../types'
+import { SnippetsLoader } from '../fetch'
 
-const SnippetCard = (props) => {
+interface SnippetCardProps {
+  snippet: Article
+}
+
+const SnippetCard = (props: SnippetCardProps) => {
   const { snippet: fetchedSnippet } = props
-  const [snippet, setSnippet] = useState(fetchedSnippet)
+  const [snippet, setSnippet] = useState<Article>(fetchedSnippet)
 
   useEffect(() => {
     if (fetchedSnippet) {
-      fetchedSnippet.fetchContents((fetched) => {
-        setSnippet((prev) => {
+      fetchedSnippet.fetchContents((fetched: Article) => {
+        setSnippet((prev: Article) => {
           return { ...prev, ...fetched }
         })
       }, true)
@@ -30,13 +36,13 @@ const SnippetCard = (props) => {
   )
 }
 
-const Snippets = (props) => {
-  const data = useLoaderData()
+const Snippets = () => {
+  const data = useLoaderData<typeof SnippetsLoader>()
 
   return (
     <AsyncBlock resolve={data.snippets}>
-      {(fetched) => {
-        const snippets = fetched.map((s) => {
+      {(fetched: Article[]) => {
+        const snippets = fetched.map((s: Article) => {
           return <SnippetCard key={s.path} snippet={s} />
         })
 

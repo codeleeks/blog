@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "module": "es2020",
+    "target": "ES2018",
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "lib": ["es2021"],
+    "paths": {
+      "react": ["./node_modules/@types/react"]
+    },
+    "allowSyntheticDefaultImports": true
+  }
+}

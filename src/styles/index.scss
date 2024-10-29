@@ -354,13 +354,15 @@ img {
 .article-nav,
 .article-aside {
   position: fixed;
+  top: var(--header-height);
   flex-shrink: 0;
   $height: calc(100vh - var(--header-height) - var(--footer-margin-top));
   height: $height;
+
   @include media_medium_style {
     position: fixed;
   }
-  top: var(--header-height);
+
   &.toggled {
     height: calc(100vh - var(--header-height));
   }

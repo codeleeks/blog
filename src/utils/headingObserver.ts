@@ -1,12 +1,18 @@
 import GithubSlugger from 'github-slugger'
 
-class HeadingObserver {
-  io = null
-  tableOfContents = []
+export type TableOfContents = {
+  level: number
+  text: string
+  slug: string
+}
 
-  tableOfContentsFromContents(contents) {
+export class HeadingObserver {
+  io: IntersectionObserver = null
+  tableOfContents: TableOfContents[] = []
+
+  tableOfContentsFromContents(contents: string) {
     const slugger = new GithubSlugger()
-    const adjustLevels = (levels) => {
+    const adjustLevels = (levels: number[]) => {
       let min = 6
       for (const level of levels) {
         if (level < min) {
@@ -36,8 +42,8 @@ class HeadingObserver {
       slug: slugger.slug(heading.groups.text),
     }))
   }
-  register(headingItemEls, contents) {
-    const slugToAnchor = headingItemEls.reduce((acc, el) => {
+  register(headingItemEls: HTMLElement[], contents: string) {
+    const slugToAnchor: any = headingItemEls.reduce((acc, el) => {
       const slug = el.querySelector('a').getAttribute('href').slice(1)
       return { ...acc, [slug]: el }
     }, {})
@@ -55,7 +61,7 @@ class HeadingObserver {
 
     this.tableOfContents = this.tableOfContentsFromContents(contents)
   }
-  start(contentsHeadingEls) {
+  start(contentsHeadingEls: HTMLHeadingElement[]) {
     contentsHeadingEls.forEach((el) => {
       if (
         el.textContent &&

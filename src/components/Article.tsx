@@ -4,22 +4,26 @@ import { gsap } from 'gsap'
 import ScrollToPlugin from 'gsap/ScrollToPlugin'
 import { NavLink } from 'react-router-dom'
 import Markdown from './Markdown'
-import { postEditBaseUrl } from '../fetch'
+import { HeadingObserver, TableOfContents } from '../utils/headingObserver'
+import { Article } from '../types'
 
 gsap.registerPlugin(ScrollToPlugin)
-function scrollTo(target, config) {
-  gsap.to(target, config)
+
+interface TocItemProps {
+  headings: TableOfContents[]
 }
 
-const TocItem = (props) => {
+const TocItem = (props: TocItemProps) => {
   const { headings } = props
-  const timer = useRef()
-  let headingSlug
+  const timer = useRef<NodeJS.Timeout>()
+  let headingSlug: string
 
-  const scroller = (e) => {
+  const scroller = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     e.preventDefault()
-    const slug = e.target.attributes.href.value
-    scrollTo(window, {
+    const anchorEl = e.target as HTMLAnchorElement
+    const slug = anchorEl.attributes.getNamedItem('href').value
+
+    gsap.to(window, {
       duration: 1,
       scrollTo: {
         y: slug,
@@ -60,34 +64,42 @@ const TocItem = (props) => {
   return <>{items}</>
 }
 
-const Article = (props) => {
+interface ArticleProps {
+  editBaseUrl: string
+  loaderData: any
+  headingObserver: HeadingObserver
+}
+
+const Article = (props: ArticleProps) => {
   const { editBaseUrl, loaderData: data, headingObserver } = props
   const contentsRef = useRef(null)
   const tocRef = useRef(null)
   const navRef = useRef(null)
   const asideRef = useRef(null)
 
-  const startHeadingObserver = (contents) => {
+  const startHeadingObserver = (contents: string) => {
     if (contentsRef.current.childNodes) {
       if (tocRef.current.childNodes) {
         headingObserver.clear()
-        const tocHeadingEls = Array.from(tocRef.current.childNodes)
+        const tocHeadingEls = Array.from(
+          tocRef.current.childNodes
+        ) as HTMLElement[]
         headingObserver.register(tocHeadingEls, contents)
         const contentsHeadingEls = Array.from(
-          contentsRef.current.childNodes
+          contentsRef.current.childNodes as HTMLHeadingElement[]
         ).filter((node) => node.nodeName.match(/h[1-6]/i))
         headingObserver.start(contentsHeadingEls)
       }
     }
   }
 
-  const toggler = (e, ref) => {
+  const toggler = (e: React.MouseEvent, ref: React.MutableRefObject<any>) => {
     e.stopPropagation()
     ref.current.classList.toggle('toggled')
     document.body.classList.toggle('toggled')
   }
 
-  const closer = (e, ref) => {
+  const closer = (e: React.MouseEvent, ref: React.MutableRefObject<any>) => {
     ref.current.classList.remove('toggled')
     document.body.classList.remove('toggled')
   }
@@ -105,9 +117,9 @@ const Article = (props) => {
           <div className='article-nav__menu'>
             <ul className='article-nav__scroll'>
               <AsyncBlock resolve={data.articles}>
-                {(fetchedArticles) => {
+                {(fetchedArticles: Article[]) => {
                   const articlesPerCategory = fetchedArticles.reduce(
-                    (acc, cur) => {
+                    (acc: { [c: string]: Article[] }, cur: Article) => {
                       const { category } = cur
                       if (category in acc) {
                         acc[category].push(cur)
@@ -133,7 +145,7 @@ const Article = (props) => {
                           {category}
                         </h4>
                         <ul className='article-nav__scroll__nav-item__articles'>
-                          {articles.map((article) => (
+                          {articles.map((article: Article) => (
                             <li
                               className='article-nav__scroll__nav-item__articles__item'
                               key={article.path}
@@ -167,7 +179,7 @@ const Article = (props) => {
         </nav>
         <article className='article-article'>
           <AsyncBlock resolve={data.contents}>
-            {(fetched) => {
+            {(fetched: Article) => {
               const { title, titleImage, date, contentsWithoutHeader, path } =
                 fetched
               return (
@@ -220,7 +232,7 @@ const Article = (props) => {
           <div className='article-aside__menu'>
             <ul className='article-aside__scroll' ref={tocRef}>
               <AsyncBlock resolve={data.contents}>
-                {(fetched) => {
+                {(fetched: any) => {
                   const { contentsWithoutHeader } = fetched
                   const headings = headingObserver.tableOfContentsFromContents(
                     contentsWithoutHeader

@@ -3,7 +3,7 @@ import { postTocObserver, snippetTocObserver } from '../utils/headingObserver'
 import Article from '../components/Article'
 import { snippetEditBaseUrl } from '../fetch'
 
-const Snippet = (props) => {
+const Snippet = () => {
   const data = useLoaderData()
   return (
     <Article
