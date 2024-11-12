@@ -788,6 +788,7 @@ public class MyDataSourceValueConfig {
 
 <MessageBox title='자바빈 방법과 생성자 방법' level='warning'>
 	자바빈 방법으로 프로퍼티 클래스를 구성하면 빈으로 직접 등록할 수 있다.
+	
 	```java
 	@Data
 	@Component
@@ -829,6 +830,9 @@ my:
       timeout: 60s
       options: LOCAL, CACHE
 ```
+
+- `EnableconfigurationProperties`을 이용하기
+
 ```java
 @Getter
 @ConfigurationProperties("my.datasource")
@@ -882,6 +886,35 @@ public class MyDataSourceConfigV2 {
         );
     }
 }
+```
+
+- `configurationPropertiesScan`을 이용하기
+
+```java
+
+@SpringBootApplication
+@ConfigurationPropertiesScan
+public class BlogApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(BlogApplication.class, args);
+	}
+
+}
+
+package service.blog.config;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+@ConfigurationProperties(prefix = "custom.github")
+@Getter
+@AllArgsConstructor
+public class GithubConfig {
+    final String token;
+}
+
 ```
 
 클래스를 활용하여 설정 정보를 계층적으로 표현할 수 있기 때문에 가독성이 좋다.
