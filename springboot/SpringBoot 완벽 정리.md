@@ -646,6 +646,7 @@ password=prod_pw
 ```
 
 <MessageBox title='논리 파일의 설정 적용 방법' level='warning'>
+	
 	```
 	url=local.db.com
 	username=local_user
@@ -676,6 +677,7 @@ password=prod_pw
  	이런 식으로 외부에서 설정한 profile이 일치하는 경우에만 설정 정보를 적용한다.
   	그런데 `spring.config.activate.on-profile`을 만날 때 profile 일치 여부를 확인하기 때문에, `spring.config.activate.on-profile`이 없이 설정 정보를 적으면 해당 설정 정보가 적용된다.
    	따라서 맨 마지막 줄에 적은 `url=hello.db.com` 설정이 가장 마지막으로 적용되어 외부에서 명시한 profile과 무관하게 url의 값이 정해지는 것이다.
+    
 </MessageBox>
 
 ### 설정 주입 방법들의 우선 순위
@@ -787,6 +789,7 @@ public class MyDataSourceValueConfig {
 좀 더 안전한 방법은 생성자를 활용하는 방법이다.
 
 <MessageBox title='자바빈 방법과 생성자 방법' level='warning'>
+	
 	자바빈 방법으로 프로퍼티 클래스를 구성하면 빈으로 직접 등록할 수 있다.
 	
 	```java
@@ -817,6 +820,7 @@ public class MyDataSourceValueConfig {
   	에러의 내용으로 추측컨대 설정 정보를 셋팅해주는 작업은 컴포넌트 스캔에 의한 빈 생성 작업 이후에 수행되기 때문에, 빈 생성 시점에 설정 정보를 넣어야 하는 생성자 방식은 의존성 주입에서 문제가 생기는 것 같다.
 
    	해결하려면 `@Configuration`과 `@EnableConfigurationProperties` 조합을 사용하거나 `@ConfigurationPropertiesScan`으로 프로퍼티 클래스를 스캔하는 별도의 로직을 실행하게 설정하면 된다.
+    
 </MessageBox>
 
 ```yml
@@ -1028,6 +1032,7 @@ Profile로 생성될 설정 정보 빈을 선택한다.
 프로퍼티 클래스에 붙일 수 있고, 설정 클래스의 `@Bean`에 붙일 수도 있다.
 
 - 프로퍼티 클래스에 붙이는 방법
+
 ```java
 @Getter
 @Profile("prod")
@@ -1068,6 +1073,7 @@ public class MyDataSourcePropertiesV3 {
 ```
 
 - 설정 클래스의 `@Bean` 메서드에 붙이는 방법
+
 ```java
 @Slf4j
 @Configuration
