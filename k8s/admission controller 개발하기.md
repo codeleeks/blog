@@ -274,3 +274,18 @@ spec:
 ```bash
 Error from server: admission webhook "val-webhook.coffeewhale.com" denied the request: fire! worked great!!
 ```
+
+## 참고
+
+https://coffeewhale.com/kubernetes/admission-control/2021/04/28/opa1/
+https://malwareanalysis.tistory.com/704
+https://www.civo.com/learn/kubernetes-admission-controllers-for-beginners
+
+https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller
+https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#response
+
+https://github.com/kubernetes/api
+https://pkg.go.dev/k8s.io/api/admission/v1#pkg-constants
+
+https://kind.sigs.k8s.io/docs/user/configuration/#feature-gates
+https://kind.sigs.k8s.io/docs/user/quick-start#building-images
