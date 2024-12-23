@@ -148,6 +148,12 @@ img {
 
   display: flex;
 
+  @include media_small_style {
+    --article-nav-width: 0;
+    --article-article-width: calc(var(--article-area-width) * 0.8);
+    --article-aside-width: calc(var(--article-area-width) * 0.2);
+  }
+
   &-article {
     width: var(--article-article-width);
     margin: 0 auto;
