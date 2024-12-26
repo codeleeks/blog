@@ -75,7 +75,7 @@ const Root = () => {
       <main className='main'>
         <Outlet />
       </main>
-      <footer className='footer'>designed by codeleeks</footer>
+      <footer className='footer'>designed by silverbullet</footer>
     </>
   )
 }

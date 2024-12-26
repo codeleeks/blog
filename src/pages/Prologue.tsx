@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react'
-import {
-  AwaitResolveRenderFunction,
-  LoaderFunction,
-  useLoaderData,
-} from 'react-router-typesafe'
+import { useLoaderData } from 'react-router-typesafe'
 import { Link } from 'react-router-dom'
 import AsyncBlock from '../components/AsyncBlock'
-import HappyMeImg from '../assets/행복한나.jpg'
+import HeroImg from '../assets/배경.jpg'
 
 interface PostCardProps {
   post: Article
@@ -56,12 +52,12 @@ const Prologue = () => {
         return (
           <div>
             <figure className='hero'>
-              <img className='hero-img' src={HappyMeImg} alt='happy me' />
+              <img className='hero-img' src={HeroImg} alt='happy me' />
               <figcaption className='hero-caption'>
                 <div className='hero-caption__title'>
                   <h1 className='hero-caption__title-text'>
-                    Kasong <br />
-                    <span>Lee</span>
+                    Silver <br />
+                    <span>bullet</span>
                   </h1>
                 </div>
                 <div className='hero-caption__article'>
